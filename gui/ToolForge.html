@@ -1038,13 +1038,28 @@
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-          <!-- v1.1.2 details -->
-          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent2)':'var(--border)'">
+          <!-- v1.1.3 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent2)':'var(--border)'" open>
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
-                🚀 Version 1.1.2
+                🚀 Version 1.1.3
                 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
               </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>⚙️ <strong style="color: var(--text);">Einstellungen-Persistenz</strong>: Vollständige Speicherung aller Einstellungen (Sprache, Theme, Dashboard-Optionen) direkt in der backendseitigen config.json für permanente Haltbarkeit.</li>
+                <li>🎨 <strong style="color: var(--text);">4 Premium Themes</strong>: Zusätzliche Themes (Modern Schiefer, Smaragdwald, Synthwave und Dracula) mit farblich angepassten Hintergrund-Orbs und Rändern für ein einheitliches Design.</li>
+                <li>💬 <strong style="color: var(--text);">Theme-gerechte Modals</strong>: Komplette Ablösung von browser-nativen alert() und confirm() Fenstern durch animierte, modal-basierte Dialogboxen.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.1.2 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span>📦 Version 1.1.2</span>
               <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
             </summary>
             <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
@@ -1360,7 +1375,7 @@
     }
 
     // ── Settings Tab Actions ──
-    let installedAppVersion = 'v1.1.2';
+    let installedAppVersion = 'v1.1.3';
 
     function loadSettingsTab() {
       if (typeof pywebview !== 'undefined' && pywebview.api) {
@@ -1832,6 +1847,9 @@
         badgeCurrent: "Aktuell",
         footerText: "Deine persönliche Toolbox · Made with <span>♥</span> · ",
         footerToolsSuffix: " Tools",
+        changelog_v113_list: `<li>⚙️ <strong style="color: var(--text);">Einstellungen-Persistenz</strong>: Vollständige Speicherung aller Einstellungen (Sprache, Theme, Dashboard-Optionen) direkt in der backendseitigen config.json für permanente Haltbarkeit.</li>
+                <li>🎨 <strong style="color: var(--text);">4 Premium Themes</strong>: Zusätzliche Themes (Modern Schiefer, Smaragdwald, Synthwave und Dracula) mit farblich angepassten Hintergrund-Orbs und Rändern für ein einheitliches Design.</li>
+                <li>💬 <strong style="color: var(--text);">Theme-gerechte Modals</strong>: Komplette Ablösung von browser-nativen alert() und confirm() Fenstern durch animierte, modal-basierte Dialogboxen.</li>`,
         changelog_v112_list: `<li>🛠️ <strong style="color: var(--text);">Navigations-Fix</strong>: Behebung des fatalen Syntaxfehlers im Übersetzungs-Wörterbuch, der zum Einfrieren der Benutzeroberfläche (tabBtn-Klicks) beim Laden führte.</li>
                 <li>⚙️ <strong style="color: var(--text);">Produktionsmodus</strong>: Deaktivierung der Browser-Entwicklertools (DevTools) im normalen App-Modus für ein saubereres Benutzererlebnis.</li>`,
         changelog_v111_list: `<li>⚡ <strong style="color: var(--text);">Messergebnis-Optimierung</strong>: Behebung von Caching-Problemen beim Cloudflare-Speedtest durch Deaktivierung von HTTP-Caches und Aktivierung des privaten Webview-Modus.</li>
@@ -1942,6 +1960,9 @@
         badgeCurrent: "Current",
         footerText: "Your personal toolbox · Made with <span>♥</span> · ",
         footerToolsSuffix: " tools",
+        changelog_v113_list: `<li>⚙️ <strong style="color: var(--text);">Settings Persistence</strong>: Save and restore all options (language, active theme, and dashboard metrics visibility) inside the config.json backend file.</li>
+                <li>🎨 <strong style="color: var(--text);">4 Premium Themes</strong>: Added Monochrome, Forest, Synthwave, and Dracula. Background glowing spots and borders adapt color to match the theme.</li>
+                <li>💬 <strong style="color: var(--text);">Custom Dialogs</strong>: Replaced standard browser alert() and confirm() prompts with beautiful theme-integrated overlay modals.</li>`,
         changelog_v112_list: `<li>🛠️ <strong style="color: var(--text);">Navigation Fix</strong>: Resolved the critical dictionary syntax error that caused the entire user interface (tabBtn clicks) to freeze on startup.</li>
                 <li>⚙️ <strong style="color: var(--text);">Production Mode</strong>: Disabled the browser developer tools (DevTools) in normal application mode for a cleaner user experience.</li>`,
         changelog_v111_list: `<li>⚡ <strong style="color: var(--text);">Speedtest Optimization</strong>: Addressed caching issues with the Cloudflare Speedtest by disabling HTTP caches and using private WebView contexts.</li>
@@ -2086,22 +2107,26 @@
       if (changelogCard) {
         changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
         const detailsElements = changelogCard.querySelectorAll('details');
-        if (detailsElements.length >= 4) {
-          const sum112 = detailsElements[0].querySelector('summary');
-          sum112.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.2 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
-          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v112_list;
+        if (detailsElements.length >= 5) {
+          const sum113 = detailsElements[0].querySelector('summary');
+          sum113.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.3 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v113_list;
           
-          const sum111 = detailsElements[1].querySelector('summary');
+          const sum112 = detailsElements[1].querySelector('summary');
+          sum112.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.2`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v112_list;
+          
+          const sum111 = detailsElements[2].querySelector('summary');
           sum111.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.1`;
-          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v111_list;
+          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v111_list;
 
-          const sum110 = detailsElements[2].querySelector('summary');
+          const sum110 = detailsElements[3].querySelector('summary');
           sum110.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0`;
-          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v110_list;
+          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v110_list;
 
-          const sum100 = detailsElements[3].querySelector('summary');
+          const sum100 = detailsElements[4].querySelector('summary');
           sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
-          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v100_list;
+          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v100_list;
         }
       }
       
