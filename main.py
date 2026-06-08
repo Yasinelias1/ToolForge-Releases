@@ -1920,5 +1920,5 @@ if __name__ == '__main__':
     window.events.loaded += on_loaded
     
     # Start app
-    webview.start(debug=True, private_mode=True)
+    webview.start(debug=False, private_mode=True)
 
