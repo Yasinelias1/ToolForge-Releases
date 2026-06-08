@@ -354,7 +354,7 @@ class FileShareServer:
         self.shared_filename = os.path.basename(file_path)
 
 class ToolForgeAPI:
-    APP_VERSION = "1.1.7"
+    APP_VERSION = "1.1.8"
 
     def __init__(self):
         self._window = None

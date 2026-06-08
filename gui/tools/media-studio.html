@@ -718,6 +718,7 @@
             </div>
             <div class="btn-group">
               <button class="action-btn primary" id="vidCensorRunBtn" onclick="window.vidCensor.runProcessing()" disabled>⚙️ Video verarbeiten &amp; speichern</button>
+              <button class="action-btn secondary" id="vidCensorEditBtn" style="display:none;" onclick="window.vidCensor.backToEdit()">🔄 Zensur ändern / Neu verarbeiten</button>
               <button class="action-btn secondary" onclick="window.vidCensor.resetAll()">❌ Anderes Video laden</button>
             </div>
             <div class="progress-card" id="vidCensorProgress">
@@ -1459,6 +1460,10 @@
 
               runBtn.innerHTML = '💾 Video auf PC speichern';
               runBtn.className = 'action-btn primary';
+              
+              // Show the edit button
+              const editBtn = document.getElementById('vidCensorEditBtn');
+              if (editBtn) editBtn.style.display = 'block';
             } else {
               statusText.textContent = 'Fehler aufgetreten.';
               showToast('Fehler: ' + (res.error || 'Video-Verarbeitung fehlgeschlagen.'), 'error');
@@ -1500,6 +1505,11 @@
         isBoxSelected = false;
         runBtn.disabled = !autoFaceCheckbox.checked;
         coordsInfo.style.display = 'none';
+        
+        // Hide edit button if reset
+        const editBtn = document.getElementById('vidCensorEditBtn');
+        if (editBtn) editBtn.style.display = 'none';
+        
         drawFrame();
       }
 
@@ -1507,6 +1517,10 @@
         videoPath = null; isBoxSelected = false; isProcessed = false; tempVideoPath = null;
         selectedBoxes = [];
         document.getElementById('vidCensorFilename').value = '';
+        
+        // Hide edit button
+        const editBtn = document.getElementById('vidCensorEditBtn');
+        if (editBtn) editBtn.style.display = 'none';
         autoFaceCheckbox.checked = false; autoFaceCheckbox.disabled = false; autoFaceCheckbox.parentElement.style.opacity = '1';
         trackingCheckbox.checked = false; trackingCheckbox.disabled = false; trackingCheckbox.parentElement.style.opacity = '1';
         autodetectCheckbox.checked = false;
@@ -1534,7 +1548,33 @@
         lastCensoredVideoPath = null;
       }
 
-      window.vidCensor = { openVideo, setMethod, runProcessing, resetAll, toggleTimeRange, clearBoxes };
+      function backToEdit() {
+        if (!isProcessed) return;
+        isProcessed = false;
+        
+        // Hide video player, show canvas again
+        player.style.display = 'none';
+        player.src = '';
+        canvas.style.display = 'block';
+        
+        // Update main run button
+        runBtn.innerHTML = '⚙️ Video verarbeiten &amp; speichern';
+        runBtn.className = 'action-btn primary';
+        runBtn.disabled = false;
+        
+        // Hide the edit button itself
+        const editBtn = document.getElementById('vidCensorEditBtn');
+        if (editBtn) editBtn.style.display = 'none';
+        
+        // Hide the progress bar/finalized state
+        progressCard.style.display = 'none';
+        
+        // Redraw frame and boxes
+        drawFrame();
+        updateBoxInfo(false);
+      }
+
+      window.vidCensor = { openVideo, setMethod, runProcessing, resetAll, toggleTimeRange, clearBoxes, backToEdit };
     })();
 
     // ==========================================
