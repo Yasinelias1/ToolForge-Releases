@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Audio-Recorder – ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09090e;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(255,255,255,0.14);
+      --text: #f0f0ff;
+      --text-muted: #8888aa;
+      --accent: #7c3aed;
+      --accent-hover: #8b5cf6;
+      --accent2: #ec4899;
+      --gradient: linear-gradient(135deg, #7c3aed, #ec4899);
+      --radius: 18px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 80% 10%, rgba(124, 58, 237, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 20% 90%, rgba(236, 72, 153, 0.08) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      z-index: 999;
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(124, 58, 237, 0.4);
+      color: #f1f5f9;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .app-container {
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 90px 20px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 28px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .group-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      align-self: flex-start;
+    }
+
+    /* Waveform visualizer */
+    .visualizer-container {
+      width: 100%;
+      height: 120px;
+      background: #05050a;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      position: relative;
+    }
+    #visualizerCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .timer {
+      font-size: 2.5rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      background: linear-gradient(135deg, #fff, var(--text-muted));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin: 10px 0;
+    }
+
+    .status-text {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* Controls */
+    .controls-row {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .record-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: none;
+      background: #ef4444;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .record-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 24px rgba(239, 68, 68, 0.6);
+    }
+    .record-btn.recording {
+      background: #fff;
+      color: #ef4444;
+      border: 2px solid #ef4444;
+      animation: pulseRecord 1.5s infinite alternate;
+    }
+
+    @keyframes pulseRecord {
+      from { box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+      to { box-shadow: 0 0 24px rgba(239, 68, 68, 0.8); }
+    }
+
+    .control-action-btn {
+      padding: 14px 24px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+    .control-action-btn:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+    }
+    .control-action-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Preview and save cards */
+    .preview-card-wrap {
+      width: 100%;
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .audio-player-custom {
+      width: 100%;
+      margin-top: 10px;
+      outline: none;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: var(--radius-sm);
+    }
+    /* Simple styling for standard audio player in dark mode */
+    audio::-webkit-media-controls-panel {
+      background-color: #11111a;
+    }
+    audio::-webkit-media-controls-play-button,
+    audio::-webkit-media-controls-mute-button {
+      filter: invert(1);
+    }
+
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+    }
+    .settings-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .settings-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .settings-select, .url-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .settings-select:focus, .url-input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .settings-select option {
+      background: #111118;
+      color: var(--text);
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .btn.primary {
+      background: var(--gradient);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
+    }
+    .btn.primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--accent-hover), #f472b6);
+      box-shadow: 0 6px 20px rgba(124, 58, 237, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--gradient);
+      color: white;
+      padding: 12px 26px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 9999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="../ToolForge.html" class="back-btn">⬅ Zurück</a>
+
+  <div class="app-container">
+    <header>
+      <h1>Audio-Recorder</h1>
+      <p>Nimm Sprachnotizen, Soundclips oder Diktate direkt offline und privat auf.</p>
+    </header>
+
+    <!-- Main Card -->
+    <div class="card">
+      <div class="group-title">Aufnahme</div>
+      
+      <div class="visualizer-container">
+        <canvas id="visualizerCanvas"></canvas>
+      </div>
+
+      <div class="timer" id="timerLabel">00:00:00</div>
+      <div class="status-text" id="statusLabel">Bereit für Aufnahme</div>
+
+      <div class="controls-row">
+        <button id="pauseBtn" class="control-action-btn" disabled onclick="togglePause()">
+          <span>⏸</span> Pause
+        </button>
+        <button id="recordBtn" class="record-btn" onclick="toggleRecord()" title="Aufnahme starten">
+          <span>🎤</span>
+        </button>
+        <button id="stopBtn" class="control-action-btn" disabled onclick="stopRecording()">
+          <span>⏹</span> Stopp
+        </button>
+      </div>
+    </div>
+
+    <!-- Preview Card -->
+    <div class="card preview-card-wrap" id="previewCard">
+      <div class="group-title">Vorschau &amp; Wiedergabe</div>
+      <audio id="audioPreview" class="audio-player-custom" controls></audio>
+    </div>
+
+    <!-- Save Settings Card -->
+    <div class="card preview-card-wrap" id="saveCard">
+      <div class="group-title">Datei speichern</div>
+      
+      <div class="settings-grid">
+        <div class="settings-item">
+          <span class="settings-label">Dateiname (ohne Endung)</span>
+          <input type="text" id="customFilename" class="url-input" placeholder="sprachaufnahme" />
+        </div>
+        <div class="settings-item">
+          <span class="settings-label">Zielformat</span>
+          <select id="formatSelect" class="settings-select">
+            <option value="mp3">MP3 (.mp3) - Komprimiert</option>
+            <option value="wav">WAV (.wav) - Verlustfrei</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="saveBtn" class="btn primary" onclick="saveAudioFile()">
+        💾 Aufnahme speichern unter...
+      </button>
+    </div>
+  </div>
+
+  <div id="toast">Erfolgreich! ✓</div>
+
+  <script>
+    // State
+    let mediaRecorder;
+    let audioChunks = [];
+    let audioContext;
+    let analyser;
+    let dataArray;
+    let source;
+    let animationId;
+    let localStream;
+    let isRecording = false;
+    let isPaused = false;
+    let startTime = 0;
+    let elapsedTime = 0;
+    let timerInterval = null;
+    let recordedBlob = null;
+
+    // Elements
+    const recordBtn = document.getElementById('recordBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const timerLabel = document.getElementById('timerLabel');
+    const statusLabel = document.getElementById('statusLabel');
+    const previewCard = document.getElementById('previewCard');
+    const saveCard = document.getElementById('saveCard');
+    const audioPreview = document.getElementById('audioPreview');
+
+    // Visualizer Setup
+    const canvas = document.getElementById('visualizerCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // Resize canvas
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+      drawFlatLine();
+    }
+    window.addEventListener('resize', resizeCanvas);
+    
+    function drawFlatLine() {
+      ctx.fillStyle = '#05050a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+    }
+    
+    resizeCanvas();
+
+    function formatTime(ms) {
+      const totalSeconds = Math.floor(ms / 1000);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      
+      const pad = val => val < 10 ? '0' + val : val;
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function startTimer() {
+      const baseTime = Date.now() - elapsedTime;
+      timerInterval = setInterval(() => {
+        elapsedTime = Date.now() - baseTime;
+        timerLabel.textContent = formatTime(elapsedTime);
+      }, 200);
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    async function toggleRecord() {
+      if (!isRecording) {
+        // Start Recording
+        try {
+          localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          
+          audioChunks = [];
+          mediaRecorder = new MediaRecorder(localStream);
+          
+          mediaRecorder.ondataavailable = event => {
+            if (event.data.size > 0) {
+              audioChunks.push(event.data);
+            }
+          };
+          
+          mediaRecorder.onstop = () => {
+            recordedBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            const audioUrl = URL.createObjectURL(recordedBlob);
+            audioPreview.src = audioUrl;
+            
+            previewCard.style.display = 'flex';
+            saveCard.style.display = 'flex';
+            
+            // Set default filename
+            const dateStr = new Date().toISOString().slice(0,10) + '_' + new Date().toTimeString().slice(0,8).replace(/:/g, '-');
+            document.getElementById('customFilename').value = 'aufzeichnung_' + dateStr;
+          };
+
+          // Setup analyser
+          audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          analyser = audioContext.createAnalyser();
+          source = audioContext.createMediaStreamSource(localStream);
+          source.connect(analyser);
+          analyser.fftSize = 128;
+          const bufferLength = analyser.frequencyBinCount;
+          dataArray = new Uint8Array(bufferLength);
+
+          mediaRecorder.start(100);
+          isRecording = true;
+          isPaused = false;
+          elapsedTime = 0;
+          
+          startTimer();
+          drawVisualizer();
+          updateUI();
+        } catch (err) {
+          console.error("Mic access error:", err);
+          showToast('Mikrofon-Zugriff verweigert oder Fehler: ' + err.message, 'error');
+        }
+      } else {
+        stopRecording();
+      }
+    }
+
+    function togglePause() {
+      if (!isRecording) return;
+      
+      if (!isPaused) {
+        // Pause
+        mediaRecorder.pause();
+        isPaused = true;
+        stopTimer();
+        statusLabel.textContent = "Aufnahme pausiert";
+      } else {
+        // Resume
+        mediaRecorder.resume();
+        isPaused = false;
+        startTimer();
+        statusLabel.textContent = "Aufnahme läuft...";
+      }
+      updateUI();
+    }
+
+    function stopRecording() {
+      if (!isRecording) return;
+      
+      mediaRecorder.stop();
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
+      
+      stopTimer();
+      cancelAnimationFrame(animationId);
+      
+      isRecording = false;
+      isPaused = false;
+      
+      statusLabel.textContent = "Aufnahme beendet";
+      updateUI();
+      drawFlatLine();
+    }
+
+    function updateUI() {
+      if (isRecording) {
+        recordBtn.innerHTML = "<span>⏹</span>";
+        recordBtn.className = "record-btn recording";
+        recordBtn.title = "Aufnahme stoppen";
+        
+        pauseBtn.disabled = false;
+        pauseBtn.innerHTML = isPaused ? "<span>▶</span> Fortsetzen" : "<span>⏸</span> Pause";
+        
+        stopBtn.disabled = false;
+        statusLabel.textContent = isPaused ? "Aufnahme pausiert" : "Aufnahme läuft...";
+      } else {
+        recordBtn.innerHTML = "<span>🎤</span>";
+        recordBtn.className = "record-btn";
+        recordBtn.title = "Aufnahme starten";
+        
+        pauseBtn.disabled = true;
+        pauseBtn.innerHTML = "<span>⏸</span> Pause";
+        
+        stopBtn.disabled = true;
+      }
+    }
+
+    function drawVisualizer() {
+      const width = canvas.width;
+      const height = canvas.height;
+      
+      function draw() {
+        if (!isRecording || isPaused) {
+          drawFlatLine();
+          return;
+        }
+        
+        animationId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+        
+        ctx.fillStyle = '#05050a';
+        ctx.fillRect(0, 0, width, height);
+        
+        const barWidth = (width / dataArray.length) * 1.5;
+        let barHeight;
+        let x = 0;
+        
+        for (let i = 0; i < dataArray.length; i++) {
+          barHeight = (dataArray[i] / 255) * height * 0.85;
+          
+          const grad = ctx.createLinearGradient(0, height, 0, (height - barHeight) / 2);
+          grad.addColorStop(0, '#7c3aed');
+          grad.addColorStop(1, '#ec4899');
+          
+          ctx.fillStyle = grad;
+          // Symmetric wave
+          ctx.fillRect(x, (height - barHeight) / 2, barWidth - 1, barHeight);
+          
+          x += barWidth;
+        }
+      }
+      draw();
+    }
+
+    function saveAudioFile() {
+      if (!recordedBlob) return;
+
+      const format = document.getElementById('formatSelect').value;
+      const customName = document.getElementById('customFilename').value.trim() || 'aufnahme';
+      const defaultName = customName + '.' + format;
+      
+      const fileTypes = JSON.stringify([
+        [format.toUpperCase() + " Audio", `*.${format}`],
+        ["Alle Dateien", "*.*"]
+      ]);
+
+      if (typeof pywebview === 'undefined') {
+        showToast('System nicht bereit. Läuft die Desktop-App?', 'error');
+        return;
+      }
+
+      // Show Save Dialog
+      pywebview.api.save_file_dialog(fileTypes, defaultName).then(outputPath => {
+        if (!outputPath) return;
+
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.disabled = true;
+        saveBtn.textContent = '⏳ Konvertiere & Speichere...';
+
+        // Read Blob as Base64
+        const reader = new FileReader();
+        reader.onloadend = function() {
+          const base64Data = reader.result;
+          
+          pywebview.api.save_recorded_audio(base64Data, format, outputPath).then(res => {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '💾 Aufnahme speichern unter...';
+            
+            if (res && res.success) {
+              showToast('Aufnahme erfolgreich gespeichert! 💾');
+            } else {
+              showToast('Fehler beim Speichern: ' + (res.error || 'Speichern fehlgeschlagen.'), 'error');
+            }
+          });
+        };
+        reader.readAsDataURL(recordedBlob);
+      });
+    }
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      if (type === 'error') {
+        toast.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+        toast.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.4)';
+      } else {
+        toast.style.background = 'var(--gradient)';
+        toast.style.boxShadow = '0 8px 32px rgba(124, 58, 237, 0.4)';
+      }
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>

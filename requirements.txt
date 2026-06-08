@@ -1,0 +1,8 @@
+pywebview
+opencv-python
+Pillow
+requests
+qrcode
+pyinstaller
+yt-dlp
+pypdf

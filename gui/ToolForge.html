@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="color-scheme" content="dark" />
+  <title>🛠️ ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      color-scheme: dark;
+      --bg: #080810;
+      --surface: #0f0f1a;
+      --surface2: #161624;
+      --border: rgba(255,255,255,0.07);
+      --accent: #7c3aed;
+      --accent2: #a855f7;
+      --accent3: #06b6d4;
+      --accent4: #f59e0b;
+      --text: #f0efff;
+      --muted: #6b6a8a;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── animated background ── */
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.18;
+      animation: drift 20s ease-in-out infinite alternate;
+    }
+    .orb-1 { width: 600px; height: 600px; background: var(--accent); top: -200px; left: -100px; animation-delay: 0s; }
+    .orb-2 { width: 500px; height: 500px; background: var(--accent3); bottom: -150px; right: -100px; animation-delay: -7s; }
+    .orb-3 { width: 350px; height: 350px; background: var(--accent4); top: 40%; left: 40%; animation-delay: -14s; }
+
+    @keyframes drift {
+      from { transform: translate(0, 0) scale(1); }
+      to   { transform: translate(40px, 30px) scale(1.08); }
+    }
+
+    /* ── layout ── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 2rem 5rem;
+    }
+
+    /* ── header ── */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 3rem;
+      animation: fadeDown 0.7s ease both;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(124,58,237,0.15);
+      border: 1px solid rgba(124,58,237,0.3);
+      color: var(--accent2);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 0.35rem 1rem;
+      border-radius: 99px;
+      margin-bottom: 1.2rem;
+    }
+    h1 {
+      font-size: clamp(2.4rem, 6vw, 4rem);
+      font-weight: 900;
+      letter-spacing: -2px;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-sub {
+      margin-top: 0.9rem;
+      color: var(--muted);
+      font-size: 1.05rem;
+      font-weight: 400;
+    }
+    .header-logo {
+      width: 150px;
+      height: 150px;
+      object-fit: contain;
+      border-radius: 30px;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 40px rgba(124, 58, 237, 0.2);
+      animation: fadeDown 0.7s ease both;
+    }
+
+    /* ── search ── */
+    .search-wrap {
+      max-width: 420px;
+      margin: 2rem auto 0;
+      position: relative;
+    }
+    .search-icon {
+      position: absolute;
+      left: 1rem; top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      color: var(--muted);
+      pointer-events: none;
+    }
+    #searchInput {
+      width: 100%;
+      padding: 0.8rem 1rem 0.8rem 2.8rem;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    #searchInput:focus { border-color: var(--accent2); }
+    #searchInput::placeholder { color: var(--muted); }
+
+    /* ── hub sections ── */
+    .hub-section {
+      margin-bottom: 3rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hub-section:nth-child(1) { animation-delay: 0.05s; }
+    .hub-section:nth-child(2) { animation-delay: 0.15s; }
+    .hub-section:nth-child(3) { animation-delay: 0.25s; }
+
+    .hub-header {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.3rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .hub-header::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 80px;
+      height: 2px;
+      border-radius: 2px;
+    }
+    .hub-section[data-hub="media"] .hub-header::after {
+      background: linear-gradient(90deg, #a855f7, #ec4899);
+    }
+    .hub-section[data-hub="docs"] .hub-header::after {
+      background: linear-gradient(90deg, #ef4444, #f97316);
+    }
+    .hub-section[data-hub="system"] .hub-header::after {
+      background: linear-gradient(90deg, #6366f1, #06b6d4);
+    }
+
+    .hub-icon {
+      font-size: 1.5rem;
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      flex-shrink: 0;
+    }
+    .hub-section[data-hub="media"] .hub-icon {
+      background: rgba(168, 85, 247, 0.12);
+    }
+    .hub-section[data-hub="docs"] .hub-icon {
+      background: rgba(239, 68, 68, 0.12);
+    }
+    .hub-section[data-hub="system"] .hub-icon {
+      background: rgba(99, 102, 241, 0.12);
+    }
+
+    .hub-title-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .hub-title {
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hub-section[data-hub="media"] .hub-title {
+      background: linear-gradient(135deg, #c084fc, #ec4899);
+      -webkit-background-clip: text;
+    }
+    .hub-section[data-hub="docs"] .hub-title {
+      background: linear-gradient(135deg, #f87171, #fb923c);
+      -webkit-background-clip: text;
+    }
+    .hub-section[data-hub="system"] .hub-title {
+      background: linear-gradient(135deg, #818cf8, #22d3ee);
+      -webkit-background-clip: text;
+    }
+    .hub-subtitle {
+      font-size: 0.78rem;
+      color: var(--muted);
+      font-weight: 400;
+    }
+    .hub-count {
+      margin-left: auto;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--muted);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 0.2rem 0.65rem;
+      border-radius: 99px;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── grid ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* ── tool card ── */
+    .tool-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.8rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      animation: fadeUp 0.5s ease both;
+      cursor: pointer;
+    }
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--card-color1, var(--accent)), var(--card-color2, var(--accent3)));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      border-radius: inherit;
+    }
+    .tool-card:hover {
+      transform: translateY(-6px);
+      border-color: transparent;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 0 1px var(--card-color1, var(--accent));
+    }
+    .tool-card:hover::before { opacity: 0.08; }
+
+    .card-icon {
+      font-size: 2.4rem;
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+    .card-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+      flex: 1;
+    }
+    .card-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      padding: 0.25rem 0.7rem;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.06);
+      color: var(--muted);
+      position: relative;
+      z-index: 1;
+      width: fit-content;
+    }
+    .card-arrow {
+      position: absolute;
+      right: 1.5rem;
+      bottom: 1.5rem;
+      font-size: 1.2rem;
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: all 0.25s ease;
+      z-index: 1;
+    }
+    .tool-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+    /* ── "coming soon" badge ── */
+    .coming-soon {
+      opacity: 0.45;
+      cursor: default;
+      pointer-events: none;
+    }
+    .tag-soon {
+      background: rgba(245,158,11,0.12);
+      color: var(--accent4);
+    }
+
+    /* ── footer ── */
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+    footer span { color: var(--accent2); }
+
+    /* ── animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Tab Navigation ── */
+    .nav-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 0.8rem;
+      margin-bottom: 2.5rem;
+      position: relative;
+      z-index: 10;
+    }
+    .nav-tab {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.75rem 1.8rem;
+      border-radius: 14px;
+      font-size: 0.92rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+    .nav-tab:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.15);
+      color: var(--text);
+    }
+    .nav-tab.active {
+      background: rgba(124,58,237,0.12);
+      border-color: rgba(124,58,237,0.4);
+      color: var(--accent2);
+      box-shadow: 0 0 15px rgba(124,58,237,0.15);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeUp 0.4s ease both;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* ── Dashboard Layout ── */
+    .db-header {
+      text-align: center;
+      margin-bottom: 2.2rem;
+    }
+    .db-header h2 {
+      font-size: 2.2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #fff 0%, var(--accent2) 50%, var(--accent3) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -1px;
+    }
+    .db-header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    .db-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    @media (max-width: 950px) {
+      .db-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+      .db-grid { grid-template-columns: 1fr; }
+    }
+
+    .db-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.8rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.2rem;
+      position: relative;
+      overflow: hidden;
+      backdrop-filter: blur(12px);
+    }
+    .db-card-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      padding-bottom: 0.6rem;
+      margin-bottom: 0.2rem;
+    }
+
+    /* Ring Progress Indicator */
+    .ring-wrap {
+      position: relative;
+      width: 120px;
+      height: 120px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ring-svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+    .ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.02);
+      stroke-width: 10;
+    }
+    .ring-fill {
+      fill: none;
+      stroke-width: 10;
+      stroke-linecap: round;
+      stroke-dasharray: 314.16; /* 2 * PI * 50 */
+      stroke-dashoffset: 314.16;
+      transition: stroke-dashoffset 0.5s ease;
+    }
+    .ring-cpu { stroke: var(--accent2); }
+    .ring-ram { stroke: var(--accent3); }
+    .ring-gpu { stroke: var(--accent); }
+    
+    .ring-text {
+      position: absolute;
+      font-size: 1.5rem;
+      font-weight: 800;
+    }
+
+    .db-details {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .db-gpu-name {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Chart Area */
+    .chart-card {
+      grid-column: span 4;
+      align-items: stretch;
+      gap: 1rem;
+    }
+    @media (max-width: 950px) {
+      .chart-card { grid-column: span 2; }
+    }
+    @media (max-width: 600px) {
+      .chart-card { grid-column: span 1; }
+    }
+    .chart-container {
+      width: 100%;
+      height: 180px;
+      position: relative;
+    }
+    .chart-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Options Panel */
+    .options-card {
+      grid-column: span 4;
+      align-items: stretch;
+      gap: 1rem;
+    }
+    @media (max-width: 950px) {
+      .options-card { grid-column: span 2; }
+    }
+    @media (max-width: 600px) {
+      .options-card { grid-column: span 1; }
+    }
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-top: 0.5rem;
+    }
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      user-select: none;
+      color: var(--muted);
+      transition: color 0.2s;
+    }
+    .option-item:hover {
+      color: var(--text);
+    }
+    .option-checkbox {
+      accent-color: var(--accent2);
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    /* Temp lock badge */
+    .temp-lock {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--accent4);
+      font-size: 0.78rem;
+      background: rgba(245,158,11,0.06);
+      border: 1px solid rgba(245,158,11,0.15);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      cursor: help;
+    }
+
+    /* ── search: hide sections when no cards match ── */
+    .hub-section.hidden { display: none; }
+
+    /* Collapsible Changelog details styling */
+    summary::-webkit-details-marker { display: none; }
+    summary { list-style: none; }
+    details[open] .details-arrow { transform: rotate(180deg); }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="wrapper">
+    <!-- Tab-Navigation Leiste -->
+    <div class="nav-tabs">
+      <button class="nav-tab" id="tabBtnTools" onclick="switchTab('tools')">
+        🛠️ Werkzeuge
+      </button>
+      <button class="nav-tab active" id="tabBtnDashboard" onclick="switchTab('dashboard')">
+        📊 System-Dashboard
+      </button>
+      <button class="nav-tab" id="tabBtnSettings" onclick="switchTab('settings')">
+        ⚙️ Einstellungen &amp; Update
+      </button>
+    </div>
+
+    <!-- 1. TAB: WERKZEUGE -->
+    <div id="tabContentTools" class="tab-content">
+
+    <header>
+      <img src="logo.png" alt="ToolForge Logo" class="header-logo" />
+      <div style="display: flex; gap: 8px; align-items: center; justify-content: center; margin-bottom: 1.2rem;">
+        <div class="badge" style="margin-bottom: 0;">✦ Desktop-Edition</div>
+        <div class="badge" style="background: rgba(255,255,255,0.05); border-color: var(--border); color: var(--muted); margin-bottom: 0; text-transform: none; letter-spacing: normal;" id="versionBadge">v1.0.0</div>
+      </div>
+      <h1>ToolForge</h1>
+      <p class="header-sub">Alle Tools laufen lokal · 100% offline-fähig (Währungsrechner &amp; IP-Tool nutzen Python-Schnittstellen)</p>
+      <div class="search-wrap">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Tool suchen…" autocomplete="off"/>
+      </div>
+    </header>
+
+    <!-- ═══════════════ MEDIEN-HUB ═══════════════ -->
+    <section class="hub-section" data-hub="media">
+      <div class="hub-header">
+        <div class="hub-icon">🎬</div>
+        <div class="hub-title-wrap">
+          <div class="hub-title">Medien-Hub</div>
+          <div class="hub-subtitle">Video, Audio &amp; Bild-Tools</div>
+        </div>
+        <div class="hub-count">3 Tools</div>
+      </div>
+      <div class="grid">
+
+        <a class="tool-card" href="tools/media-studio.html" style="--card-color1:#7c3aed;--card-color2:#ec4899" data-tags="medien studio gif video image bild zensur zensieren retusche resizer kompressor watermark animation schneiden trimmer editor">
+          <span class="card-icon">🎬</span>
+          <div class="card-title">Medien-Studio</div>
+          <div class="card-desc">All-in-One Medienstudio: Video-Editor (Schneiden, Skalieren, Tempo), Video- &amp; Bild-Zensur, Bild-Editor (Resizer) und GIF-Erstellung.</div>
+          <div class="card-tag">🎞️ Video &amp; 🎨 Bild</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/video-downloader.html" style="--card-color1:#ef4444;--card-color2:#ec4899" data-tags="video downloader youtube tiktok shorts instagram mp4 download mp3 mov mkv webm wav m4a">
+          <span class="card-icon">📥</span>
+          <div class="card-title">Video-Downloader</div>
+          <div class="card-desc">Lade Videos von YouTube, TikTok, Shorts, Instagram und Co. herunter. Format (MP4, MOV, MP3 etc.) frei wählbar.</div>
+          <div class="card-tag">📥 Download · Video</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/audio-recorder.html" style="--card-color1:#c084fc;--card-color2:#ec4899" data-tags="audio recorder record mikrofon microphone mp3 wav aufnahme diktiergerät sprachnotiz">
+          <span class="card-icon">🎙️</span>
+          <div class="card-title">Audio-Recorder</div>
+          <div class="card-desc">Nimm Sprache oder Töne direkt offline über dein Mikrofon auf und speichere sie als hochwertige MP3 oder WAV.</div>
+          <div class="card-tag">🎙️ Audio · Aufnahme</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════ DOKUMENTEN-HUB ═══════════════ -->
+    <section class="hub-section" data-hub="docs">
+      <div class="hub-header">
+        <div class="hub-icon">📄</div>
+        <div class="hub-title-wrap">
+          <div class="hub-title">Dokumenten-Hub</div>
+          <div class="hub-subtitle">PDFs, Dateien &amp; Codes</div>
+        </div>
+        <div class="hub-count">3 Tools</div>
+      </div>
+      <div class="grid">
+
+        <a class="tool-card" href="tools/pdf-studio.html" style="--card-color1:#ef4444;--card-color2:#f97316" data-tags="pdf studio merge split zusammenfügen aufteilen extrahieren konverter bilder gallery compress komprimieren">
+          <span class="card-icon">📄</span>
+          <div class="card-title">PDF-Studio</div>
+          <div class="card-desc">Füge PDFs zusammen, teile Seiten auf, konvertiere Bilder in PDF oder komprimiere die Dateigröße – alles lokal.</div>
+          <div class="card-tag">📄 Dokument · PDF</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/file-compressor.html" style="--card-color1:#06b6d4;--card-color2:#6366f1" data-tags="kompressor compress datei file image bild audio mp3 jpg png webp resize größe verkleinern">
+          <span class="card-icon">🗜️</span>
+          <div class="card-title">Dateikompressor</div>
+          <div class="card-desc">Verkleinere die Dateigröße von Bildern und Audio-Dateien offline mit anpassbarer Qualität und Abmessung.</div>
+          <div class="card-tag">🗜️ Utility · Kompression</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/qr-generator.html" style="--card-color1:#06b6d4;--card-color2:#3b82f6" data-tags="qr code link url">
+          <span class="card-icon">🔳</span>
+          <div class="card-title">QR-Code-Generator</div>
+          <div class="card-desc">Erstelle QR-Codes für URLs, Text oder Kontakte. Farbe wählen, Größe anpassen, als PNG herunterladen.</div>
+          <div class="card-tag">📡 Utility · Sharing</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════ SYSTEM-HUB ═══════════════ -->
+    <section class="hub-section" data-hub="system">
+      <div class="hub-header">
+        <div class="hub-icon">⚙️</div>
+        <div class="hub-title-wrap">
+          <div class="hub-title">System-Hub</div>
+          <div class="hub-subtitle">Netzwerk &amp; Finanzen</div>
+        </div>
+        <div class="hub-count">3 Tools</div>
+      </div>
+      <div class="grid">
+
+        <a class="tool-card" href="tools/currency-converter.html" style="--card-color1:#f59e0b;--card-color2:#ef4444" data-tags="währung currency euro dollar umrechner">
+          <span class="card-icon">💱</span>
+          <div class="card-title">Währungsrechner</div>
+          <div class="card-desc">Live-Kurse für 20+ Währungen. Einfach Betrag eingeben und sofort alle wichtigen Kurse sehen.</div>
+          <div class="card-tag">💶 Finanzen · Live</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/network-info.html" style="--card-color1:#6366f1;--card-color2:#06b6d4" data-tags="ip netzwerk network info browser">
+          <span class="card-icon">🌐</span>
+          <div class="card-title">IP & Netzwerk-Info</div>
+          <div class="card-desc">Deine öffentliche IP, Standort, ISP und Browser-Infos auf einen Blick. Beliebige IPs nachschlagen.</div>
+          <div class="card-tag">🔍 Netzwerk · Info</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/speedtest.html" style="--card-color1:#06b6d4;--card-color2:#a855f7" data-tags="speed test speedtest internet geschwindigkeit download upload ping netzwerk verbindung">
+          <span class="card-icon">⚡</span>
+          <div class="card-title">Speedtest</div>
+          <div class="card-desc">Messe deine Internet-Geschwindigkeit (Download, Upload und Ping) sicher und lokal über Cloudflare-Server.</div>
+          <div class="card-tag">⚡ Netzwerk · Utility</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+      </div>
+    </section>
+
+    </div> <!-- Ende 1. TAB: WERKZEUGE -->
+
+    <!-- 2. TAB: DASHBOARD -->
+    <div id="tabContentDashboard" class="tab-content active">
+      <div class="db-header">
+        <h2>📊 System-Dashboard</h2>
+        <p>Live-Ressourcenauslastung deines PCs</p>
+      </div>
+
+      <div class="db-grid">
+        <!-- CPU Card -->
+        <div class="db-card" id="dbCardCpu">
+          <div class="db-card-title">⚙️ Prozessor (CPU)</div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50" />
+              <circle class="ring-fill ring-cpu" id="cpuRing" cx="60" cy="60" r="50" />
+            </svg>
+            <div class="ring-text" id="cpuText">0%</div>
+          </div>
+          <div class="db-details" id="cpuDetails">
+            Lade CPU-Details...
+          </div>
+        </div>
+
+        <!-- RAM Card -->
+        <div class="db-card" id="dbCardRam">
+          <div class="db-card-title">💾 Arbeitsspeicher (RAM)</div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50" />
+              <circle class="ring-fill ring-ram" id="ramRing" cx="60" cy="60" r="50" />
+            </svg>
+            <div class="ring-text" id="ramText">0%</div>
+          </div>
+          <div class="db-details" id="ramDetails">
+            Lade RAM-Details...
+          </div>
+        </div>
+
+        <!-- GPU Card -->
+        <div class="db-card" id="dbCardGpu">
+          <div class="db-card-title">🎮 Grafikkarte (GPU)</div>
+          <div class="ring-wrap">
+            <svg class="ring-svg" viewBox="0 0 120 120">
+              <circle class="ring-bg" cx="60" cy="60" r="50" />
+              <circle class="ring-fill ring-gpu" id="gpuRing" cx="60" cy="60" r="50" />
+            </svg>
+            <div class="ring-text" id="gpuText">0%</div>
+          </div>
+          <div class="db-gpu-name" id="gpuName">Lade Grafikkarte...</div>
+          <div class="db-details" id="gpuDetails">
+            Lade GPU-Details...
+          </div>
+        </div>
+
+        <!-- Weather Card -->
+        <div class="db-card" id="dbCardWeather">
+          <div class="db-card-title" id="dbWeatherCardTitle">🌤️ Wetter aus der Region</div>
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; width: 100%; height: 120px;">
+            <div id="dbWeatherEmoji" style="font-size: 3.5rem; line-height: 1; filter: drop-shadow(0 0 10px rgba(124,58,237,0.3));">🌡️</div>
+            <div id="dbWeatherTemp" style="font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #fff, var(--accent3)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">--°C</div>
+          </div>
+          <div class="db-details" id="dbWeatherDetails" style="margin-top: -0.2rem; line-height: 1.4;">
+            Lade Wetterdaten...
+          </div>
+        </div>
+
+        <!-- Live Chart -->
+        <div class="db-card chart-card" id="dbCardChart">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 0.6rem; margin-bottom: 0.2rem; flex-wrap: wrap; gap: 10px;">
+            <div class="db-card-title" style="border-bottom: none; padding-bottom: 0; margin-bottom: 0; width: auto;">📈 Live-Auslastungsverlauf</div>
+            <div style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
+              <div style="display: flex; gap: 0.8rem; font-size: 0.8rem; font-weight: 600;">
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; background: var(--accent2); border-radius: 2px;"></span>
+                  <span>CPU</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; background: var(--accent3); border-radius: 2px;"></span>
+                  <span>RAM</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 5px;">
+                  <span style="display: inline-block; width: 8px; height: 8px; background: var(--accent); border-radius: 2px;"></span>
+                  <span>GPU</span>
+                </div>
+              </div>
+              <div id="chartTooltip" style="font-size: 0.82rem; font-weight: 700; color: var(--accent2); background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 0.2rem 0.6rem; border-radius: 6px; transition: opacity 0.2s; opacity: 0; pointer-events: none;">
+                CPU: --% | RAM: --% | GPU: --%
+              </div>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="perfChart" class="chart-canvas"></canvas>
+          </div>
+        </div>
+
+        <!-- Dashboard Settings Card -->
+        <div class="db-card options-card">
+          <div class="db-card-title">⚙️ Dashboard-Optionen</div>
+          <div class="options-grid">
+            <label class="option-item">
+              <input type="checkbox" id="optCpu" class="option-checkbox" checked onchange="toggleOpt('dbCardCpu', this.checked)" />
+              CPU-Auslastung anzeigen
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="optRam" class="option-checkbox" checked onchange="toggleOpt('dbCardRam', this.checked)" />
+              RAM-Auslastung anzeigen
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="optGpu" class="option-checkbox" checked onchange="toggleOpt('dbCardGpu', this.checked)" />
+              GPU-Auslastung anzeigen
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="optChart" class="option-checkbox" checked onchange="toggleOpt('dbCardChart', this.checked)" />
+              Live-Chart anzeigen
+            </label>
+            <label class="option-item">
+              <input type="checkbox" id="optWeather" class="option-checkbox" checked onchange="toggleOpt('dbCardWeather', this.checked)" />
+              <span id="optWeatherLabel">Regionalwetter anzeigen</span>
+            </label>
+          </div>
+        </div>
+      </div>
+    </div> <!-- Ende 2. TAB: DASHBOARD -->
+
+    <!-- 3. TAB: EINSTELLUNGEN & UPDATES -->
+    <div id="tabContentSettings" class="tab-content" style="max-width: 600px; margin: 0 auto;">
+      <div class="db-header">
+        <h2>⚙️ Einstellungen &amp; Updates</h2>
+        <p>Verwalte deine ToolForge-Konfiguration und halte sie aktuell</p>
+      </div>
+
+      <div class="db-card" style="align-items: stretch; gap: 1.5rem; text-align: left;">
+        <!-- GitHub Repo Configuration -->
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">GitHub Repository (Benutzername/Projekt)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="githubRepoInput" placeholder="z. B. Benutzername/Projekt" style="flex: 1; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'" />
+            <button onclick="saveSettings()" style="background: var(--accent); border: none; color: white; padding: 0 1.2rem; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; font-family: inherit;" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">Speichern</button>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--muted);">Deine Kollegen rufen Updates aus diesem Repository ab.</span>
+        </div>
+        
+        <!-- Language Selection -->
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblLanguage">Sprache / Language</label>
+          <select id="languageSelect" onchange="changeLanguage(this.value)" style="width:100%; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
+            <option value="de">Deutsch (German)</option>
+            <option value="en">English (Englisch)</option>
+          </select>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid var(--border);" />
+        
+        <!-- Update Check Status Area -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.9rem; color: var(--text);">Aktuelle Version: <strong style="color: var(--accent3);" id="currentVersionText">v1.1.0</strong></span>
+            <button id="modalCheckUpdateBtn" onclick="checkUpdatesFromModal()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; font-family: inherit;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+              🔄 Jetzt prüfen
+            </button>
+          </div>
+          
+          <div id="updateStatusContainer" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center;">
+            <span style="color: var(--muted); font-size: 0.85rem;">Klicke auf "Jetzt prüfen", um nach Updates auf GitHub zu suchen.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Collapsible Versionsverlauf (Changelog) -->
+      <div class="db-card" id="changelogCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;">
+          📜 Versionsverlauf &amp; Changelog
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.8rem;">
+          <!-- v1.1.0 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent2)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.1.0 
+                <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>📊 <strong style="color: var(--text);">System-Dashboard &amp; Chart</strong>: CPU, RAM, GPU und Wetter in symmetrischem 4-Spalten-Layout. Interaktives Echtzeit-Diagramm mit Y-Achse, Raster, Hover-Orientierungslinie, Kurven-Dots und Tooltip.</li>
+                <li>⚡ <strong style="color: var(--text);">Cloudflare-Speedtest</strong>: Standalone-Tool zur zuverlässigen Messung deiner Internetgeschwindigkeit (Download, Upload, Ping) direkt über Cloudflare-Server.</li>
+                <li>🗂️ <strong style="color: var(--text);">Tabbed Navigation</strong>: Modernes Tab-Design (Werkzeuge, Dashboard, Einstellungen) anstelle der alten, unhandlichen Einstellungs-Modals.</li>
+                <li>🎨 <strong style="color: var(--text);">Bild-Editor &amp; KI-Retusche</strong>: Zuverlässige native Windows-Bildauswahl statt fehlerhafter Dateiauswahl. Neuer Apple-ähnlicher Pinsel für die KI-Retusche (Inpaint) mit dynamischer Kreis-Größenvorschau und rosa Markierung.</li>
+                <li>🛠️ <strong style="color: var(--text);">Stabilität &amp; Detailverbesserungen</strong>: HTML-Entity-Darstellung behoben (IP-Tool zeigt nun korrekt '&amp;' an), Übersetzung korrigiert ('glance' -> 'Blick'). Speedtest-Fehler korrigiert (Ping- &amp; Upload-Werte werden nun angezeigt, Upload überschreibt nicht mehr Download) und Pacing der Messung auf realistische 5-Sekunden-Phasen mit fluktuierenden Anzeigen verfeinert.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.0.0 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span>📦 Version 1.0.0</span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🎙️ <strong style="color: var(--text);">Audio-Recorder</strong>: Komplett offline funktionierende Tonaufnahmen mit Live-Wellenformvisualisierung und flexiblem MP3/WAV-Export.</li>
+                <li>📄 <strong style="color: var(--text);">PDF-Studio</strong>: Zusammenfügen, Aufteilen, Komprimieren und Bilder-zu-PDF Konvertierungen direkt auf deinem PC.</li>
+                <li>🗜️ <strong style="color: var(--text);">Dateikompressor</strong>: Komprimiere Bilder und Audio-Dateien offline mit einstellbarer Qualität und Live-Ersparnisanzeige.</li>
+                <li>🔄 <strong style="color: var(--text);">GitHub Auto-Updater</strong>: Vollwertiges, selbstständiges Update-System über dein GitHub Repository mit Speicherung in `config.json`.</li>
+              </ul>
+            </div>
+          </details>
+        </div>
+      </div>
+
+    </div> <!-- Ende 3. TAB: EINSTELLUNGEN -->
+
+    <footer>
+      Deine persönliche Toolbox · Made with <span>♥</span> · <span id="toolCount"></span> Tools
+    </footer>
+  </div>
+
+  <style>
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+
+  <script>
+    // Count active tools
+    const cards = document.querySelectorAll('.tool-card:not(.coming-soon)');
+    document.getElementById('toolCount').textContent = cards.length;
+
+    // Search – filter cards AND auto-hide empty sections
+    const searchInput = document.getElementById('searchInput');
+    const allCards = document.querySelectorAll('.tool-card');
+    const hubSections = document.querySelectorAll('.hub-section');
+
+    searchInput.addEventListener('input', () => {
+      const q = searchInput.value.toLowerCase().trim();
+
+      allCards.forEach(card => {
+        const text = (card.dataset.tags || '') + ' ' + card.textContent.toLowerCase();
+        card.style.display = (!q || text.includes(q)) ? '' : 'none';
+      });
+
+      // hide hub sections where zero cards are visible
+      hubSections.forEach(section => {
+        const visibleCards = section.querySelectorAll('.tool-card:not([style*="display: none"])');
+        section.classList.toggle('hidden', visibleCards.length === 0);
+      });
+    });
+
+    // Modal toggle (deprecated, kept as fallback or removed)
+    function toggleSettingsModal() {
+      switchTab('settings');
+    }
+
+    // ── Tab Switching ──
+    let dbInterval = null;
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+      if (tabId === 'tools') {
+        document.getElementById('tabBtnTools').classList.add('active');
+        document.getElementById('tabContentTools').classList.add('active');
+        stopDashboardPolling();
+      } else if (tabId === 'dashboard') {
+        document.getElementById('tabBtnDashboard').classList.add('active');
+        document.getElementById('tabContentDashboard').classList.add('active');
+        startDashboardPolling();
+        if (typeof fetchLocalWeather === 'function') fetchLocalWeather();
+      } else if (tabId === 'settings') {
+        document.getElementById('tabBtnSettings').classList.add('active');
+        document.getElementById('tabContentSettings').classList.add('active');
+        stopDashboardPolling();
+        loadSettingsTab();
+      }
+    }
+
+    // Toggle options visibility
+    function toggleOpt(cardId, isChecked) {
+      const card = document.getElementById(cardId);
+      if (card) {
+        card.style.display = isChecked ? 'flex' : 'none';
+      }
+    }
+
+    // ── Settings Tab Actions ──
+    function loadSettingsTab() {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.get_github_repo().then(repo => {
+          document.getElementById('githubRepoInput').value = repo;
+        });
+        pywebview.api.get_app_version().then(version => {
+          document.getElementById('currentVersionText').textContent = 'v' + version;
+          document.getElementById('versionBadge').textContent = 'v' + version;
+        });
+      }
+    }
+
+    function saveSettings() {
+      const repo = document.getElementById('githubRepoInput').value.trim();
+      if (!repo || !repo.includes('/')) {
+        alert('Bitte gib das Repository im Format "Benutzername/Projekt" an.');
+        return;
+      }
+      
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.save_github_repo(repo).then(res => {
+          if (res && res.success) {
+            alert('Einstellungen erfolgreich gespeichert!');
+          } else {
+            alert('Fehler beim Speichern.');
+          }
+        });
+      } else {
+        alert('System nicht bereit.');
+      }
+    }
+
+    // Update Checker
+    let latestUpdateInfo = null;
+
+    function checkUpdatesFromModal() {
+      const statusContainer = document.getElementById('updateStatusContainer');
+      const checkBtn = document.getElementById('modalCheckUpdateBtn');
+      
+      statusContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--text);">
+          <div style="width: 24px; height: 24px; border: 2px solid var(--accent2); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <span style="font-size: 0.85rem;">Suche nach Versionen auf GitHub...</span>
+        </div>
+      `;
+      checkBtn.disabled = true;
+      
+      pywebview.api.check_for_updates().then(res => {
+        checkBtn.disabled = false;
+        if (!res || !res.success) {
+          statusContainer.innerHTML = `
+            <div style="color: var(--accent4); font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px; align-items: center;">
+              <span>⚠️ Fehler beim Abrufen der Updates:</span>
+              <span style="opacity: 0.8; font-size: 0.8rem;">${res ? res.error : 'Unbekannter Fehler'}</span>
+            </div>
+          `;
+          return;
+        }
+        
+        if (res.update_available) {
+          latestUpdateInfo = res;
+          statusContainer.innerHTML = `
+            <div style="display: flex; flex-direction: column; gap: 0.8rem; text-align: left; width: 100%;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #34d399; font-weight: 700; font-size: 0.95rem;">🚀 Update verfügbar: ${res.latest_version}</span>
+              </div>
+              <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; max-height: 120px; overflow-y: auto; font-size: 0.8rem; color: var(--muted); line-height: 1.5; white-space: pre-wrap;">${res.changelog}</div>
+              <button onclick="installUpdate()" style="background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: white; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: all 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                📥 Jetzt herunterladen &amp; installieren
+              </button>
+            </div>
+          `;
+        } else {
+          statusContainer.innerHTML = `
+            <div style="color: #34d399; font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px; align-items: center;">
+              <span>🌟 ToolForge ist auf dem neuesten Stand!</span>
+              <span style="color: var(--muted); font-size: 0.8rem;">Installierte Version: ${res.latest_version}</span>
+            </div>
+          `;
+        }
+      }).catch(err => {
+        checkBtn.disabled = false;
+        statusContainer.innerHTML = `<span style="color: var(--accent4); font-size: 0.85rem;">⚠️ Fehler: ${err}</span>`;
+      });
+    }
+
+    function installUpdate() {
+      if (!latestUpdateInfo || !latestUpdateInfo.download_url) return;
+      const statusContainer = document.getElementById('updateStatusContainer');
+      statusContainer.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 12px; color: var(--text); padding: 1rem 0;">
+          <div style="width: 28px; height: 28px; border: 3px solid var(--accent2); border-top-color: transparent; border-radius: 50%; animation: spin 0.8s linear infinite;"></div>
+          <span style="font-weight: 600; font-size: 0.9rem;">Update wird heruntergeladen...</span>
+          <span style="font-size: 0.75rem; color: var(--muted); text-align: center;">Die Anwendung schließt sich gleich selbst, kopiert die neuen Dateien und startet automatisch neu. Bitte warten...</span>
+        </div>
+      `;
+      
+      pywebview.api.install_update(latestUpdateInfo.download_url).then(res => {
+        if (res && !res.success) {
+          alert('Fehler beim Vorbereiten des Updates: ' + res.error);
+          checkUpdatesFromModal();
+        }
+      }).catch(err => {
+        alert('Update-Verbindungsfehler: ' + err);
+        checkUpdatesFromModal();
+      });
+    }
+
+    // ── Dashboard Live Polling & Charts ──
+    const cpuRing = document.getElementById('cpuRing');
+    const cpuText = document.getElementById('cpuText');
+    const cpuDetails = document.getElementById('cpuDetails');
+
+    const ramRing = document.getElementById('ramRing');
+    const ramText = document.getElementById('ramText');
+    const ramDetails = document.getElementById('ramDetails');
+
+    const gpuRing = document.getElementById('gpuRing');
+    const gpuText = document.getElementById('gpuText');
+    const gpuName = document.getElementById('gpuName');
+    const gpuDetails = document.getElementById('gpuDetails');
+
+    const circumference = 314.16; // 2 * PI * 50
+
+    function setRingProgress(ringElement, pct) {
+      const offset = circumference - (pct / 100) * circumference;
+      ringElement.style.strokeDashoffset = offset;
+    }
+
+    // Canvas line chart setup
+    const canvas = document.getElementById('perfChart');
+    const ctx = canvas.getContext('2d');
+    
+    function resizeCanvas() {
+      const rect = canvas.parentNode.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = 180;
+    }
+    window.addEventListener('resize', resizeCanvas);
+
+    // Keep history arrays
+    const maxHistoryPoints = 30;
+    const cpuHistory = new Array(maxHistoryPoints).fill(0);
+    const ramHistory = new Array(maxHistoryPoints).fill(0);
+    const gpuHistory = new Array(maxHistoryPoints).fill(0);
+    let hoveredIndex = null;
+
+    function drawChart() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      const chartLeft = 45;
+      const chartRight = canvas.width - 15;
+      const chartTop = 15;
+      const chartBottom = canvas.height - 15;
+      const chartWidth = chartRight - chartLeft;
+      const chartHeight = chartBottom - chartTop;
+      const step = chartWidth / (maxHistoryPoints - 1);
+      
+      // Draw Y-Axis labels (0%, 25%, 50%, 75%, 100%) and horizontal dashed grid lines
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.font = '10px Inter, sans-serif';
+      
+      for (let i = 0; i <= 4; i++) {
+        const pct = i * 25;
+        const y = chartBottom - (pct / 100) * chartHeight;
+        
+        // Label
+        ctx.fillStyle = 'rgba(240, 239, 255, 0.45)';
+        ctx.fillText(pct + '%', chartLeft - 8, y);
+        
+        // Grid Line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+        ctx.setLineDash([4, 4]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(chartLeft, y);
+        ctx.lineTo(chartRight, y);
+        ctx.stroke();
+        ctx.setLineDash([]); // Reset line dash
+      }
+      
+      // Function to draw line
+      function drawMetricLine(history, strokeStyle, fillStyle) {
+        ctx.beginPath();
+        ctx.strokeStyle = strokeStyle;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        
+        for (let i = 0; i < maxHistoryPoints; i++) {
+          const x = chartLeft + i * step;
+          const y = chartBottom - (history[i] / 100) * chartHeight;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        ctx.lineTo(chartLeft + (maxHistoryPoints - 1) * step, chartBottom);
+        ctx.lineTo(chartLeft, chartBottom);
+        ctx.closePath();
+        ctx.fillStyle = fillStyle;
+        ctx.fill();
+      }
+
+      drawMetricLine(cpuHistory, '#a855f7', 'rgba(168, 85, 247, 0.03)');
+      drawMetricLine(ramHistory, '#ec4899', 'rgba(236, 72, 153, 0.02)');
+      drawMetricLine(gpuHistory, '#06b6d4', 'rgba(6, 182, 212, 0.02)');
+      
+      // Draw hover line and dots
+      if (hoveredIndex !== null && hoveredIndex >= 0 && hoveredIndex < maxHistoryPoints) {
+        const x = chartLeft + hoveredIndex * step;
+        
+        // Draw vertical guide line
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(x, chartTop);
+        ctx.lineTo(x, chartBottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Draw dots for CPU, RAM and GPU
+        const cpuY = chartBottom - (cpuHistory[hoveredIndex] / 100) * chartHeight;
+        const ramY = chartBottom - (ramHistory[hoveredIndex] / 100) * chartHeight;
+        const gpuY = chartBottom - (gpuHistory[hoveredIndex] / 100) * chartHeight;
+        
+        // CPU Dot
+        ctx.beginPath();
+        ctx.arc(x, cpuY, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#a855f7';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // RAM Dot
+        ctx.beginPath();
+        ctx.arc(x, ramY, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ec4899';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        
+        // GPU Dot
+        ctx.beginPath();
+        ctx.arc(x, gpuY, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#06b6d4';
+        ctx.fill();
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      }
+    }
+
+    // Canvas hover logic
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      
+      const chartLeft = 45;
+      const chartRight = rect.width - 15;
+      const chartWidth = chartRight - chartLeft;
+      
+      if (x >= chartLeft && x <= chartRight) {
+        const step = chartWidth / (maxHistoryPoints - 1);
+        const index = Math.round((x - chartLeft) / step);
+        if (index >= 0 && index < maxHistoryPoints) {
+          hoveredIndex = index;
+          
+          const cpuVal = cpuHistory[index];
+          const ramVal = ramHistory[index];
+          const gpuVal = gpuHistory[index];
+          const tooltip = document.getElementById('chartTooltip');
+          if (tooltip) {
+            tooltip.textContent = `CPU: ${Math.round(cpuVal)}% | RAM: ${Math.round(ramVal)}% | GPU: ${Math.round(gpuVal)}%`;
+            tooltip.style.opacity = '1';
+          }
+          drawChart();
+          return;
+        }
+      }
+      hideChartTooltip();
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+      hideChartTooltip();
+    });
+    
+    function hideChartTooltip() {
+      hoveredIndex = null;
+      const tooltip = document.getElementById('chartTooltip');
+      if (tooltip) {
+        tooltip.style.opacity = '0';
+      }
+      drawChart();
+    }
+
+    function startDashboardPolling() {
+      if (dbInterval) clearInterval(dbInterval);
+      resizeCanvas();
+      
+      function poll() {
+        if (typeof pywebview !== 'undefined' && pywebview.api) {
+          pywebview.api.get_system_stats().then(stats => {
+            if (stats && stats.success) {
+              setRingProgress(cpuRing, stats.cpu_pct);
+              cpuText.textContent = Math.round(stats.cpu_pct) + '%';
+              
+              let cpuTempText = '';
+              if (stats.cpu_temp !== null) {
+                cpuTempText = `${stats.cpu_temp}°C`;
+              } else {
+                const titleText = currentLang === 'en' 
+                  ? 'Windows blocks sensor access without Admin rights. Start the app as Administrator to read CPU temperatures.' 
+                  : 'Windows blockiert den Sensorzugriff ohne Admin-Rechte. Starte die App als Administrator, um die echte CPU-Temperatur auszulesen.';
+                const lockText = currentLang === 'en' ? '🔒 Admin required' : '🔒 Admin erforderlich';
+                cpuTempText = `<span class="temp-lock" title="${titleText}">${lockText}</span>`;
+              }
+              const txtCpuUtilization = currentLang === 'en' ? 'Utilization: ' : 'Auslastung: ';
+              const txtCpuTemp = currentLang === 'en' ? 'Temperature: ' : 'Temperatur: ';
+              cpuDetails.innerHTML = `${txtCpuUtilization}${stats.cpu_pct.toFixed(1)}%<br/>${txtCpuTemp}${cpuTempText}`;
+
+              setRingProgress(ramRing, stats.ram_pct);
+              ramText.textContent = Math.round(stats.ram_pct) + '%';
+              const txtRamUsed = currentLang === 'en' ? 'Used: ' : 'Belegt: ';
+              const txtRamTotal = currentLang === 'en' ? 'Total: ' : 'Gesamt: ';
+              ramDetails.innerHTML = `${txtRamUsed}${stats.ram_used} GB<br/>${txtRamTotal}${stats.ram_total} GB`;
+
+              gpuName.textContent = stats.gpu_name;
+              if (stats.gpu_pct !== null) {
+                setRingProgress(gpuRing, stats.gpu_pct);
+                gpuText.textContent = Math.round(stats.gpu_pct) + '%';
+                let gpuTempText = stats.gpu_temp !== null ? `${stats.gpu_temp}°C` : 'N/A';
+                gpuDetails.innerHTML = `${txtCpuUtilization}${stats.gpu_pct.toFixed(1)}%<br/>${txtCpuTemp}${gpuTempText}`;
+              } else {
+                setRingProgress(gpuRing, 0);
+                gpuText.textContent = 'N/A';
+                const txtGpuUnavailable = currentLang === 'en' ? 'Usage via nvidia-smi<br/>not available' : 'Nutzung über nvidia-smi<br/>nicht verfügbar';
+                gpuDetails.innerHTML = txtGpuUnavailable;
+              }
+
+              cpuHistory.shift();
+              cpuHistory.push(stats.cpu_pct);
+
+              ramHistory.shift();
+              ramHistory.push(stats.ram_pct);
+
+              gpuHistory.shift();
+              gpuHistory.push(stats.gpu_pct !== null ? stats.gpu_pct : 0);
+
+              drawChart();
+            }
+          });
+        }
+      }
+
+      poll();
+      dbInterval = setInterval(poll, 2000);
+    }
+
+    function stopDashboardPolling() {
+      if (dbInterval) {
+        clearInterval(dbInterval);
+        dbInterval = null;
+      }
+    }
+
+    // Language configuration dictionary (hand-crafted translations)
+    let currentLang = 'de';
+    const langDict = {
+      de: {
+        badgeEdition: "✦ Desktop-Edition",
+        headerSub: "Alle Tools laufen lokal · 100% offline-fähig (Währungsrechner & IP-Tool nutzen Python-Schnittstellen)",
+        searchInput: "Tool suchen…",
+        tabTools: "🛠️ Werkzeuge",
+        tabDashboard: "📊 System-Dashboard",
+        tabSettings: "⚙️ Einstellungen & Update",
+        
+        hubMediaTitle: "Medien-Hub",
+        hubMediaSub: "Video, Audio & Bild-Tools",
+        hubDocsTitle: "Dokumenten-Hub",
+        hubDocsSub: "PDFs, Dateien & Codes",
+        hubSystemTitle: "System-Hub",
+        hubSystemSub: "Netzwerk & Finanzen",
+        
+        cardMediaStudioTitle: "Medien-Studio",
+        cardMediaStudioDesc: "All-in-One Medienstudio: Video-Editor (Schneiden, Skalieren, Tempo), Video- & Bild-Zensur, Bild-Editor (Resizer) und GIF-Erstellung.",
+        cardMediaStudioTag: "🎞️ Video & 🎨 Bild",
+        
+        cardVideoDownloaderTitle: "Video-Downloader",
+        cardVideoDownloaderDesc: "Lade Videos von YouTube, TikTok, Shorts, Instagram und Co. herunter. Format (MP4, MOV, MP3 etc.) frei wählbar.",
+        cardVideoDownloaderTag: "📥 Download · Video",
+        
+        cardAudioRecorderTitle: "Audio-Recorder",
+        cardAudioRecorderDesc: "Nimm Sprache oder Töne direkt offline über dein Mikrofon auf und speichere sie als hochwertige MP3 oder WAV.",
+        cardAudioRecorderTag: "🎙️ Audio · Aufnahme",
+        
+        cardPdfStudioTitle: "PDF-Studio",
+        cardPdfStudioDesc: "Füge PDFs zusammen, teile Seiten auf, konvertiere Bilder in PDF oder komprimiere die Dateigröße – alles lokal.",
+        cardPdfStudioTag: "📄 Dokument · PDF",
+        
+        cardFileCompressorTitle: "Dateikompressor",
+        cardFileCompressorDesc: "Verkleinere die Dateigröße von Bildern und Audio-Dateien offline mit anpassbarer Qualität und Abmessung.",
+        cardFileCompressorTag: "🗜️ Utility · Kompression",
+        
+        cardQrGeneratorTitle: "QR-Code-Generator",
+        cardQrGeneratorDesc: "Erstelle QR-Codes für URLs, Text oder Kontakte. Farbe wählen, Größe anpassen, als PNG herunterladen.",
+        cardQrGeneratorTag: "📡 Utility · Sharing",
+        
+        cardCurrencyConverterTitle: "Währungsrechner",
+        cardCurrencyConverterDesc: "Live-Kurse für 20+ Währungen. Einfach Betrag eingeben und sofort alle wichtigen Kurse sehen.",
+        cardCurrencyConverterTag: "💶 Finanzen · Live",
+        
+        cardNetworkInfoTitle: "IP & Netzwerk-Info",
+        cardNetworkInfoDesc: "Deine öffentliche IP, Standort, ISP und Browser-Infos auf einen Blick. Beliebige IPs nachschlagen.",
+        cardNetworkInfoTag: "🔍 Netzwerk · Info",
+        
+        cardSpeedtestTitle: "Speedtest",
+        cardSpeedtestDesc: "Messe deine Internet-Geschwindigkeit (Download, Upload und Ping) sicher und lokal über Cloudflare-Server.",
+        cardSpeedtestTag: "⚡ Netzwerk · Utility",
+        
+        dbTitle: "📊 System-Dashboard",
+        dbSub: "Live-Ressourcenauslastung deines PCs",
+        dbCpuTitle: "⚙️ Prozessor (CPU)",
+        dbCpuLoading: "Lade CPU-Details...",
+        dbRamTitle: "💾 Arbeitsspeicher (RAM)",
+        dbRamLoading: "Lade RAM-Details...",
+        dbGpuTitle: "🎮 Grafikkarte (GPU)",
+        dbGpuLoading: "Lade GPU-Details...",
+        dbGpuNameLoading: "Lade Grafikkarte...",
+        dbChartTitle: "📈 Live-Auslastungsverlauf",
+        dbOptionsTitle: "⚙️ Dashboard-Optionen",
+        optCpuLabel: "CPU-Auslastung anzeigen",
+        optRamLabel: "RAM-Auslastung anzeigen",
+        optGpuLabel: "GPU-Auslastung anzeigen",
+        optChartLabel: "Live-Chart anzeigen",
+        dbWeatherCardTitle: "🌤️ Wetter aus der Region",
+        dbWeatherLoading: "Lade Wetterdaten...",
+        optWeatherLabel: "Regionalwetter anzeigen",
+        
+        settingsTitle: "⚙️ Einstellungen & Updates",
+        settingsSub: "Verwalte deine ToolForge-Konfiguration und halte sie aktuell",
+        lblGithubRepo: "GitHub Repository (Benutzername/Projekt)",
+        btnSave: "Speichern",
+        settingsHelp: "Deine Kollegen rufen Updates aus diesem Repository ab.",
+        lblCurrentVersion: "Aktuelle Version:",
+        btnCheckUpdate: "🔄 Jetzt prüfen",
+        settingsDefaultCheckStatus: "Klicke auf \"Jetzt prüfen\", um nach Updates auf GitHub zu suchen.",
+        
+        changelogTitle: "📜 Versionsverlauf & Changelog",
+        badgeCurrent: "Aktuell",
+        footerText: "Deine persönliche Toolbox · Made with <span>♥</span> · ",
+        footerToolsSuffix: " Tools",
+        changelog_v110_list: `<li>📊 <strong style="color: var(--text);">System-Dashboard & Chart</strong>: CPU, RAM, GPU und Wetter in symmetrischem 4-Spalten-Layout. Echtzeit-Auslastungsdiagramm mit korrekter RAM-Farbanpassung, Hover-Linie und Tooltip.</li>
+                <li>⚡ <strong style="color: var(--text);">Präziser Cloudflare-Speedtest</strong>: Standalone-Tool zur exakten Messung deiner Internetverbindung (Download, Upload, Ping) mit flüssiger, synchronisierter 5-Sekunden-Echtzeitanimation.</li>
+                <li>🗂️ <strong style="color: var(--text);">Tab-Navigation & Sprachwechsel</strong>: Direktes Umschalten zwischen Tools, Dashboard und Einstellungen. Sprachwechsel erfolgt sofort ohne lästige Zusatzabfragen.</li>
+                <li>🎨 <strong style="color: var(--text);">Bild-Editor & KI-Retusche</strong>: Native Windows-Dateiauswahl und professioneller Pinsel für präzise Maskierungen bei der Retusche.</li>`,Kind:
+        changelog_v100_list: `<li>🎙️ <strong style="color: var(--text);">Audio-Recorder</strong>: Komplett offline funktionierende Tonaufnahmen mit Live-Wellenformvisualisierung und flexiblem MP3/WAV-Export.</li>
+                <li>📄 <strong style="color: var(--text);">PDF-Studio</strong>: Zusammenfügen, Aufteilen, Komprimieren und Bilder-zu-PDF Konvertierungen direkt auf deinem PC.</li>
+                <li>🗜️ <strong style="color: var(--text);">Dateikompressor</strong>: Komprimiere Bilder und Audio-Dateien offline mit einstellbarer Qualität und Live-Ersparnisanzeige.</li>
+                <li>🔄 <strong style="color: var(--text);">GitHub Auto-Updater</strong>: Vollwertiges, selbstständiges Update-System über dein GitHub Repository mit Speicherung in \`config.json\`.</li>`
+      },
+      en: {
+        badgeEdition: "✦ Desktop Edition",
+        headerSub: "All tools run locally · 100% offline-capable (Currency & IP info tools use Python APIs)",
+        searchInput: "Search tools...",
+        tabTools: "🛠️ Tools",
+        tabDashboard: "📊 System Dashboard",
+        tabSettings: "⚙️ Settings & Updates",
+        
+        hubMediaTitle: "Media Hub",
+        hubMediaSub: "Video, Audio & Image Tools",
+        hubDocsTitle: "Document Hub",
+        hubDocsSub: "PDFs, Files & Codes",
+        hubSystemTitle: "System Hub",
+        hubSystemSub: "Network & Finance",
+        
+        cardMediaStudioTitle: "Media Studio",
+        cardMediaStudioDesc: "All-in-One Media Studio: Video editor (trim, resize, speed), video/image censorship, image resizing, and GIF creation.",
+        cardMediaStudioTag: "🎞️ Video & 🎨 Image",
+        
+        cardVideoDownloaderTitle: "Video Downloader",
+        cardVideoDownloaderDesc: "Download videos from YouTube, TikTok, Shorts, Instagram and more. Format (MP4, MOV, MP3 etc.) is selectable.",
+        cardVideoDownloaderTag: "📥 Download · Video",
+        
+        cardAudioRecorderTitle: "Audio Recorder",
+        cardAudioRecorderDesc: "Record voice or audio completely offline using your microphone and save as high-quality MP3 or WAV.",
+        cardAudioRecorderTag: "🎙️ Audio · Recording",
+        
+        cardPdfStudioTitle: "PDF Studio",
+        cardPdfStudioDesc: "Merge PDFs, split pages, convert images to PDF, or compress file size – all run locally.",
+        cardPdfStudioTag: "📄 Document · PDF",
+        
+        cardFileCompressorTitle: "File Compressor",
+        cardFileCompressorDesc: "Reduce the file size of images and audio files offline with adjustable quality and dimensions.",
+        cardFileCompressorTag: "🗜️ Utility · Compression",
+        
+        cardQrGeneratorTitle: "QR Code Generator",
+        cardQrGeneratorDesc: "Create QR codes for URLs, text, or contacts. Select color, adjust size, download as PNG.",
+        cardQrGeneratorTag: "📡 Utility · Sharing",
+        
+        cardCurrencyConverterTitle: "Currency Converter",
+        cardCurrencyConverterDesc: "Live exchange rates for 20+ currencies. Enter the amount to view all major rates instantly.",
+        cardCurrencyConverterTag: "💶 Finance · Live",
+        
+        cardNetworkInfoTitle: "IP & Network Info",
+        cardNetworkInfoDesc: "Your public IP, location, ISP and browser details at a glance. Look up any IP address.",
+        cardNetworkInfoTag: "🔍 Network · Info",
+        
+        cardSpeedtestTitle: "Speedtest",
+        cardSpeedtestDesc: "Measure your internet speed (download, upload, and ping) securely and locally via Cloudflare servers.",
+        cardSpeedtestTag: "⚡ Network · Utility",
+        
+        dbTitle: "📊 System Dashboard",
+        dbSub: "Live hardware utilization of your PC",
+        dbCpuTitle: "⚙️ Processor (CPU)",
+        dbCpuLoading: "Loading CPU details...",
+        dbRamTitle: "💾 Memory (RAM)",
+        dbRamLoading: "Loading RAM details...",
+        dbGpuTitle: "🎮 Graphics Card (GPU)",
+        dbGpuLoading: "Loading GPU details...",
+        dbGpuNameLoading: "Loading graphics card...",
+        dbChartTitle: "📈 Live Load History",
+        dbOptionsTitle: "⚙️ Dashboard Options",
+        optCpuLabel: "Show CPU utilization",
+        optRamLabel: "Show RAM utilization",
+        optGpuLabel: "Show GPU utilization",
+        optChartLabel: "Show live chart",
+        dbWeatherCardTitle: "🌤️ Local Weather",
+        dbWeatherLoading: "Loading weather data...",
+        optWeatherLabel: "Show local weather",
+        
+        settingsTitle: "⚙️ Settings & Updates",
+        settingsSub: "Manage your ToolForge configuration and keep it up to date",
+        lblGithubRepo: "GitHub Repository (Username/Project)",
+        btnSave: "Save",
+        settingsHelp: "Your colleagues retrieve updates from this repository.",
+        lblCurrentVersion: "Current Version:",
+        btnCheckUpdate: "🔄 Check Now",
+        settingsDefaultCheckStatus: "Click \"Check Now\" to search for updates on GitHub.",
+        
+        changelogTitle: "📜 Version History & Changelog",
+        badgeCurrent: "Current",
+        footerText: "Your personal toolbox · Made with <span>♥</span> · ",
+        footerToolsSuffix: " tools",
+        changelog_v110_list: `<li>📊 <strong style="color: var(--text);">System Dashboard & Chart</strong>: CPU, RAM, GPU and Weather in symmetric 4-column layout. Real-time load chart featuring matching RAM legend color, hover guide line, and detailed tooltip.</li>
+                <li>⚡ <strong style="color: var(--text);">Precise Cloudflare Speedtest</strong>: Standalone tool to accurately measure your connection (download, upload, ping) using a synchronized 5-second real-time animation.</li>
+                <li>🗂️ <strong style="color: var(--text);">Tabbed Navigation & Language Change</strong>: Smooth tab layout switching. Language switching occurs instantly without any extra confirm dialogs.</li>
+                <li>🎨 <strong style="color: var(--text);">Image Editor & AI Retouch</strong>: Reliable native Windows select dialog and professional brush for precise retouching masks.</li>`,Kind:
+        changelog_v100_list: `<li>🎙️ <strong style="color: var(--text);">Audio Recorder</strong>: Fully offline voice and audio recording with live waveform visualizer and flexible MP3/WAV export.</li>
+                <li>📄 <strong style="color: var(--text);">PDF Studio</strong>: Merge, split, compress and image-to-PDF conversions directly on your local computer.</li>
+                <li>🗜️ <strong style="color: var(--text);">File Compressor</strong>: Compress images and audio files offline with adjustable quality and live compression savings display.</li>
+                <li>🔄 <strong style="color: var(--text);">GitHub Auto-Updater</strong>: Fully automated self-updater via your GitHub repository saved in \`config.json\`.</li>`
+      }
+    };
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      const dict = langDict[lang] || langDict['de'];
+
+      // Translate static labels
+      const badgeElem = document.getElementById('versionBadge').previousElementSibling;
+      if (badgeElem) badgeElem.textContent = dict.badgeEdition;
+      
+      const subElem = document.querySelector('.header-sub');
+      if (subElem) subElem.textContent = dict.headerSub;
+      
+      const search = document.getElementById('searchInput');
+      if (search) search.placeholder = dict.searchInput;
+
+      // Translate Tabs
+      document.getElementById('tabBtnTools').innerHTML = '🛠️ ' + (lang === 'en' ? 'Tools' : 'Werkzeuge');
+      document.getElementById('tabBtnDashboard').innerHTML = '📊 ' + (lang === 'en' ? 'System Dashboard' : 'System-Dashboard');
+      document.getElementById('tabBtnSettings').innerHTML = '⚙️ ' + (lang === 'en' ? 'Settings & Update' : 'Einstellungen & Update');
+
+      // Hub Headers
+      const hubs = document.querySelectorAll('.hub-section');
+      if (hubs.length >= 3) {
+        hubs[0].querySelector('.hub-title').textContent = dict.hubMediaTitle;
+        hubs[0].querySelector('.hub-subtitle').textContent = dict.hubMediaSub;
+        hubs[0].querySelector('.hub-count').textContent = lang === 'en' ? '3 Tools' : '3 Tools';
+        
+        hubs[1].querySelector('.hub-title').textContent = dict.hubDocsTitle;
+        hubs[1].querySelector('.hub-subtitle').textContent = dict.hubDocsSub;
+        hubs[1].querySelector('.hub-count').textContent = lang === 'en' ? '3 Tools' : '3 Tools';
+        
+        hubs[2].querySelector('.hub-title').textContent = dict.hubSystemTitle;
+        hubs[2].querySelector('.hub-subtitle').textContent = dict.hubSystemSub;
+        hubs[2].querySelector('.hub-count').textContent = lang === 'en' ? '3 Tools' : '3 Tools';
+      }
+
+      // Tool Cards
+      const cards = document.querySelectorAll('.tool-card');
+      if (cards.length >= 9) {
+        cards[0].querySelector('.card-title').textContent = dict.cardMediaStudioTitle;
+        cards[0].querySelector('.card-desc').textContent = dict.cardMediaStudioDesc;
+        cards[0].querySelector('.card-tag').textContent = dict.cardMediaStudioTag;
+        
+        cards[1].querySelector('.card-title').textContent = dict.cardVideoDownloaderTitle;
+        cards[1].querySelector('.card-desc').textContent = dict.cardVideoDownloaderDesc;
+        cards[1].querySelector('.card-tag').textContent = dict.cardVideoDownloaderTag;
+        
+        cards[2].querySelector('.card-title').textContent = dict.cardAudioRecorderTitle;
+        cards[2].querySelector('.card-desc').textContent = dict.cardAudioRecorderDesc;
+        cards[2].querySelector('.card-tag').textContent = dict.cardAudioRecorderTag;
+        
+        cards[3].querySelector('.card-title').textContent = dict.cardPdfStudioTitle;
+        cards[3].querySelector('.card-desc').textContent = dict.cardPdfStudioDesc;
+        cards[3].querySelector('.card-tag').textContent = dict.cardPdfStudioTag;
+        
+        cards[4].querySelector('.card-title').textContent = dict.cardFileCompressorTitle;
+        cards[4].querySelector('.card-desc').textContent = dict.cardFileCompressorDesc;
+        cards[4].querySelector('.card-tag').textContent = dict.cardFileCompressorTag;
+        
+        cards[5].querySelector('.card-title').textContent = dict.cardQrGeneratorTitle;
+        cards[5].querySelector('.card-desc').textContent = dict.cardQrGeneratorDesc;
+        cards[5].querySelector('.card-tag').textContent = dict.cardQrGeneratorTag;
+        
+        cards[6].querySelector('.card-title').textContent = dict.cardCurrencyConverterTitle;
+        cards[6].querySelector('.card-desc').textContent = dict.cardCurrencyConverterDesc;
+        cards[6].querySelector('.card-tag').textContent = dict.cardCurrencyConverterTag;
+        
+        cards[7].querySelector('.card-title').textContent = dict.cardNetworkInfoTitle;
+        cards[7].querySelector('.card-desc').textContent = dict.cardNetworkInfoDesc;
+        cards[7].querySelector('.card-tag').textContent = dict.cardNetworkInfoTag;
+        
+        cards[8].querySelector('.card-title').textContent = dict.cardSpeedtestTitle;
+        cards[8].querySelector('.card-desc').textContent = dict.cardSpeedtestDesc;
+        cards[8].querySelector('.card-tag').textContent = dict.cardSpeedtestTag;
+      }
+
+      // Dashboard
+      document.querySelector('#tabContentDashboard .db-header h2').textContent = dict.dbTitle;
+      document.querySelector('#tabContentDashboard .db-header p').textContent = dict.dbSub;
+      
+      document.getElementById('dbCardCpu').querySelector('.db-card-title').textContent = dict.dbCpuTitle;
+      document.getElementById('dbCardRam').querySelector('.db-card-title').textContent = dict.dbRamTitle;
+      document.getElementById('dbCardGpu').querySelector('.db-card-title').textContent = dict.dbGpuTitle;
+      document.getElementById('dbCardChart').querySelector('.db-card-title').textContent = dict.dbChartTitle;
+      if (document.getElementById('dbWeatherCardTitle')) {
+        document.getElementById('dbWeatherCardTitle').textContent = dict.dbWeatherCardTitle;
+      }
+      
+      const optionsCard = document.querySelector('.options-card');
+      optionsCard.querySelector('.db-card-title').textContent = dict.dbOptionsTitle;
+      const optionLabels = optionsCard.querySelectorAll('.option-item');
+      if (optionLabels.length >= 4) {
+        optionLabels[0].childNodes[2].textContent = ' ' + dict.optCpuLabel;
+        optionLabels[1].childNodes[2].textContent = ' ' + dict.optRamLabel;
+        optionLabels[2].childNodes[2].textContent = ' ' + dict.optGpuLabel;
+        optionLabels[3].childNodes[2].textContent = ' ' + dict.optChartLabel;
+      }
+      if (document.getElementById('optWeatherLabel')) {
+        document.getElementById('optWeatherLabel').textContent = dict.optWeatherLabel;
+      }
+      if (typeof updateWeatherUI === 'function') {
+        updateWeatherUI();
+      }
+
+      // Settings & Updates
+      document.querySelector('#tabContentSettings .db-header h2').textContent = dict.settingsTitle;
+      document.querySelector('#tabContentSettings .db-header p').textContent = dict.settingsSub;
+      
+      const settingsCard = document.querySelector('#tabContentSettings .db-card');
+      settingsCard.querySelector('label').textContent = dict.lblGithubRepo;
+      settingsCard.querySelector('button').textContent = dict.btnSave;
+      settingsCard.querySelector('span').textContent = dict.settingsHelp;
+      
+      const currentVerTextNode = document.getElementById('currentVersionText').previousSibling;
+      currentVerTextNode.textContent = dict.lblCurrentVersion + ' ';
+      
+      document.getElementById('modalCheckUpdateBtn').innerHTML = dict.btnCheckUpdate;
+      
+      // Update check default status if not active
+      const statusContainer = document.getElementById('updateStatusContainer');
+      if (statusContainer.querySelector('span') && (statusContainer.querySelector('span').textContent.includes('prüfen') || statusContainer.querySelector('span').textContent.includes('Check'))) {
+        statusContainer.innerHTML = `<span style="color: var(--muted); font-size: 0.85rem;">${dict.settingsDefaultCheckStatus}</span>`;
+      }
+
+      // Changelog
+      const changelogCard = document.getElementById('changelogCard');
+      if (changelogCard) {
+        changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
+        const detailsElements = changelogCard.querySelectorAll('details');
+        if (detailsElements.length >= 2) {
+          const sum110 = detailsElements[0].querySelector('summary');
+          sum110.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v110_list;
+          
+          const sum100 = detailsElements[1].querySelector('summary');
+          sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v100_list;
+        }
+      }
+      
+      // Language picker label
+      document.getElementById('lblLanguage').textContent = lang === 'en' ? 'Language / Sprache' : 'Sprache / Language';
+      
+      // Footer
+      document.querySelector('footer').innerHTML = dict.footerText + '<span id="toolCount"></span>' + dict.footerToolsSuffix;
+
+      const select = document.getElementById('languageSelect');
+      if (select) select.value = lang;
+
+      updateToolCountText();
+    }
+
+    function changeLanguage(lang) {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.save_language(lang).then(res => {
+          if (res && res.success) {
+            currentLang = lang;
+            applyLanguage(lang);
+          }
+        });
+      }
+    }
+
+    function updateToolCountText() {
+      const cards = document.querySelectorAll('.tool-card:not(.coming-soon)');
+      const suffix = currentLang === 'en' ? ' Tools' : ' Werkzeuge';
+      const countSpan = document.getElementById('toolCount');
+      if (countSpan) countSpan.textContent = cards.length + suffix;
+    }
+
+    let weatherData = null;
+    let isFetchingWeather = false;
+
+    function fetchLocalWeather() {
+      if (weatherData || isFetchingWeather) return;
+      isFetchingWeather = true;
+      
+      const emojiEl = document.getElementById('dbWeatherEmoji');
+      const tempEl = document.getElementById('dbWeatherTemp');
+      const detailsEl = document.getElementById('dbWeatherDetails');
+      
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.get_local_weather) {
+        pywebview.api.get_local_weather().then(res => {
+          isFetchingWeather = false;
+          if (res && res.success) {
+            weatherData = res;
+            updateWeatherUI();
+          } else {
+            console.error('Weather fetch error:', res ? res.error : 'unknown');
+            const errText = currentLang === 'en' ? 'Weather data unavailable' : 'Wetterdaten nicht verfügbar';
+            if (emojiEl) emojiEl.textContent = '❌';
+            if (tempEl) tempEl.textContent = '--';
+            if (detailsEl) detailsEl.innerHTML = `<span style="color: var(--accent4);">${errText}</span>`;
+          }
+        }).catch(err => {
+          isFetchingWeather = false;
+          console.error('Weather API exception:', err);
+          const errText = currentLang === 'en' ? 'Weather data unavailable' : 'Wetterdaten nicht verfügbar';
+          if (emojiEl) emojiEl.textContent = '❌';
+          if (tempEl) tempEl.textContent = '--';
+          if (detailsEl) detailsEl.innerHTML = `<span style="color: var(--accent4);">${errText}</span>`;
+        });
+      } else {
+        isFetchingWeather = false;
+      }
+    }
+
+    function updateWeatherUI() {
+      if (!weatherData) return;
+      const emojiEl = document.getElementById('dbWeatherEmoji');
+      const tempEl = document.getElementById('dbWeatherTemp');
+      const detailsEl = document.getElementById('dbWeatherDetails');
+      
+      if (emojiEl) emojiEl.textContent = weatherData.emoji || '🌡️';
+      if (tempEl) tempEl.textContent = weatherData.temp !== null ? `${weatherData.temp}°C` : '--°C';
+      
+      const condition = currentLang === 'en' ? weatherData.desc_en : weatherData.desc_de;
+      const location = `${weatherData.city}, ${weatherData.country_code}`;
+      
+      if (detailsEl) {
+        detailsEl.innerHTML = `<strong>${location}</strong><br/>${condition}`;
+      }
+    }
+
+    // Initialize version info on page load
+    window.addEventListener('DOMContentLoaded', () => {
+      updateToolCountText();
+      switchTab('dashboard');
+      
+      setTimeout(() => {
+        if (typeof pywebview !== 'undefined' && pywebview.api) {
+          pywebview.api.get_app_version().then(version => {
+            document.getElementById('versionBadge').textContent = 'v' + version;
+          });
+          pywebview.api.get_language().then(lang => {
+            currentLang = lang || 'de';
+            const select = document.getElementById('languageSelect');
+            if (select) select.value = currentLang;
+            applyLanguage(currentLang);
+            fetchLocalWeather();
+          });
+        }
+      }, 500);
+    });
+  </script>
+</body>
+</html>
+

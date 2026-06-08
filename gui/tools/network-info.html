@@ -1,0 +1,1987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IP & Netzwerk-Info</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #0f0f1a;
+      --glass-bg: rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-hover: rgba(255, 255, 255, 0.07);
+      --purple: #a855f7;
+      --purple-light: #c084fc;
+      --purple-dark: #7c3aed;
+      --cyan: #22d3ee;
+      --cyan-light: #67e8f9;
+      --pink: #f472b6;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --success: #34d399;
+      --warning: #fbbf24;
+      --error: #f87171;
+      --card-radius: 20px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%, rgba(168, 85, 247, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%, rgba(34, 211, 238, 0.10) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 60% at 50% 50%, rgba(124, 58, 237, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Floating orbs */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      pointer-events: none;
+      z-index: 0;
+      animation: floatOrb 12s ease-in-out infinite alternate;
+    }
+    .orb-1 {
+      width: 400px; height: 400px;
+      background: rgba(168, 85, 247, 0.07);
+      top: -100px; left: -100px;
+      animation-duration: 14s;
+    }
+    .orb-2 {
+      width: 350px; height: 350px;
+      background: rgba(34, 211, 238, 0.06);
+      bottom: -80px; right: -80px;
+      animation-duration: 10s;
+      animation-direction: alternate-reverse;
+    }
+    .orb-3 {
+      width: 250px; height: 250px;
+      background: rgba(244, 114, 182, 0.05);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      animation-duration: 18s;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, -30px) scale(1.1); }
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(168, 85, 247, 0.12);
+      border: 1px solid rgba(168, 85, 247, 0.25);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--purple-light);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      animation: fadeSlideDown 0.6s ease both;
+    }
+
+    .header-badge .dot {
+      width: 6px; height: 6px;
+      background: var(--cyan);
+      border-radius: 50%;
+      animation: pulse 2s ease infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff 0%, var(--purple-light) 40%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1.2;
+      margin-bottom: 14px;
+      animation: fadeSlideDown 0.6s ease 0.1s both;
+    }
+
+    .header-sub {
+      color: var(--text-secondary);
+      font-size: 1rem;
+      font-weight: 400;
+      animation: fadeSlideDown 0.6s ease 0.2s both;
+    }
+
+    /* Online status bar */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      animation: fadeSlideDown 0.6s ease 0.3s both;
+    }
+
+    .status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .status-indicator.online {
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.3);
+      color: var(--success);
+    }
+
+    .status-indicator.offline {
+      background: rgba(248, 113, 113, 0.12);
+      border: 1px solid rgba(248, 113, 113, 0.3);
+      color: var(--error);
+    }
+
+    .status-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-indicator.online .status-dot {
+      animation: pulse 2s ease infinite;
+    }
+
+    /* Grid layout */
+    .grid {
+      display: grid;
+      gap: 20px;
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    @media (max-width: 768px) {
+      .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    }
+
+    @media (min-width: 769px) and (max-width: 900px) {
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* Section labels */
+    .section-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin: 40px 0 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--glass-border);
+    }
+
+    /* Cards */
+    .card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--card-radius);
+      padding: 24px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition: var(--transition);
+      opacity: 0;
+      transform: translateY(20px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168, 85, 247, 0.4), transparent);
+      opacity: 0;
+      transition: var(--transition);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card:hover {
+      background: var(--glass-hover);
+      border-color: rgba(168, 85, 247, 0.2);
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(168, 85, 247, 0.1);
+    }
+
+    .card.revealed {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.5s ease, transform 0.5s ease, background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card.span-full {
+      grid-column: 1 / -1;
+    }
+
+    /* Card elements */
+    .card-icon {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .card-icon.purple {
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.2);
+    }
+    .card-icon.cyan {
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.2);
+    }
+    .card-icon.pink {
+      background: rgba(244, 114, 182, 0.12);
+      border: 1px solid rgba(244, 114, 182, 0.2);
+    }
+    .card-icon.green {
+      background: rgba(52, 211, 153, 0.12);
+      border: 1px solid rgba(52, 211, 153, 0.2);
+    }
+    .card-icon.yellow {
+      background: rgba(251, 191, 36, 0.12);
+      border: 1px solid rgba(251, 191, 36, 0.2);
+    }
+
+    .card-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .card-value {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+      word-break: break-all;
+    }
+
+    .card-value.large {
+      font-size: 1.8rem;
+    }
+
+    .card-sub {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+
+    /* IP card special */
+    .ip-card {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.12), rgba(34, 211, 238, 0.08));
+      border-color: rgba(168, 85, 247, 0.25);
+    }
+
+    .ip-display {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .ip-value {
+      font-size: 2rem;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      background: linear-gradient(135deg, #fff, var(--cyan-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .copy-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(168, 85, 247, 0.15);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      color: var(--purple-light);
+      border-radius: 10px;
+      padding: 7px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .copy-btn:hover {
+      background: rgba(168, 85, 247, 0.25);
+      border-color: rgba(168, 85, 247, 0.5);
+      transform: scale(1.03);
+    }
+
+    .copy-btn.copied {
+      background: rgba(52, 211, 153, 0.15);
+      border-color: rgba(52, 211, 153, 0.4);
+      color: var(--success);
+    }
+
+    /* Loading spinner */
+    .spinner-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      gap: 20px;
+      grid-column: 1 / -1;
+    }
+
+    .spinner {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      border: 3px solid rgba(168, 85, 247, 0.15);
+      border-top-color: var(--purple);
+      border-right-color: var(--cyan);
+      animation: spin 0.9s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .spinner-text {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* Error state */
+    .error-card {
+      text-align: center;
+      padding: 40px;
+      grid-column: 1 / -1;
+    }
+
+    .error-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .error-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--error);
+      margin-bottom: 8px;
+    }
+
+    .error-msg {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* IP Lookup section */
+    .lookup-section {
+      margin-top: 0;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .ip-input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 15px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      color: var(--text-primary);
+      outline: none;
+      transition: var(--transition);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .ip-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .ip-input:focus {
+      border-color: rgba(168, 85, 247, 0.5);
+      background: rgba(168, 85, 247, 0.06);
+      box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.1);
+    }
+
+    .lookup-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 22px;
+      background: linear-gradient(135deg, var(--purple-dark), var(--purple));
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 14px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .lookup-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--purple), var(--purple-light));
+      box-shadow: 0 8px 20px rgba(168, 85, 247, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .lookup-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .lookup-btn .btn-spinner {
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .lookup-btn.loading .btn-spinner { display: block; }
+    .lookup-btn.loading .btn-text { display: none; }
+
+    /* Results mini card */
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 14px;
+    }
+
+    .result-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--glass-border);
+      border-radius: 14px;
+      padding: 16px;
+      transition: var(--transition);
+    }
+
+    .result-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(34, 211, 238, 0.2);
+    }
+
+    .result-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .result-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      word-break: break-all;
+    }
+
+    .result-placeholder {
+      color: var(--text-muted);
+      font-style: italic;
+      font-size: 13px;
+      text-align: center;
+      padding: 30px;
+      grid-column: 1 / -1;
+    }
+
+    /* Map link */
+    .map-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--cyan);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-top: 8px;
+      transition: var(--transition);
+    }
+
+    .map-link:hover {
+      color: var(--cyan-light);
+      gap: 8px;
+    }
+
+    /* Browser/Screen info */
+    .info-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .info-key {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      white-space: nowrap;
+      padding-top: 1px;
+    }
+
+    .info-val {
+      font-size: 13px;
+      color: var(--text-primary);
+      font-weight: 600;
+      text-align: right;
+      word-break: break-word;
+    }
+
+    /* Coordinates card */
+    .coord-value {
+      font-variant-numeric: tabular-nums;
+      font-size: 1.1rem;
+    }
+
+    /* Animate in */
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: var(--glass-border);
+      margin: 8px 0 24px;
+    }
+
+    /* Flag */
+    .flag-emoji {
+      font-size: 2rem;
+      line-height: 1;
+    }
+
+    /* Tag */
+    .tag {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      background: rgba(34, 211, 238, 0.12);
+      border: 1px solid rgba(34, 211, 238, 0.2);
+      color: var(--cyan);
+      margin-top: 6px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(168, 85, 247, 0.3); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(168, 85, 247, 0.5); }
+  
+    /* ── Zurück-Button ── */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      z-index: 999;
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #f1f5f9;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    @media (max-width: 768px) {
+      .back-btn {
+        position: static;
+        margin: 10px auto;
+        display: flex;
+        width: fit-content;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <a href="../ToolForge.html" class="back-btn">⬅ Zurück</a>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
+
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-badge">
+        <span class="dot"></span>
+        Network Intelligence
+      </div>
+      <h1>IP & Netzwerk-Info</h1>
+      <p class="header-sub">Complete network diagnostics and IP geolocation at a glance</p>
+      <div class="status-bar">
+        <div class="status-indicator" id="onlineStatus">
+          <span class="status-dot"></span>
+          <span class="status-text">Checking…</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Public IP Section -->
+    <div class="section-label">🌐 Public Network</div>
+    <div class="grid" id="networkGrid">
+      <div class="spinner-wrap" id="loadingSpinner">
+        <div class="spinner"></div>
+        <div class="spinner-text">Fetching your network info…</div>
+      </div>
+    </div>
+
+    <!-- Browser & Device Section -->
+    <div class="section-label">💻 Browser & Device</div>
+    <div class="grid grid-2" id="browserGrid"></div>
+
+    <!-- IP Lookup Section -->
+    <div class="section-label">🔍 IP Lookup</div>
+    <div class="card revealed lookup-section span-full" style="grid-column: 1 / -1;">
+      <div class="card-label" style="margin-bottom: 16px;">Enter any IP address to look up its info</div>
+      <div class="input-row">
+        <input
+          class="ip-input"
+          type="text"
+          id="lookupInput"
+          placeholder="e.g. 8.8.8.8 or 1.1.1.1"
+          maxlength="45"
+          spellcheck="false"
+          autocomplete="off"
+        />
+        <button class="lookup-btn" id="lookupBtn" onclick="doLookup()">
+          <div class="btn-spinner"></div>
+          <span class="btn-text">🔍 Lookup</span>
+        </button>
+      </div>
+      <div id="lookupResults">
+        <div class="result-placeholder">Enter an IP address above and click Lookup to see results</div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center; margin-top: 48px; color: var(--text-muted); font-size: 12px; animation: fadeIn 1s ease 1s both;">
+      Data from <a href="https://ipapi.co" target="_blank" style="color: var(--purple-light); text-decoration: none;">ipapi.co</a> &amp; <a href="https://ipify.org" target="_blank" style="color: var(--cyan); text-decoration: none;">ipify.org</a> — All data processed locally in your browser
+    </div>
+  </div>
+
+  <script>
+    async function corsFreeFetch(url, options) {
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.fetch_network_info) {
+        try {
+          const res = await pywebview.api.fetch_network_info(url);
+          if (!res.success) throw new Error(res.error || 'Backend request failed');
+          return {
+            json: async () => typeof res.data === 'string' ? JSON.parse(res.data) : res.data,
+            text: async () => typeof res.data === 'string' ? res.data : JSON.stringify(res.data),
+            ok: true
+          };
+        } catch (e) {
+          console.warn('Backend fetch failed, falling back to standard fetch:', e);
+        }
+      }
+      return fetch(url, options);
+    }
+
+    // ─── Utilities ────────────────────────────────────────────────────────────
+
+    function revealCards(selector) {
+      const cards = document.querySelectorAll(selector);
+      cards.forEach((card, i) => {
+        setTimeout(() => card.classList.add('revealed'), i * 80);
+      });
+    }
+
+    function countryToFlag(countryCode) {
+      if (!countryCode || countryCode.length !== 2) return '🌍';
+      return countryCode.toUpperCase().replace(/./g, c =>
+        String.fromCodePoint(c.charCodeAt(0) + 127397)
+      );
+    }
+
+    function formatLatLon(lat, lon) {
+      if (!lat || !lon) return 'N/A';
+      const latDir = lat >= 0 ? 'N' : 'S';
+      const lonDir = lon >= 0 ? 'E' : 'W';
+      return `${Math.abs(lat).toFixed(4)}° ${latDir}, ${Math.abs(lon).toFixed(4)}° ${lonDir}`;
+    }
+
+    // ─── Online/Offline Status ────────────────────────────────────────────────
+
+    function updateOnlineStatus() {
+      const el = document.getElementById('onlineStatus');
+      const textEl = el.querySelector('.status-text');
+      if (navigator.onLine) {
+        el.className = 'status-indicator online';
+        textEl.textContent = 'Online';
+      } else {
+        el.className = 'status-indicator offline';
+        textEl.textContent = 'Offline';
+      }
+    }
+
+    updateOnlineStatus();
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+
+    // ─── Browser & Device Info ────────────────────────────────────────────────
+
+    function parseBrowser(ua) {
+      const tests = [
+        { name: 'Edge', re: /Edg\/([\d.]+)/ },
+        { name: 'Chrome', re: /Chrome\/([\d.]+)/ },
+        { name: 'Firefox', re: /Firefox\/([\d.]+)/ },
+        { name: 'Safari', re: /Version\/([\d.]+).*Safari/ },
+        { name: 'Opera', re: /OPR\/([\d.]+)/ },
+      ];
+      for (const t of tests) {
+        const m = ua.match(t.re);
+        if (m) return `${t.name} ${m[1].split('.').slice(0,2).join('.')}`;
+      }
+      return 'Unknown Browser';
+    }
+
+    function parseOS(ua) {
+      if (/Windows NT 10/.test(ua)) return 'Windows 10/11';
+      if (/Windows NT 6.3/.test(ua)) return 'Windows 8.1';
+      if (/Windows NT 6.1/.test(ua)) return 'Windows 7';
+      if (/Windows/.test(ua)) return 'Windows';
+      if (/Mac OS X ([\d_]+)/.test(ua)) {
+        const v = ua.match(/Mac OS X ([\d_]+)/)[1].replace(/_/g, '.');
+        return `macOS ${v}`;
+      }
+      if (/Android ([\d.]+)/.test(ua)) return `Android ${ua.match(/Android ([\d.]+)/)[1]}`;
+      if (/iPhone OS ([\d_]+)/.test(ua)) return `iOS ${ua.match(/iPhone OS ([\d_]+)/)[1].replace(/_/g,'.')}`;
+      if (/Linux/.test(ua)) return 'Linux';
+      return 'Unknown OS';
+    }
+
+    function buildBrowserSection() {
+      const ua = navigator.userAgent;
+      const browser = parseBrowser(ua);
+      const os = parseOS(ua);
+      const grid = document.getElementById('browserGrid');
+
+      const cards = [
+        {
+          icon: '🌐', iconClass: 'purple',
+          label: 'Browser',
+          value: browser,
+          sub: '',
+          items: [
+            { k: 'User Agent', v: ua.length > 80 ? ua.slice(0, 80) + '…' : ua },
+            { k: 'Language', v: navigator.language || 'N/A' },
+            { k: 'Do Not Track', v: navigator.doNotTrack === '1' ? 'Enabled' : 'Disabled' },
+            { k: 'Cookies', v: navigator.cookieEnabled ? 'Enabled' : 'Disabled' },
+          ]
+        },
+        {
+          icon: '🖥️', iconClass: 'cyan',
+          label: 'Display & System',
+          value: `${screen.width} × ${screen.height}`,
+          sub: '',
+          items: [
+            { k: 'Resolution', v: `${screen.width} × ${screen.height} px` },
+            { k: 'Color Depth', v: `${screen.colorDepth}-bit` },
+            { k: 'Device Pixel Ratio', v: `${window.devicePixelRatio}x` },
+            { k: 'Operating System', v: os },
+            { k: 'Platform', v: navigator.platform || 'N/A' },
+            { k: 'Hardware Threads', v: navigator.hardwareConcurrency ? `${navigator.hardwareConcurrency} cores` : 'N/A' },
+          ]
+        }
+      ];
+
+      cards.forEach(c => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-icon ${c.iconClass}">${c.icon}</div>
+          <div class="card-label">${c.label}</div>
+          <div class="card-value">${c.value}</div>
+          ${c.sub ? `<div class="card-sub">${c.sub}</div>` : ''}
+          <div class="divider"></div>
+          <ul class="info-list">
+            ${c.items.map(i => `
+              <li class="info-item">
+                <span class="info-key">${i.k}</span>
+                <span class="info-val">${i.v}</span>
+              </li>
+            `).join('')}
+          </ul>
+        `;
+        grid.appendChild(card);
+      });
+
+      revealCards('#browserGrid .card');
+    }
+
+    buildBrowserSection();
+
+    // ─── Copy to clipboard ────────────────────────────────────────────────────
+
+    function copyIP(btn, ip) {
+      navigator.clipboard.writeText(ip).then(() => {
+        btn.classList.add('copied');
+        btn.innerHTML = '✓ Copied!';
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '⎘ Copy';
+        }, 2000);
+      });
+    }
+
+    // ─── Build network cards ──────────────────────────────────────────────────
+
+    function fetchWeatherForCard(lat, lon) {
+      const dict = langDict[currentLang] || langDict['de'];
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.get_weather) {
+        pywebview.api.get_weather(lat, lon).then(res => {
+          if (res && res.success) {
+            const iconEl = document.getElementById('weatherIcon');
+            const tempEl = document.getElementById('weatherTemp');
+            const descEl = document.getElementById('weatherDesc');
+            const windEl = document.getElementById('weatherValWind');
+            const windDirEl = document.getElementById('weatherValWindDir');
+            const dayEl = document.getElementById('weatherValDay');
+            
+            if (iconEl) iconEl.textContent = res.emoji || '🌡️';
+            if (tempEl) tempEl.textContent = `${res.temp}°C`;
+            if (descEl) descEl.textContent = currentLang === 'en' ? res.desc_en : res.desc_de;
+            if (windEl) windEl.textContent = `${res.windspeed} km/h`;
+            if (windDirEl) windDirEl.textContent = `${res.winddirection}°`;
+            if (dayEl) dayEl.textContent = res.is_day ? dict.day : dict.night;
+          } else {
+            const descEl = document.getElementById('weatherDesc');
+            if (descEl) descEl.textContent = dict.weatherUnavailable;
+          }
+        }).catch(err => {
+          console.error(err);
+          const descEl = document.getElementById('weatherDesc');
+          if (descEl) descEl.textContent = dict.weatherUnavailable;
+        });
+      }
+    }
+
+    function buildNetworkCards(ipData, geoData) {
+      const grid = document.getElementById('networkGrid');
+      grid.innerHTML = '';
+      const dict = langDict[currentLang] || langDict['de'];
+
+      const flag = countryToFlag(geoData.country_code);
+      const latlon = formatLatLon(geoData.latitude, geoData.longitude);
+      const mapsUrl = geoData.latitude
+        ? `https://www.google.com/maps?q=${geoData.latitude},${geoData.longitude}`
+        : '#';
+
+      // IP Card (full width)
+      const ipCard = document.createElement('div');
+      ipCard.className = 'card ip-card';
+      ipCard.style.gridColumn = '1 / -1';
+      ipCard.innerHTML = `
+        <div class="card-label" style="margin-bottom:10px;">${dict.cardPublicIpTitle}</div>
+        <div class="ip-display">
+          <div class="ip-value">${ipData.ip}</div>
+          <button class="copy-btn" onclick="copyIP(this, '${ipData.ip}')">${currentLang === 'en' ? '⎘ Copy' : '⎘ Kopieren'}</button>
+        </div>
+        <div class="card-sub" style="margin-top:10px;">
+          ${geoData.network ? `<span class="tag">${currentLang === 'en' ? 'Network' : 'Netzwerk'}: ${geoData.network}</span>` : ''}
+          ${geoData.version ? `<span class="tag" style="margin-left:6px;">${geoData.version}</span>` : ''}
+        </div>
+      `;
+
+      // City/Region/Country
+      const locationCard = document.createElement('div');
+      locationCard.className = 'card';
+      locationCard.innerHTML = `
+        <div class="card-icon purple" style="font-size:22px; width:44px; height:44px;">${flag}</div>
+        <div class="card-label">${dict.cardLocationTitle}</div>
+        <div class="card-value" style="font-size:1.3rem;">${geoData.city || 'Unknown'}</div>
+        <div class="card-sub">${[geoData.region, geoData.country_name].filter(Boolean).join(', ') || 'Unknown'}</div>
+        <div class="divider"></div>
+        <ul class="info-list">
+          <li class="info-item"><span class="info-key">${dict.city}</span><span class="info-val">${geoData.city || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.region}</span><span class="info-val">${geoData.region || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.country}</span><span class="info-val">${flag} ${geoData.country_name || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.postalCode}</span><span class="info-val">${geoData.postal || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.continent}</span><span class="info-val">${geoData.continent_code || 'N/A'}</span></li>
+        </ul>
+      `;
+
+      // ISP/Org
+      const ispCard = document.createElement('div');
+      ispCard.className = 'card';
+      ispCard.innerHTML = `
+        <div class="card-icon cyan">📡</div>
+        <div class="card-label">${dict.cardIspTitle}</div>
+        <div class="card-value" style="font-size:1.1rem; line-height:1.4;">${geoData.org || geoData.isp || 'N/A'}</div>
+        <div class="divider"></div>
+        <ul class="info-list">
+          <li class="info-item"><span class="info-key">${dict.asn}</span><span class="info-val">${geoData.asn || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.organization}</span><span class="info-val">${geoData.org || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.currency}</span><span class="info-val">${geoData.currency || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.callingCode}</span><span class="info-val">${geoData.country_calling_code || 'N/A'}</span></li>
+        </ul>
+      `;
+
+      // Timezone
+      const tzCard = document.createElement('div');
+      tzCard.className = 'card';
+      tzCard.innerHTML = `
+        <div class="card-icon pink">🕐</div>
+        <div class="card-label">${dict.cardTimezoneTitle}</div>
+        <div class="card-value" style="font-size:1.2rem;">${geoData.timezone || 'N/A'}</div>
+        <div class="card-sub" id="localTime">${dict.loadingTime}</div>
+        <div class="divider"></div>
+        <ul class="info-list">
+          <li class="info-item"><span class="info-key">${dict.utcOffset}</span><span class="info-val">${geoData.utc_offset || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.countryTld}</span><span class="info-val">${geoData.country_tld || 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.languages}</span><span class="info-val">${geoData.languages ? geoData.languages.split(',').slice(0,3).join(', ') : 'N/A'}</span></li>
+        </ul>
+      `;
+
+      // Coordinates
+      const coordCard = document.createElement('div');
+      coordCard.className = 'card';
+      coordCard.innerHTML = `
+        <div class="card-icon green">📍</div>
+        <div class="card-label">${dict.cardCoordinatesTitle}</div>
+        <div class="card-value coord-value">${latlon}</div>
+        ${geoData.latitude ? `<a class="map-link" href="${mapsUrl}" target="_blank">${dict.viewMaps}</a>` : ''}
+        <div class="divider"></div>
+        <ul class="info-list">
+          <li class="info-item"><span class="info-key">${dict.latitude}</span><span class="info-val">${geoData.latitude ?? 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.longitude}</span><span class="info-val">${geoData.longitude ?? 'N/A'}</span></li>
+          <li class="info-item"><span class="info-key">${dict.inEu}</span><span class="info-val">${geoData.in_eu ? '✅ ' + dict.yes : '❌ ' + dict.no}</span></li>
+        </ul>
+      `;
+
+      // Weather Card
+      const weatherCard = document.createElement('div');
+      weatherCard.className = 'card';
+      weatherCard.id = 'weatherCard';
+      weatherCard.innerHTML = `
+        <div class="card-icon yellow" id="weatherIcon">🌡️</div>
+        <div class="card-label">${dict.cardWeatherTitle}</div>
+        <div class="card-value" id="weatherTemp" style="font-size:1.4rem;">--°C</div>
+        <div class="card-sub" id="weatherDesc">${dict.loadingWeather}</div>
+        <div class="divider"></div>
+        <ul class="info-list">
+          <li class="info-item"><span class="info-key">${dict.weatherWind}</span><span class="info-val" id="weatherValWind">--</span></li>
+          <li class="info-item"><span class="info-key">${dict.weatherWindDir}</span><span class="info-val" id="weatherValWindDir">--</span></li>
+          <li class="info-item"><span class="info-key">${dict.weatherDayNight}</span><span class="info-val" id="weatherValDay">--</span></li>
+        </ul>
+      `;
+
+      grid.appendChild(ipCard);
+      grid.appendChild(locationCard);
+      grid.appendChild(ispCard);
+      grid.appendChild(tzCard);
+      grid.appendChild(coordCard);
+      grid.appendChild(weatherCard);
+
+      // Responsive fix
+      const style = document.createElement('style');
+      style.textContent = `
+        #networkGrid { grid-template-columns: repeat(3, 1fr); }
+        @media(max-width:950px){#networkGrid{grid-template-columns:repeat(2, 1fr);}}
+        @media(max-width:650px){#networkGrid{grid-template-columns:1fr!important;}}
+      `;
+      document.head.appendChild(style);
+
+      revealCards('#networkGrid .card');
+
+      if (geoData.latitude && geoData.longitude) {
+        fetchWeatherForCard(geoData.latitude, geoData.longitude);
+      } else {
+        const descEl = document.getElementById('weatherDesc');
+        if (descEl) descEl.textContent = dict.weatherUnavailable;
+      }
+
+      // Live clock for detected timezone
+      if (geoData.timezone) {
+        function updateClock() {
+          const timeEl = document.getElementById('localTime');
+          if (!timeEl) return;
+          try {
+            const now = new Date();
+            const fmt = new Intl.DateTimeFormat(currentLang === 'de' ? 'de-DE' : 'en-GB', {
+              timeZone: geoData.timezone,
+              hour: '2-digit', minute: '2-digit', second: '2-digit',
+              weekday: 'short', day: 'numeric', month: 'short'
+            });
+            timeEl.textContent = fmt.format(now);
+          } catch(e) {
+            timeEl.textContent = '';
+          }
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+      }
+    }
+
+    function showError(message) {
+      const grid = document.getElementById('networkGrid');
+      grid.innerHTML = `
+        <div class="card error-card revealed" style="grid-column:1/-1;">
+          <div class="error-icon">⚠️</div>
+          <div class="error-title">${currentLang === 'en' ? 'Could not fetch network info' : 'Netzwerkinformationen konnten nicht abgerufen werden'}</div>
+          <div class="error-msg">${message}</div>
+        </div>
+      `;
+    }
+
+    // ─── Fetch on Load ────────────────────────────────────────────────────────
+
+    // Fetch and normalize Geo IP info with multiple fallbacks and ad-blocker/sandbox protection
+    async function fetchGeoData(ip = '') {
+      const errors = [];
+
+      // 1. Try FreeIPAPI.com Fetch (High limit, CORS-friendly, HTTPS)
+      try {
+        const url = ip ? `https://freeipapi.com/api/json/${ip}` : 'https://freeipapi.com/api/json';
+        const res = await corsFreeFetch(url);
+        if (res.ok) {
+          const d = await res.json();
+          return normalizeFreeIPAPI(d);
+        }
+      } catch (e) {
+        errors.push(`FreeIPAPI Fetch: ${e.message}`);
+      }
+
+      // 2. Try ipwho.is Fetch (10,000 requests/month, CORS-friendly, HTTPS)
+      try {
+        const url = ip ? `https://ipwho.is/${ip}` : 'https://ipwho.is/';
+        const res = await corsFreeFetch(url);
+        if (res.ok) {
+          const d = await res.json();
+          if (d.success) {
+            return normalizeIPWhoIs(d);
+          }
+        }
+      } catch (e) {
+        errors.push(`ipwho.is Fetch: ${e.message}`);
+      }
+
+      // 3. Try GeoJS JSONP (Developer utility, extremely rarely blocked by ad-blockers, bypasses fetch CORS)
+      try {
+        const d = await fetchGeoDataJSONP_geojs(ip);
+        if (d && d.ip) {
+          return normalizeGeoJS(d);
+        }
+      } catch (e) {
+        errors.push(`GeoJS JSONP: ${e.message}`);
+      }
+
+      // 4. Try GeoIP-DB JSONP (Secondary developer endpoint, rarely blocked)
+      try {
+        const d = await fetchGeoDataJSONP_geoipdb(ip);
+        if (d && (d.IPv4 || d.ip)) {
+          return normalizeGeoIPDB(d);
+        }
+      } catch (e) {
+        errors.push(`GeoIP-DB JSONP: ${e.message}`);
+      }
+
+      // 5. Try ipwho.is JSONP (Fallback)
+      try {
+        const d = await fetchGeoDataJSONP_ipwhois(ip);
+        if (d && d.success) {
+          return normalizeIPWhoIs(d);
+        }
+      } catch (e) {
+        errors.push(`ipwho.is JSONP: ${e.message}`);
+      }
+
+      // 6. Try ipapi.co JSONP (Fallback)
+      try {
+        const d = await fetchGeoDataJSONP_ipapi(ip);
+        if (d && !d.error) {
+          return normalizeIPAPICo(d);
+        }
+      } catch (e) {
+        errors.push(`ipapi.co JSONP: ${e.message}`);
+      }
+
+      // 7. Try Cloudflare trace Fetch (Fallback)
+      if (!ip) {
+        try {
+          const cloudflareData = await fetchCloudflareTrace();
+          return cloudflareData;
+        } catch (e) {
+          errors.push(`Cloudflare trace Fetch: ${e.message}`);
+        }
+      }
+
+      // 8. Failsafe: Try api.ipify.org JSONP (Almost never blocked by ad-blockers or sandboxes)
+      if (!ip) {
+        try {
+          const ipData = await fetchGeoDataJSONP_ipify();
+          if (ipData && ipData.ip) {
+            return {
+              ip: ipData.ip,
+              version: ipData.ip.includes(':') ? 'IPv6' : 'IPv4',
+              city: 'N/A (Geo-APIs blocked by Ad-Blocker/Shield)',
+              region: 'N/A (Geo-APIs blocked by Ad-Blocker/Shield)',
+              country_name: 'Blocked',
+              country_code: '🌍',
+              postal: 'N/A',
+              continent_code: 'N/A',
+              latitude: null,
+              longitude: null,
+              asn: 'N/A',
+              org: 'N/A',
+              isp: 'N/A',
+              currency: 'N/A',
+              country_calling_code: 'N/A',
+              timezone: 'UTC',
+              utc_offset: '+0000',
+              country_tld: 'N/A',
+              in_eu: false,
+              languages: 'N/A',
+              network: 'Ad-Blocker Fallback / Ipify JSONP'
+            };
+          }
+        } catch (e) {
+          errors.push(`Ipify JSONP: ${e.message}`);
+        }
+      }
+
+      throw new Error(`All IP Geolocation methods failed (Fetch & JSONP blocked by local file sandbox or firewall).\nDetails:\n- ${errors.join('\n- ')}`);
+    }
+
+    // JSONP Helper for GeoJS (Primary JSONP)
+    function fetchGeoDataJSONP_geojs(ip = '') {
+      return new Promise((resolve, reject) => {
+        const uniqueCallback = `jsonp_callback_geojs_${Date.now()}_${Math.round(Math.random() * 1000000)}`;
+        window[uniqueCallback] = function(data) {
+          cleanup();
+          resolve(data);
+        };
+        const script = document.createElement('script');
+        script.id = uniqueCallback;
+        
+        const url = ip 
+          ? `https://get.geojs.io/v1/ip/geo/${ip}.js?callback=${uniqueCallback}`
+          : `https://get.geojs.io/v1/ip/geo.js?callback=${uniqueCallback}`;
+        script.src = url;
+        
+        function cleanup() {
+          const el = document.getElementById(uniqueCallback);
+          if (el) el.remove();
+          delete window[uniqueCallback];
+        }
+        
+        script.onerror = function(err) {
+          cleanup();
+          reject(new Error('GeoJS JSONP request failed'));
+        };
+        
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error('GeoJS JSONP timeout'));
+        }, 5000);
+        
+        const originalResolve = resolve;
+        resolve = function(val) {
+          clearTimeout(timeoutId);
+          originalResolve(val);
+        };
+        
+        document.body.appendChild(script);
+      });
+    }
+
+    // JSONP Helper for GeoIP-DB (Secondary JSONP)
+    function fetchGeoDataJSONP_geoipdb(ip = '') {
+      return new Promise((resolve, reject) => {
+        const uniqueCallback = `jsonp_callback_geoipdb_${Date.now()}_${Math.round(Math.random() * 1000000)}`;
+        window[uniqueCallback] = function(data) {
+          cleanup();
+          resolve(data);
+        };
+        const script = document.createElement('script');
+        script.id = uniqueCallback;
+        
+        const url = ip
+          ? `https://geoip-db.com/json/geoip.php?ip=${ip}&callback=${uniqueCallback}`
+          : `https://geoip-db.com/json/geoip.php?callback=${uniqueCallback}`;
+        script.src = url;
+        
+        function cleanup() {
+          const el = document.getElementById(uniqueCallback);
+          if (el) el.remove();
+          delete window[uniqueCallback];
+        }
+        
+        script.onerror = function(err) {
+          cleanup();
+          reject(new Error('GeoIPDB JSONP request failed'));
+        };
+        
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error('GeoIPDB JSONP timeout'));
+        }, 5000);
+        
+        const originalResolve = resolve;
+        resolve = function(val) {
+          clearTimeout(timeoutId);
+          originalResolve(val);
+        };
+        
+        document.body.appendChild(script);
+      });
+    }
+
+    // JSONP Helper for ipwho.is
+    function fetchGeoDataJSONP_ipwhois(ip = '') {
+      return new Promise((resolve, reject) => {
+        const uniqueCallback = `jsonp_callback_ipwhois_${Date.now()}_${Math.round(Math.random() * 1000000)}`;
+        window[uniqueCallback] = function(data) {
+          cleanup();
+          resolve(data);
+        };
+        const script = document.createElement('script');
+        script.id = uniqueCallback;
+        
+        const baseUrl = ip ? `https://ipwho.is/${ip}` : 'https://ipwho.is/';
+        script.src = `${baseUrl}?callback=${uniqueCallback}`;
+        
+        function cleanup() {
+          const el = document.getElementById(uniqueCallback);
+          if (el) el.remove();
+          delete window[uniqueCallback];
+        }
+        
+        script.onerror = function(err) {
+          cleanup();
+          reject(new Error('ipwho.is JSONP request failed'));
+        };
+        
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error('ipwho.is JSONP timeout'));
+        }, 5000);
+        
+        const originalResolve = resolve;
+        resolve = function(val) {
+          clearTimeout(timeoutId);
+          originalResolve(val);
+        };
+        
+        document.body.appendChild(script);
+      });
+    }
+
+    // JSONP Helper for ipapi.co
+    function fetchGeoDataJSONP_ipapi(ip = '') {
+      return new Promise((resolve, reject) => {
+        const uniqueCallback = `jsonp_callback_co_${Date.now()}_${Math.round(Math.random() * 1000000)}`;
+        window[uniqueCallback] = function(data) {
+          cleanup();
+          resolve(data);
+        };
+        const script = document.createElement('script');
+        script.id = uniqueCallback;
+        
+        const baseUrl = ip ? `https://ipapi.co/${ip}/json/` : 'https://ipapi.co/json/';
+        script.src = `${baseUrl}?callback=${uniqueCallback}`;
+        
+        function cleanup() {
+          const el = document.getElementById(uniqueCallback);
+          if (el) el.remove();
+          delete window[uniqueCallback];
+        }
+        
+        script.onerror = function(err) {
+          cleanup();
+          reject(new Error('ipapi.co JSONP request failed'));
+        };
+        
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error('ipapi.co JSONP timeout'));
+        }, 5000);
+        
+        const originalResolve = resolve;
+        resolve = function(val) {
+          clearTimeout(timeoutId);
+          originalResolve(val);
+        };
+        
+        document.body.appendChild(script);
+      });
+    }
+
+    // JSONP Helper for api.ipify.org (Unblockable IP-only fallback)
+    function fetchGeoDataJSONP_ipify() {
+      return new Promise((resolve, reject) => {
+        const uniqueCallback = `jsonp_callback_ipify_${Date.now()}_${Math.round(Math.random() * 1000000)}`;
+        window[uniqueCallback] = function(data) {
+          cleanup();
+          resolve(data);
+        };
+        const script = document.createElement('script');
+        script.id = uniqueCallback;
+        script.src = `https://api.ipify.org?format=jsonp&callback=${uniqueCallback}`;
+        
+        function cleanup() {
+          const el = document.getElementById(uniqueCallback);
+          if (el) el.remove();
+          delete window[uniqueCallback];
+        }
+        
+        script.onerror = function(err) {
+          cleanup();
+          reject(new Error('Ipify JSONP request failed'));
+        };
+        
+        const timeoutId = setTimeout(() => {
+          cleanup();
+          reject(new Error('Ipify JSONP timeout'));
+        }, 5000);
+        
+        const originalResolve = resolve;
+        resolve = function(val) {
+          clearTimeout(timeoutId);
+          originalResolve(val);
+        };
+        
+        document.body.appendChild(script);
+      });
+    }
+
+    async function fetchCloudflareTrace() {
+      const res = await corsFreeFetch('https://www.cloudflare.com/cdn-cgi/trace');
+      if (!res.ok) throw new Error('Cloudflare trace failed');
+      const text = await res.text();
+      const lines = text.split('\n');
+      const data = {};
+      lines.forEach(line => {
+        const parts = line.split('=');
+        if (parts.length === 2) {
+          data[parts[0].trim()] = parts[1].trim();
+        }
+      });
+      if (!data.ip) throw new Error('No IP in Cloudflare trace');
+      
+      const countryNames = {
+        'DE': 'Germany', 'AT': 'Austria', 'CH': 'Switzerland',
+        'US': 'United States', 'GB': 'United Kingdom', 'FR': 'France',
+        'IT': 'Italy', 'ES': 'Spain', 'NL': 'Netherlands', 'PL': 'Poland'
+      };
+      
+      return {
+        ip: data.ip,
+        version: data.ip.includes(':') ? 'IPv6' : 'IPv4',
+        city: 'N/A (Ad-Blocker active)',
+        region: 'N/A (Ad-Blocker active)',
+        country_name: countryNames[data.loc] || data.loc || 'Unknown',
+        country_code: data.loc || '🌍',
+        postal: 'N/A',
+        continent_code: 'N/A',
+        latitude: null,
+        longitude: null,
+        asn: 'N/A',
+        org: 'N/A',
+        isp: 'N/A',
+        currency: 'N/A',
+        country_calling_code: 'N/A',
+        timezone: 'UTC',
+        utc_offset: '+0000',
+        country_tld: data.loc ? `.${data.loc.toLowerCase()}` : 'N/A',
+        in_eu: ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'].includes(data.loc),
+        languages: 'N/A',
+        network: 'Ad-Blocker Fallback / Cloudflare'
+      };
+    }
+
+    function normalizeFreeIPAPI(d) {
+      const euCountries = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
+      const countryCode = d.countryCode || d.country_code;
+      return {
+        ip: d.ipAddress || d.ip_address,
+        version: (d.ipVersion === 6 || d.ip_version === 6) ? 'IPv6' : 'IPv4',
+        city: d.cityName || d.city || 'N/A',
+        region: d.regionName || d.region || 'N/A',
+        country_name: d.countryName || d.country || 'N/A',
+        country_code: countryCode || 'N/A',
+        postal: d.zipCode || d.postal_code || 'N/A',
+        continent_code: d.continentCode || d.continent_code || 'N/A',
+        latitude: d.latitude,
+        longitude: d.longitude,
+        asn: d.asn || 'N/A',
+        org: d.asnOrganization || d.asn_org || 'N/A',
+        isp: d.asnOrganization || d.asn_org || 'N/A',
+        currency: d.currencies && d.currencies.length > 0 ? d.currencies[0] : 'N/A',
+        country_calling_code: (d.phoneCodes && d.phoneCodes.length > 0 ? `+${d.phoneCodes[0]}` : null) || (d.phone_codes && d.phone_codes.length > 0 ? `+${d.phone_codes[0]}` : 'N/A'),
+        timezone: (d.timeZones && d.timeZones.length > 0 ? d.timeZones[0] : null) || (d.timezones && d.timezones.length > 0 ? d.timezones[0] : 'UTC'),
+        utc_offset: 'N/A',
+        country_tld: countryCode ? `.${countryCode.toLowerCase()}` : 'N/A',
+        in_eu: countryCode ? euCountries.includes(countryCode.toUpperCase()) : false,
+        languages: d.languages && d.languages.length > 0 ? d.languages.join(', ') : 'N/A',
+        network: d.asnOrganization || d.asn_org || 'N/A'
+      };
+    }
+
+    function normalizeIPWhoIs(d) {
+      return {
+        ip: d.ip,
+        version: d.type || 'IPv4',
+        city: d.city || 'N/A',
+        region: d.region || 'N/A',
+        country_name: d.country || 'N/A',
+        country_code: d.country_code || 'N/A',
+        postal: d.postal || 'N/A',
+        continent_code: d.continent_code || 'N/A',
+        latitude: d.latitude,
+        longitude: d.longitude,
+        asn: d.connection?.asn || 'N/A',
+        org: d.connection?.org || 'N/A',
+        isp: d.connection?.isp || 'N/A',
+        currency: d.currency?.code || 'N/A',
+        country_calling_code: d.calling_code || 'N/A',
+        timezone: d.timezone?.id || 'UTC',
+        utc_offset: d.timezone?.utc || 'N/A',
+        country_tld: d.country_code ? `.${d.country_code.toLowerCase()}` : 'N/A',
+        in_eu: d.is_eu || false,
+        languages: 'N/A',
+        network: d.connection?.domain || 'N/A'
+      };
+    }
+
+    function normalizeIPAPICo(d) {
+      return {
+        ip: d.ip,
+        version: d.version || 'IPv4',
+        city: d.city || 'N/A',
+        region: d.region || 'N/A',
+        country_name: d.country_name || 'N/A',
+        country_code: d.country_code || 'N/A',
+        postal: d.postal || 'N/A',
+        continent_code: d.continent_code || 'N/A',
+        latitude: d.latitude,
+        longitude: d.longitude,
+        asn: d.asn || 'N/A',
+        org: d.org || 'N/A',
+        isp: d.isp || 'N/A',
+        currency: d.currency || 'N/A',
+        country_calling_code: d.country_calling_code || 'N/A',
+        timezone: d.timezone || 'UTC',
+        utc_offset: d.utc_offset || 'N/A',
+        country_tld: d.country_tld || 'N/A',
+        in_eu: d.in_eu || false,
+        languages: d.languages || 'N/A',
+        network: d.network || 'N/A'
+      };
+    }
+
+    function normalizeGeoJS(d) {
+      const euCountries = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
+      return {
+        ip: d.ip,
+        version: d.ip && d.ip.includes(':') ? 'IPv6' : 'IPv4',
+        city: d.city || 'N/A',
+        region: d.region || 'N/A',
+        country_name: d.country || 'N/A',
+        country_code: d.country_code || 'N/A',
+        postal: d.postal || 'N/A',
+        continent_code: d.continent_code || 'N/A',
+        latitude: d.latitude ? parseFloat(d.latitude) : null,
+        longitude: d.longitude ? parseFloat(d.longitude) : null,
+        asn: d.asn || 'N/A',
+        org: d.organization_name || d.organization || 'N/A',
+        isp: d.organization || 'N/A',
+        currency: 'N/A',
+        country_calling_code: 'N/A',
+        timezone: d.timezone || 'UTC',
+        utc_offset: 'N/A',
+        country_tld: d.country_code ? `.${d.country_code.toLowerCase()}` : 'N/A',
+        in_eu: d.country_code ? euCountries.includes(d.country_code.toUpperCase()) : false,
+        languages: 'N/A',
+        network: d.organization_name || 'N/A'
+      };
+    }
+
+    function normalizeGeoIPDB(d) {
+      const euCountries = ['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IE','IT','LV','LT','LU','MT','NL','PL','PT','RO','SK','SI','ES','SE'];
+      return {
+        ip: d.IPv4 || d.ip || 'N/A',
+        version: (d.IPv4 || d.ip || '').includes(':') ? 'IPv6' : 'IPv4',
+        city: d.city || 'N/A',
+        region: d.state || 'N/A',
+        country_name: d.country_name || 'N/A',
+        country_code: d.country_code || 'N/A',
+        postal: d.postal || 'N/A',
+        continent_code: 'N/A',
+        latitude: d.latitude ? parseFloat(d.latitude) : null,
+        longitude: d.longitude ? parseFloat(d.longitude) : null,
+        asn: 'N/A',
+        org: 'N/A',
+        isp: 'N/A',
+        currency: 'N/A',
+        country_calling_code: 'N/A',
+        timezone: 'N/A',
+        utc_offset: 'N/A',
+        country_tld: d.country_code ? `.${d.country_code.toLowerCase()}` : 'N/A',
+        in_eu: d.country_code ? euCountries.includes(d.country_code.toUpperCase()) : false,
+        languages: 'N/A',
+        network: 'N/A'
+      };
+    }
+
+    let currentLang = 'de';
+    const langDict = {
+      de: {
+        backBtn: "⬅ Zurück",
+        headerBadge: "Netzwerk-Intelligenz",
+        title: "IP & Netzwerk-Info",
+        subtitle: "Vollständige Netzwerkdiagnose und IP-Geolokalisierung auf einen Blick",
+        checking: "Prüfen...",
+        online: "Online",
+        offline: "Offline",
+        publicNetwork: "🌐 Öffentliches Netzwerk",
+        browserDevice: "💻 Browser & Gerät",
+        ipLookup: "🔍 IP-Abfrage",
+        lookupLabel: "Gib eine beliebige IP-Adresse ein, um deren Informationen abzufragen",
+        lookupPlaceholder: "z. B. 8.8.8.8 oder 1.1.1.1",
+        lookupBtn: "Abfragen",
+        lookupDefaultPlaceholder: "Gib oben eine IP-Adresse ein und klicke auf Abfragen, um Ergebnisse zu sehen",
+        fetchingNetwork: "Netzwerkinformationen werden abgerufen...",
+        footerText: 'Daten von <a href="https://ipapi.co" target="_blank" style="color: var(--purple-light); text-decoration: none;">ipapi.co</a> &amp; <a href="https://ipify.org" target="_blank" style="color: var(--cyan); text-decoration: none;">ipify.org</a> — Alle Daten werden lokal verarbeitet',
+        
+        // Cards
+        cardPublicIpTitle: "Deine öffentliche IP-Adresse",
+        cardLocationTitle: "Standort",
+        cardIspTitle: "ISP / Organisation",
+        cardTimezoneTitle: "Zeitzone",
+        cardCoordinatesTitle: "Koordinaten",
+        cardWeatherTitle: "Wetter",
+        
+        // Card details
+        city: "Stadt",
+        region: "Region",
+        country: "Land",
+        postalCode: "Postleitzahl",
+        continent: "Kontinent",
+        asn: "ASN",
+        organization: "Organisation",
+        currency: "Währung",
+        callingCode: "Vorwahl",
+        utcOffset: "UTC-Abweichung",
+        countryTld: "Länder-TLD",
+        languages: "Sprachen",
+        latitude: "Breitengrad",
+        longitude: "Längengrad",
+        inEu: "In der EU",
+        viewMaps: "Auf Google Maps anzeigen →",
+        yes: "Ja",
+        no: "Nein",
+        loadingWeather: "Lade Wetterdaten...",
+        weatherWind: "Windgeschwindigkeit",
+        weatherWindDir: "Windrichtung",
+        weatherDayNight: "Tag / Nacht",
+        day: "Tag ☀️",
+        night: "Nacht 🌙",
+        weatherLabel: "Wetter",
+        weatherValWind: "Windgeschwindigkeit",
+        weatherValWindDir: "Windrichtung",
+        weatherValDay: "Tag / Nacht",
+        weatherUnavailable: "Wetterdaten nicht verfügbar",
+        loadingTime: "Lade Uhrzeit...",
+        
+        // Lookup results
+        lookupIpAddress: "IP-Adresse",
+        lookupIpVersion: "IP-Version",
+        lookupCoordinates: "Koordinaten",
+        lookupInEu: "In der EU"
+      },
+      en: {
+        backBtn: "⬅ Back",
+        headerBadge: "Network Intelligence",
+        title: "IP & Network Info",
+        subtitle: "Complete network diagnostics and IP geolocation at a glance",
+        checking: "Checking...",
+        online: "Online",
+        offline: "Offline",
+        publicNetwork: "🌐 Public Network",
+        browserDevice: "💻 Browser & Device",
+        ipLookup: "🔍 IP Lookup",
+        lookupLabel: "Enter any IP address to look up its info",
+        lookupPlaceholder: "e.g. 8.8.8.8 or 1.1.1.1",
+        lookupBtn: "Lookup",
+        lookupDefaultPlaceholder: "Enter an IP address above and click Lookup to see results",
+        fetchingNetwork: "Fetching your network info...",
+        footerText: 'Data from <a href="https://ipapi.co" target="_blank" style="color: var(--purple-light); text-decoration: none;">ipapi.co</a> &amp; <a href="https://ipify.org" target="_blank" style="color: var(--cyan); text-decoration: none;">ipify.org</a> — All data processed locally',
+        
+        // Cards
+        cardPublicIpTitle: "Your Public IP Address",
+        cardLocationTitle: "Location",
+        cardIspTitle: "ISP / Organization",
+        cardTimezoneTitle: "Timezone",
+        cardCoordinatesTitle: "Coordinates",
+        cardWeatherTitle: "Weather",
+        
+        // Card details
+        city: "City",
+        region: "Region",
+        country: "Country",
+        postalCode: "Postal Code",
+        continent: "Continent",
+        asn: "ASN",
+        organization: "Organization",
+        currency: "Currency",
+        callingCode: "Calling Code",
+        utcOffset: "UTC Offset",
+        countryTld: "Country TLD",
+        languages: "Languages",
+        latitude: "Latitude",
+        longitude: "Longitude",
+        inEu: "In EU",
+        viewMaps: "View on Google Maps →",
+        yes: "Yes",
+        no: "No",
+        loadingWeather: "Loading weather...",
+        weatherWind: "Wind Speed",
+        weatherWindDir: "Wind Direction",
+        weatherDayNight: "Day / Night",
+        day: "Day ☀️",
+        night: "Night 🌙",
+        weatherLabel: "Weather",
+        weatherValWind: "Wind Speed",
+        weatherValWindDir: "Wind Direction",
+        weatherValDay: "Day / Night",
+        weatherUnavailable: "Weather unavailable",
+        loadingTime: "Loading time...",
+        
+        // Lookup results
+        lookupIpAddress: "IP Address",
+        lookupIpVersion: "IP Version",
+        lookupCoordinates: "Coordinates",
+        lookupInEu: "In EU"
+      }
+    };
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      const dict = langDict[lang] || langDict['de'];
+      
+      // Update page labels
+      document.querySelector('.back-btn').textContent = dict.backBtn;
+      document.querySelector('.header-badge').childNodes[2].textContent = ' ' + dict.headerBadge;
+      document.querySelector('h1').textContent = dict.title;
+      document.querySelector('.header-sub').textContent = dict.subtitle;
+      
+      const statusText = document.querySelector('.status-text');
+      if (statusText) {
+        if (statusText.textContent.includes('Checking') || statusText.textContent.includes('Prüfen')) {
+          statusText.textContent = dict.checking;
+        } else if (statusText.textContent.includes('Online')) {
+          statusText.textContent = dict.online;
+        } else if (statusText.textContent.includes('Offline')) {
+          statusText.textContent = dict.offline;
+        }
+      }
+      
+      const labels = document.querySelectorAll('.section-label');
+      if (labels.length >= 3) {
+        labels[0].textContent = dict.publicNetwork;
+        labels[1].textContent = dict.browserDevice;
+        labels[2].textContent = dict.ipLookup;
+      }
+      
+      // IP Lookup card translation
+      const lookupCard = document.querySelector('.lookup-section');
+      if (lookupCard) {
+        lookupCard.querySelector('.card-label').textContent = dict.lookupLabel;
+        document.getElementById('lookupInput').placeholder = dict.lookupPlaceholder;
+        document.getElementById('lookupBtn').querySelector('.btn-text').textContent = dict.lookupBtn;
+        
+        const placeholder = lookupCard.querySelector('.result-placeholder');
+        if (placeholder && (placeholder.textContent.includes('Enter an IP') || placeholder.textContent.includes('Gib oben'))) {
+          placeholder.textContent = dict.lookupDefaultPlaceholder;
+        }
+      }
+      
+      // Footer translation
+      const footer = document.querySelector('.container').lastElementChild;
+      if (footer && footer.tagName === 'DIV' && footer.style.textAlign === 'center') {
+        footer.innerHTML = dict.footerText;
+      }
+    }
+
+    async function loadNetworkInfo() {
+      const dict = langDict[currentLang] || langDict['de'];
+      const grid = document.getElementById('networkGrid');
+      grid.innerHTML = `
+        <div class="spinner-wrap" id="loadingSpinner">
+          <div class="spinner"></div>
+          <div class="spinner-text">${dict.fetchingNetwork}</div>
+        </div>
+      `;
+      try {
+        const geoData = await fetchGeoData();
+        buildNetworkCards(geoData, geoData);
+      } catch (err) {
+        showError(err.message || (currentLang === 'en' ? 'Could not fetch network info. Please check your internet connection.' : 'Netzwerkinformationen konnten nicht abgerufen werden. Bitte überprüfe deine Internetverbindung.'));
+      }
+    }
+
+    // ─── IP Lookup ────────────────────────────────────────────────────────────
+
+    async function doLookup() {
+      const input = document.getElementById('lookupInput').value.trim();
+      const btn = document.getElementById('lookupBtn');
+      const resultsEl = document.getElementById('lookupResults');
+      const dict = langDict[currentLang] || langDict['de'];
+
+      if (!input) {
+        document.getElementById('lookupInput').focus();
+        return;
+      }
+
+      // Validate IP
+      const ipv4 = /^(\d{1,3}\.){3}\d{1,3}$/;
+      const ipv6 = /^[0-9a-fA-F:]+$/;
+      if (!ipv4.test(input) && !ipv6.test(input)) {
+        resultsEl.innerHTML = `<div class="result-placeholder" style="color:var(--error);">${currentLang === 'en' ? '⚠️ Please enter a valid IPv4 or IPv6 address' : '⚠️ Bitte gib eine gültige IPv4- oder IPv6-Adresse ein'}</div>`;
+        return;
+      }
+
+      btn.classList.add('loading');
+      btn.disabled = true;
+      resultsEl.innerHTML = `
+        <div style="display:flex;align-items:center;gap:14px;padding:20px;color:var(--text-secondary);">
+          <div class="spinner" style="width:28px;height:28px;border-width:2px;"></div>
+          <span>${currentLang === 'en' ? 'Looking up' : 'Abfrage läuft für'} <strong style="color:var(--text-primary);">${input}</strong>…</span>
+        </div>
+      `;
+
+      try {
+        const d = await fetchGeoData(input);
+
+        const flag = countryToFlag(d.country_code);
+        const latlon = formatLatLon(d.latitude, d.longitude);
+        const mapsUrl = d.latitude ? `https://www.google.com/maps?q=${d.latitude},${d.longitude}` : null;
+
+        // Fetch weather for checked coordinates
+        let weatherInfo = null;
+        if (d.latitude && d.longitude && typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.get_weather) {
+          try {
+            const wres = await pywebview.api.get_weather(d.latitude, d.longitude);
+            if (wres && wres.success) {
+              weatherInfo = wres;
+            }
+          } catch(we) {
+            console.error('Lookup weather failed:', we);
+          }
+        }
+
+        const fields = [
+          { l: dict.lookupIpAddress, v: d.ip || input },
+          { l: dict.lookupIpVersion, v: d.version || 'N/A' },
+          { l: dict.city, v: d.city || 'N/A' },
+          { l: dict.region, v: d.region || 'N/A' },
+          { l: dict.country, v: d.country_name ? `${flag} ${d.country_name}` : 'N/A' },
+          { l: dict.postalCode, v: d.postal || 'N/A' },
+          { l: dict.continent, v: d.continent_code || 'N/A' },
+          { l: dict.cardTimezoneTitle, v: d.timezone || 'N/A' },
+          { l: dict.utcOffset, v: d.utc_offset || 'N/A' },
+          { l: dict.asn, v: d.asn || 'N/A' },
+          { l: dict.organization, v: d.org || 'N/A' },
+          { l: dict.lookupCoordinates, v: latlon },
+          { l: dict.lookupInEu, v: d.in_eu ? '✅ ' + dict.yes : '❌ ' + dict.no },
+          { l: dict.currency, v: d.currency || 'N/A' },
+          { l: dict.callingCode, v: d.country_calling_code || 'N/A' },
+          { l: dict.languages, v: d.languages || 'N/A' },
+        ];
+
+        if (weatherInfo) {
+          const wDesc = currentLang === 'en' ? weatherInfo.desc_en : weatherInfo.desc_de;
+          fields.push({ l: dict.cardWeatherTitle, v: `${weatherInfo.emoji} ${weatherInfo.temp}°C, ${wDesc}` });
+          fields.push({ l: dict.weatherWind, v: `${weatherInfo.windspeed} km/h (${weatherInfo.winddirection}°)` });
+        }
+
+        let html = `
+          <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap;">
+            <span style="font-size:2rem;">${flag}</span>
+            <div>
+              <div style="font-size:1.2rem;font-weight:700;color:var(--text-primary);">${d.ip || input}</div>
+              <div style="font-size:13px;color:var(--text-secondary);">${[d.city, d.country_name].filter(Boolean).join(', ') || (currentLang === 'en' ? 'Location unknown' : 'Standort unbekannt')}</div>
+            </div>
+            ${mapsUrl ? `<a class="map-link" href="${mapsUrl}" target="_blank" style="margin-left:auto;">📍 ${currentLang === 'en' ? 'View on Maps' : 'Auf Karte anzeigen'} →</a>` : ''}
+          </div>
+          <div class="result-grid">
+            ${fields.map(f => `
+              <div class="result-item">
+                <div class="result-label">${f.l}</div>
+                <div class="result-value">${f.v}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        resultsEl.innerHTML = html;
+
+        // Animate result items
+        const items = resultsEl.querySelectorAll('.result-item');
+        items.forEach((item, i) => {
+          item.style.opacity = '0';
+          item.style.transform = 'translateY(10px)';
+          setTimeout(() => {
+            item.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+            item.style.opacity = '1';
+            item.style.transform = 'translateY(0)';
+          }, i * 40);
+        });
+
+      } catch (err) {
+        resultsEl.innerHTML = `
+          <div class="result-placeholder" style="color:var(--error);">
+            ⚠️ ${currentLang === 'en' ? 'Lookup failed' : 'Abfrage fehlgeschlagen'}: ${err.message || 'Unknown error'}
+          </div>
+        `;
+      } finally {
+        btn.classList.remove('loading');
+        btn.disabled = false;
+      }
+    }
+
+    // Enter key triggers lookup
+    document.getElementById('lookupInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLookup();
+    });
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.get_language().then(lang => {
+          currentLang = lang || 'de';
+          applyLanguage(currentLang);
+          loadNetworkInfo();
+        });
+      } else {
+        applyLanguage('de');
+        loadNetworkInfo();
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Internet Speedtest – ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      color-scheme: dark;
+      --bg: #09090e;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(255,255,255,0.14);
+      --text: #f0f0ff;
+      --text-muted: #8888aa;
+      --accent: #06b6d4; /* Cyan */
+      --accent2: #a855f7; /* Violet */
+      --accent3: #ec4899; /* Pink */
+      --gradient: linear-gradient(135deg, #06b6d4, #a855f7);
+      --radius: 20px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background Orbs */
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.15;
+    }
+    .orb-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; left: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -50px; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .back-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+      transform: translateX(-2px);
+    }
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Card */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2.2rem;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    /* Main Gauge */
+    .gauge-wrap {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .gauge-svg {
+      transform: rotate(-90deg);
+      width: 100%;
+      height: 100%;
+    }
+    .gauge-bg {
+      fill: none;
+      stroke: rgba(255,255,255,0.03);
+      stroke-width: 14;
+    }
+    .gauge-fill {
+      fill: none;
+      stroke: url(#gaugeGrad);
+      stroke-width: 14;
+      stroke-linecap: round;
+      stroke-dasharray: 565.48; /* 2 * PI * 90 */
+      stroke-dashoffset: 565.48;
+    }
+    .gauge-content {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+    .gauge-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.1rem;
+    }
+    .gauge-val {
+      font-size: 2.8rem;
+      font-weight: 900;
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+    .gauge-unit {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-top: 0.2rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      width: 100%;
+    }
+    .metric-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.3s;
+    }
+    .metric-card.active {
+      border-color: var(--accent);
+      background: rgba(6, 182, 212, 0.03);
+      box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
+    }
+    .metric-card.active-ul {
+      border-color: var(--accent2);
+      background: rgba(168, 85, 247, 0.03);
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.1);
+    }
+    .metric-label {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .metric-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+    }
+    .metric-unit {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    /* Start Button */
+    .start-btn {
+      background: var(--gradient);
+      border: none;
+      color: white;
+      padding: 1rem 2.5rem;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(6, 182, 212, 0.3);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      font-family: inherit;
+    }
+    .start-btn:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 28px rgba(6, 182, 212, 0.45);
+      filter: brightness(1.1);
+    }
+    .start-btn:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    .start-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    /* Info Bar */
+    .status-text {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .status-text.running {
+      color: var(--text);
+    }
+
+    /* Animations */
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <div class="container">
+    <header>
+      <a href="../ToolForge.html" class="back-btn">← Zurück</a>
+      <h1>⚡ Internet-Speedtest</h1>
+    </header>
+
+    <div class="card">
+      <div class="status-text" id="statusText">Bereit für Messung</div>
+
+      <div class="gauge-wrap">
+        <svg class="gauge-svg" viewBox="0 0 200 200">
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop id="gradStop1" offset="0%" stop-color="#06b6d4" />
+              <stop id="gradStop2" offset="100%" stop-color="#a855f7" />
+            </linearGradient>
+          </defs>
+          <circle class="gauge-bg" cx="100" cy="100" r="90" />
+          <circle class="gauge-fill" id="gaugeFill" cx="100" cy="100" r="90" />
+        </svg>
+        <div class="gauge-content">
+          <div class="gauge-label" id="gaugeLabel">BEREIT</div>
+          <div class="gauge-val" id="gaugeVal">0.0</div>
+          <div class="gauge-unit" id="gaugeUnit">Mbps</div>
+        </div>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card" id="cardPing">
+          <span class="metric-label">Ping</span>
+          <span class="metric-val" id="valPing">-</span>
+          <span class="metric-unit">ms</span>
+        </div>
+        <div class="metric-card" id="cardDownload">
+          <span class="metric-label">Download</span>
+          <span class="metric-val" id="valDownload">-</span>
+          <span class="metric-unit">Mbps</span>
+        </div>
+        <div class="metric-card" id="cardUpload">
+          <span class="metric-label">Upload</span>
+          <span class="metric-val" id="valUpload">-</span>
+          <span class="metric-unit">Mbps</span>
+        </div>
+      </div>
+
+      <button class="start-btn" id="startBtn" onclick="startSpeedtest()">Speedtest starten</button>
+    </div>
+  </div>
+
+  <script>
+    const statusText = document.getElementById('statusText');
+    const gaugeFill = document.getElementById('gaugeFill');
+    const gaugeVal = document.getElementById('gaugeVal');
+    const gaugeUnit = document.getElementById('gaugeUnit');
+    const startBtn = document.getElementById('startBtn');
+
+    const cardPing = document.getElementById('cardPing');
+    const cardDownload = document.getElementById('cardDownload');
+    const cardUpload = document.getElementById('cardUpload');
+
+    const valPing = document.getElementById('valPing');
+    const valDownload = document.getElementById('valDownload');
+    const valUpload = document.getElementById('valUpload');
+
+    const gradStop1 = document.getElementById('gradStop1');
+    const gradStop2 = document.getElementById('gradStop2');
+
+    const circumference = 2 * Math.PI * 90; // 565.48
+
+    function setGaugeProgress(pct) {
+      const offset = circumference - (pct / 100) * circumference;
+      gaugeFill.style.strokeDashoffset = offset;
+    }
+
+    // Target values fed by backend
+    let targetPhase = 'idle'; // 'idle', 'ping', 'download', 'upload', 'complete'
+    let currentPhase = 'idle';
+    let targetProgress = 0;
+    let currentProgress = 0;
+    let targetSpeed = 0;
+    let currentSpeed = 0;
+    let targetPing = 0;
+    let currentPing = 0;
+
+    let backendPing = 0;
+    let backendDownload = 0;
+    let backendUpload = 0;
+
+    let animationFrameId = null;
+
+    function resetUI() {
+      targetPhase = 'idle';
+      currentPhase = 'idle';
+      targetProgress = 0;
+      currentProgress = 0;
+      targetSpeed = 0;
+      currentSpeed = 0;
+      targetPing = 0;
+      currentPing = 0;
+      
+      backendPing = 0;
+      backendDownload = 0;
+      backendUpload = 0;
+
+      setGaugeProgress(0);
+      gaugeVal.textContent = "0.0";
+      gaugeUnit.textContent = "Mbps";
+      valPing.textContent = "-";
+      valDownload.textContent = "-";
+      valUpload.textContent = "-";
+
+      cardPing.className = "metric-card";
+      cardDownload.className = "metric-card";
+      cardUpload.className = "metric-card";
+
+      gradStop1.setAttribute('stop-color', '#06b6d4');
+      gradStop2.setAttribute('stop-color', '#a855f7');
+      document.getElementById('gaugeLabel').textContent = currentLang === 'de' ? "BEREIT" : "READY";
+
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+    }
+
+    let currentLang = 'de';
+    const langDict = {
+      de: {
+        backBtn: "← Zurück",
+        title: "⚡ Internet-Speedtest",
+        statusReady: "Bereit für Messung",
+        statusComplete: "Messung abgeschlossen!",
+        startBtn: "Speedtest starten",
+        msgNotReady: "System nicht bereit. Läuft die App als Desktop-Anwendung?",
+        msgMeasuringPing: "Ping wird gemessen...",
+        msgMeasuringDownload: "Download wird gemessen...",
+        msgMeasuringUpload: "Upload wird gemessen...",
+        msgConnError: "Verbindungsfehler: ",
+        msgError: "Fehler bei der Messung: "
+      },
+      en: {
+        backBtn: "← Back",
+        title: "⚡ Internet Speedtest",
+        statusReady: "Ready for testing",
+        statusComplete: "Testing complete!",
+        startBtn: "Start Speedtest",
+        msgNotReady: "System not ready. Is the app running as a desktop application?",
+        msgMeasuringPing: "Measuring ping...",
+        msgMeasuringDownload: "Measuring download...",
+        msgMeasuringUpload: "Measuring upload...",
+        msgConnError: "Connection error: ",
+        msgError: "Error during measurement: "
+      }
+    };
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      const dict = langDict[lang] || langDict['de'];
+      document.querySelector('.back-btn').innerHTML = dict.backBtn;
+      document.querySelector('h1').textContent = dict.title;
+      if (statusText.textContent === langDict['de'].statusReady || statusText.textContent === langDict['en'].statusReady) {
+        statusText.textContent = dict.statusReady;
+      }
+      document.getElementById('startBtn').textContent = dict.startBtn;
+      document.getElementById('gaugeLabel').textContent = lang === 'de' ? "BEREIT" : "READY";
+    }
+
+    function startSpeedtest() {
+      const dict = langDict[currentLang] || langDict['de'];
+      if (typeof pywebview === 'undefined') {
+        alert(dict.msgNotReady);
+        return;
+      }
+
+      resetUI();
+      startBtn.disabled = true;
+      statusText.className = "status-text running";
+      statusText.textContent = dict.msgMeasuringPing;
+      cardPing.classList.add('active');
+
+      targetPhase = 'ping';
+      currentPhase = 'ping';
+
+      gradStop1.setAttribute('stop-color', '#00f2fe');
+      gradStop2.setAttribute('stop-color', '#4facfe');
+      document.getElementById('gaugeLabel').textContent = "PING";
+      
+      // Start 60fps animation loop
+      animationFrameId = requestAnimationFrame(animationLoop);
+
+      pywebview.api.run_speed_test().then(res => {
+        if (res && res.success) {
+          backendPing = parseFloat(res.ping);
+          backendDownload = parseFloat(res.download);
+          backendUpload = parseFloat(res.upload);
+          
+          targetPhase = 'complete';
+        } else {
+          statusText.className = "status-text";
+          statusText.textContent = dict.msgError + (res ? res.error : 'Unbekannt');
+          resetUI();
+          startBtn.disabled = false;
+        }
+      }).catch(err => {
+        startBtn.disabled = false;
+        statusText.className = "status-text";
+        statusText.textContent = dict.msgConnError + err;
+        resetUI();
+      });
+    }
+
+    // Called dynamically by Python backend to push live progress updates
+    window.updateSpeedtestStatus = function(phase, pct, value) {
+      targetPhase = phase;
+      targetProgress = pct;
+      
+      if (phase === 'ping') {
+        targetPing = value;
+        if (pct === 100) {
+          backendPing = value;
+        }
+      } else if (phase === 'download') {
+        targetSpeed = value;
+        if (pct === 100) {
+          backendDownload = value;
+        }
+      } else if (phase === 'upload') {
+        targetSpeed = value;
+        if (pct === 100) {
+          backendUpload = value;
+        }
+      } else if (phase === 'complete') {
+        targetSpeed = value;
+      }
+    };
+
+    function formatSpeed(val) {
+      if (val < 10) {
+        const formatted = val.toFixed(1);
+        return currentLang === 'de' ? formatted.replace('.', ',') : formatted;
+      } else {
+        return Math.round(val).toString();
+      }
+    }
+
+    function animationLoop() {
+      if (currentPhase === 'idle') return;
+      
+      const dict = langDict[currentLang] || langDict['de'];
+      
+      // Handle Phase Transitions
+      if (targetPhase !== currentPhase) {
+        if (currentPhase === 'ping') {
+          valPing.textContent = Math.round(backendPing);
+          cardPing.className = "metric-card";
+          cardDownload.className = "metric-card active";
+          currentSpeed = 0;
+          currentProgress = 0;
+        } 
+        else if (currentPhase === 'download') {
+          valDownload.textContent = formatSpeed(backendDownload);
+          cardDownload.className = "metric-card";
+          cardUpload.className = "metric-card active-ul";
+          currentSpeed = 0;
+          currentProgress = 0;
+        } 
+        else if (currentPhase === 'upload') {
+          valUpload.textContent = formatSpeed(backendUpload);
+          cardUpload.className = "metric-card";
+        }
+        
+        currentPhase = targetPhase;
+
+        // Shift color gradients and labels dynamically depending on the current phase
+        if (currentPhase === 'ping') {
+          gradStop1.setAttribute('stop-color', '#00f2fe');
+          gradStop2.setAttribute('stop-color', '#4facfe');
+          document.getElementById('gaugeLabel').textContent = "PING";
+        } else if (currentPhase === 'download') {
+          gradStop1.setAttribute('stop-color', '#06b6d4');
+          gradStop2.setAttribute('stop-color', '#a855f7');
+          document.getElementById('gaugeLabel').textContent = "DOWNLOAD";
+        } else if (currentPhase === 'upload') {
+          gradStop1.setAttribute('stop-color', '#a855f7');
+          gradStop2.setAttribute('stop-color', '#ec4899');
+          document.getElementById('gaugeLabel').textContent = "UPLOAD";
+        } else if (currentPhase === 'complete') {
+          gradStop1.setAttribute('stop-color', '#06b6d4');
+          gradStop2.setAttribute('stop-color', '#a855f7');
+          document.getElementById('gaugeLabel').textContent = currentLang === 'de' ? "FERTIG" : "COMPLETE";
+        }
+      }
+      
+      // Interpolate values for smooth movement at 60 FPS
+      currentProgress += (targetProgress - currentProgress) * 0.08;
+      currentSpeed += (targetSpeed - currentSpeed) * 0.06;
+      currentPing += (targetPing - currentPing) * 0.08;
+      
+      // Render frame based on current phase
+      if (currentPhase === 'ping') {
+        statusText.textContent = dict.msgMeasuringPing;
+        setGaugeProgress(currentProgress);
+        
+        const dispPing = Math.round(currentPing);
+        gaugeVal.textContent = dispPing;
+        gaugeUnit.textContent = "ms";
+        valPing.textContent = dispPing || "-";
+      } 
+      else if (currentPhase === 'download') {
+        const displayPct = Math.round(currentProgress);
+        statusText.textContent = `${dict.msgMeasuringDownload.replace('...', '')} (${displayPct}%)`;
+        setGaugeProgress(currentProgress);
+        
+        const dispSpeed = formatSpeed(currentSpeed);
+        gaugeVal.textContent = dispSpeed;
+        gaugeUnit.textContent = "Mbps";
+        valDownload.textContent = dispSpeed;
+      } 
+      else if (currentPhase === 'upload') {
+        const displayPct = Math.round(currentProgress);
+        statusText.textContent = `${dict.msgMeasuringUpload.replace('...', '')} (${displayPct}%)`;
+        setGaugeProgress(currentProgress);
+        
+        const dispSpeed = formatSpeed(currentSpeed);
+        gaugeVal.textContent = dispSpeed;
+        gaugeUnit.textContent = "Mbps";
+        valUpload.textContent = dispSpeed;
+      } 
+      else if (currentPhase === 'complete') {
+        statusText.className = "status-text";
+        statusText.textContent = dict.statusComplete;
+        
+        setGaugeProgress(100);
+        gaugeVal.textContent = formatSpeed(backendDownload);
+        gaugeUnit.textContent = "Mbps";
+        
+        valPing.textContent = Math.round(backendPing);
+        valDownload.textContent = formatSpeed(backendDownload);
+        valUpload.textContent = formatSpeed(backendUpload);
+        
+        cardPing.className = "metric-card";
+        cardDownload.className = "metric-card";
+        cardUpload.className = "metric-card";
+        
+        startBtn.disabled = false;
+        
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+        return;
+      }
+      
+      animationFrameId = requestAnimationFrame(animationLoop);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.get_language().then(lang => {
+          applyLanguage(lang || 'de');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,1152 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Währungsrechner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-deep:       #0a0614;
+      --bg-mid:        #0f0a1e;
+      --glass-bg:      rgba(255,255,255,0.05);
+      --glass-border:  rgba(255,255,255,0.10);
+      --glass-hover:   rgba(255,255,255,0.08);
+      --purple:        #a855f7;
+      --purple-light:  #c084fc;
+      --cyan:          #22d3ee;
+      --cyan-light:    #67e8f9;
+      --pink:          #ec4899;
+      --text-primary:  #f1f5f9;
+      --text-secondary:#94a3b8;
+      --text-muted:    #64748b;
+      --success:       #34d399;
+      --error:         #f87171;
+      --radius-sm:     10px;
+      --radius-md:     16px;
+      --radius-lg:     24px;
+      --radius-xl:     32px;
+      --transition:    0.25s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    html, body {
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      overflow-x: hidden;
+    }
+
+    /* ── Animated background ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(168,85,247,0.20) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 50% at 80% 80%, rgba(34,211,238,0.15) 0%, transparent 55%),
+        radial-gradient(ellipse 50% 40% at 55% 45%, rgba(236,72,153,0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed; inset: 0; z-index: 0;
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(255,255,255,0.04) 1px, transparent 0);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* ── Layout ── */
+    .page {
+      position: relative; z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+      gap: 28px;
+    }
+
+    /* ── Header ── */
+    .header {
+      text-align: center;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(168,85,247,0.15);
+      border: 1px solid rgba(168,85,247,0.30);
+      border-radius: 100px;
+      padding: 6px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--purple-light);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .header-badge .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--purple-light);
+      box-shadow: 0 0 8px var(--purple);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      background: linear-gradient(135deg, var(--purple-light) 0%, var(--cyan) 50%, var(--pink) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 8px;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-xl);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 32px;
+      width: 100%;
+      max-width: 600px;
+      animation: fadeUp 0.6s ease both;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(168,85,247,0.5), rgba(34,211,238,0.5), transparent);
+    }
+
+    .card--delay { animation-delay: 0.1s; }
+    .card--delay2 { animation-delay: 0.2s; }
+
+    /* ── Converter area ── */
+    .converter-row {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .currency-block { display: flex; flex-direction: column; gap: 10px; }
+
+    .block-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+
+    /* ── Custom Select ── */
+    .select-wrapper {
+      position: relative;
+    }
+
+    .select-search {
+      width: 100%;
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .select-search::placeholder { color: var(--text-muted); }
+
+    .select-search:focus {
+      border-color: rgba(168,85,247,0.5);
+      background: rgba(168,85,247,0.08);
+      color: var(--text-primary);
+    }
+
+    .select-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .select-trigger:hover { background: var(--glass-hover); border-color: rgba(168,85,247,0.3); }
+
+    .select-flag { font-size: 20px; line-height: 1; }
+    .select-code { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+    .select-name { font-size: 12px; color: var(--text-muted); flex: 1; }
+    .select-chevron {
+      font-size: 11px;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+    }
+
+    .select-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0; right: 0;
+      background: #1a1030;
+      border: 1px solid rgba(168,85,247,0.25);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      z-index: 100;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(168,85,247,0.10);
+      display: none;
+      animation: dropDown 0.2s ease both;
+    }
+
+    .select-dropdown.open { display: block; }
+
+    .dropdown-search {
+      padding: 10px 14px;
+      background: rgba(255,255,255,0.04);
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .dropdown-search input {
+      width: 100%;
+      background: none;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+    }
+
+    .dropdown-search input::placeholder { color: var(--text-muted); }
+
+    .dropdown-list {
+      max-height: 240px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(168,85,247,0.3) transparent;
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: background var(--transition);
+      font-size: 13px;
+    }
+
+    .dropdown-item:hover { background: rgba(168,85,247,0.12); }
+    .dropdown-item.active { background: rgba(168,85,247,0.20); }
+    .dropdown-item .flag { font-size: 18px; }
+    .dropdown-item .code { font-weight: 700; color: var(--text-primary); min-width: 40px; }
+    .dropdown-item .name { color: var(--text-muted); }
+
+    /* ── Swap button ── */
+    .swap-col {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      padding-bottom: 2px;
+    }
+
+    .swap-btn {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(168,85,247,0.25), rgba(34,211,238,0.20));
+      border: 1px solid rgba(168,85,247,0.35);
+      color: var(--purple-light);
+      font-size: 20px;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .swap-btn::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(168,85,247,0.4), rgba(34,211,238,0.3));
+      opacity: 0;
+      transition: opacity var(--transition);
+    }
+
+    .swap-btn:hover::before { opacity: 1; }
+    .swap-btn:hover { transform: scale(1.08); border-color: var(--purple); box-shadow: 0 0 20px rgba(168,85,247,0.4); }
+    .swap-btn:active { transform: scale(0.95); }
+    .swap-btn.spinning { animation: spinY 0.4s ease; }
+
+    /* ── Amount input ── */
+    .amount-block { display: flex; flex-direction: column; gap: 10px; }
+
+    .amount-wrapper {
+      position: relative;
+    }
+
+    .amount-input {
+      width: 100%;
+      padding: 16px 18px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      outline: none;
+      transition: var(--transition);
+      -moz-appearance: textfield;
+    }
+
+    .amount-input::-webkit-outer-spin-button,
+    .amount-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .amount-input:focus {
+      border-color: rgba(168,85,247,0.5);
+      background: rgba(168,85,247,0.06);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.12), 0 0 30px rgba(168,85,247,0.08);
+    }
+
+    .amount-input::placeholder { color: var(--text-muted); }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+      margin: 24px 0;
+    }
+
+    /* ── Result display ── */
+    .result-block {
+      text-align: center;
+    }
+
+    .result-label {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .result-value {
+      font-size: clamp(2.4rem, 7vw, 4rem);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      background: linear-gradient(135deg, var(--cyan-light), var(--cyan), var(--purple-light));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      min-height: 1.2em;
+      transition: opacity 0.2s;
+    }
+
+    .result-value.updating { opacity: 0.5; }
+
+    .result-currency {
+      margin-top: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    /* ── Rate badge ── */
+    .rate-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 8px 18px;
+      background: rgba(34,211,238,0.08);
+      border: 1px solid rgba(34,211,238,0.20);
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--cyan-light);
+    }
+
+    .rate-badge .rate-icon { font-size: 14px; }
+
+    /* ── Quick convert table ── */
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0.08), transparent);
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+
+    .quick-item {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      cursor: default;
+    }
+
+    .quick-item::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--purple), var(--cyan));
+      transform: scaleX(0);
+      transition: transform var(--transition);
+      transform-origin: left;
+    }
+
+    .quick-item:hover { background: rgba(255,255,255,0.07); border-color: rgba(168,85,247,0.20); }
+    .quick-item:hover::before { transform: scaleX(1); }
+
+    .quick-flag { font-size: 22px; margin-bottom: 6px; }
+    .quick-code { font-size: 11px; font-weight: 700; color: var(--text-muted); letter-spacing: 0.08em; margin-bottom: 4px; }
+    .quick-amount {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* ── Status bar ── */
+    .status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 12px 18px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-md);
+      font-size: 12px;
+      color: var(--text-muted);
+      width: 100%;
+      max-width: 600px;
+      animation: fadeUp 0.6s 0.3s ease both;
+    }
+
+    .status-left { display: flex; align-items: center; gap: 8px; }
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 8px var(--success);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    .status-dot.error { background: var(--error); box-shadow: 0 0 8px var(--error); }
+    .status-dot.loading { background: var(--purple); box-shadow: 0 0 8px var(--purple); animation: pulse 0.8s ease-in-out infinite; }
+
+    .refresh-btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: none; border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 100px; padding: 5px 12px;
+      color: var(--text-muted); font-size: 11px; font-weight: 600;
+      cursor: pointer; transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+    }
+    .refresh-btn:hover { border-color: rgba(168,85,247,0.4); color: var(--purple-light); }
+    .refresh-btn.spin .icon { display: inline-block; animation: spinFull 0.8s linear infinite; }
+
+    /* ── Error overlay ── */
+    .error-card {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+      text-align: center;
+    }
+
+    .error-card.visible { display: flex; }
+
+    .error-icon { font-size: 48px; }
+    .error-title { font-size: 20px; font-weight: 700; color: var(--error); }
+    .error-msg { font-size: 14px; color: var(--text-muted); max-width: 300px; line-height: 1.6; }
+
+    .retry-btn {
+      padding: 10px 24px;
+      background: linear-gradient(135deg, rgba(248,113,113,0.2), rgba(248,113,113,0.10));
+      border: 1px solid rgba(248,113,113,0.35);
+      border-radius: 100px;
+      color: var(--error);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: var(--transition);
+      font-family: 'Inter', sans-serif;
+    }
+    .retry-btn:hover { background: rgba(248,113,113,0.25); transform: translateY(-1px); }
+
+    /* ── Loader ── */
+    .loader {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 40px;
+    }
+
+    .loader-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--purple);
+      animation: loaderBounce 1.2s ease-in-out infinite;
+    }
+    .loader-dot:nth-child(2) { background: var(--cyan); animation-delay: 0.2s; }
+    .loader-dot:nth-child(3) { background: var(--pink); animation-delay: 0.4s; }
+
+    /* ── Animations ── */
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes dropDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.6; transform: scale(0.85); }
+    }
+    @keyframes spinY {
+      0%   { transform: rotateY(0deg); }
+      100% { transform: rotateY(360deg); }
+    }
+    @keyframes spinFull {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    @keyframes loaderBounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%           { transform: scale(1.1); opacity: 1; }
+    }
+    @keyframes numberPop {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+    @keyframes shimmer {
+      from { background-position: -200% center; }
+      to   { background-position: 200% center; }
+    }
+
+    .pop { animation: numberPop 0.35s cubic-bezier(0.34,1.56,0.64,1) both; }
+
+    /* ── Responsive ── */
+    @media (max-width: 520px) {
+      .converter-row { grid-template-columns: 1fr; }
+      .swap-col { flex-direction: row; justify-content: center; padding-bottom: 0; }
+      .swap-btn { transform: rotate(90deg); }
+      .swap-btn:hover { transform: rotate(90deg) scale(1.08); }
+      .card { padding: 22px 18px; }
+    }
+  
+    /* ── Zurück-Button ── */
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      z-index: 999;
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #f1f5f9;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+    @media (max-width: 768px) {
+      .back-btn {
+        position: static;
+        margin: 10px auto;
+        display: flex;
+        width: fit-content;
+      }
+    }
+
+  </style>
+</head>
+<body>
+  <a href="../ToolForge.html" class="back-btn">⬅ Zurück</a>
+
+<div class="page">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-badge">
+      <span class="dot"></span>
+      Live Wechselkurse
+    </div>
+    <h1>Währungsrechner</h1>
+    <p class="subtitle">Echtzeitkurse · 25 Währungen · Live API</p>
+  </header>
+
+  <!-- Main converter card -->
+  <div class="card" id="mainCard">
+
+    <!-- Loader -->
+    <div class="loader" id="loader">
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+      <div class="loader-dot"></div>
+    </div>
+
+    <!-- Error state -->
+    <div class="error-card" id="errorCard">
+      <div class="error-icon">🌐</div>
+      <div class="error-title">Keine Verbindung</div>
+      <div class="error-msg" id="errorMsg">Die Wechselkurse konnten nicht geladen werden. Bitte überprüfe deine Internetverbindung.</div>
+      <button class="retry-btn" onclick="fetchRates()">↻ Erneut versuchen</button>
+    </div>
+
+    <!-- Main UI (hidden until loaded) -->
+    <div id="mainUI" style="display:none;">
+
+      <!-- Amount input -->
+      <div class="amount-block" style="margin-bottom: 20px;">
+        <label class="block-label">Betrag</label>
+        <div class="amount-wrapper">
+          <input
+            type="number"
+            class="amount-input"
+            id="amountInput"
+            value="1"
+            min="0"
+            step="any"
+            placeholder="0"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+
+      <!-- Currency selectors + swap -->
+      <div class="converter-row">
+        <div class="currency-block">
+          <label class="block-label">Von</label>
+          <div class="select-wrapper" id="fromWrapper">
+            <div class="select-trigger" id="fromTrigger" onclick="toggleDropdown('from')">
+              <span class="select-flag" id="fromFlag"></span>
+              <span class="select-code" id="fromCode"></span>
+              <span class="select-name" id="fromName"></span>
+              <span class="select-chevron" id="fromChevron">▼</span>
+            </div>
+            <div class="select-dropdown" id="fromDropdown">
+              <div class="dropdown-search">
+                <input type="text" placeholder="🔍 Suchen…" id="fromSearch" oninput="filterDropdown('from')" />
+              </div>
+              <div class="dropdown-list" id="fromList"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="swap-col">
+          <button class="swap-btn" id="swapBtn" onclick="swapCurrencies()" title="Tauschen">↕</button>
+        </div>
+
+        <div class="currency-block">
+          <label class="block-label">Nach</label>
+          <div class="select-wrapper" id="toWrapper">
+            <div class="select-trigger" id="toTrigger" onclick="toggleDropdown('to')">
+              <span class="select-flag" id="toFlag"></span>
+              <span class="select-code" id="toCode"></span>
+              <span class="select-name" id="toName"></span>
+              <span class="select-chevron" id="toChevron">▼</span>
+            </div>
+            <div class="select-dropdown" id="toDropdown">
+              <div class="dropdown-search">
+                <input type="text" placeholder="🔍 Suchen…" id="toSearch" oninput="filterDropdown('to')" />
+              </div>
+              <div class="dropdown-list" id="toList"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Result -->
+      <div class="result-block">
+        <div class="result-label">Umgerechnet</div>
+        <div class="result-value" id="resultValue">—</div>
+        <div class="result-currency" id="resultCurrency"></div>
+        <div class="rate-badge" id="rateBadge">
+          <span class="rate-icon">⚡</span>
+          <span id="rateText">Lade Kurs…</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Quick convert card -->
+  <div class="card card--delay" id="quickCard" style="display:none;">
+    <div class="section-title">Schnellvergleich</div>
+    <div class="quick-grid" id="quickGrid"></div>
+  </div>
+
+  <!-- Status bar -->
+  <div class="status-bar" id="statusBar" style="display:none;">
+    <div class="status-left">
+      <div class="status-dot" id="statusDot"></div>
+      <span id="statusText">Verbunden</span>
+    </div>
+    <button class="refresh-btn" id="refreshBtn" onclick="fetchRates()">
+      <span class="icon">↻</span> Aktualisieren
+    </button>
+  </div>
+
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  DATA
+// ─────────────────────────────────────────────
+const CURRENCIES = [
+  { code: 'EUR', name: 'Euro',                       flag: '🇪🇺' },
+  { code: 'USD', name: 'US-Dollar',                  flag: '🇺🇸' },
+  { code: 'GBP', name: 'Britisches Pfund',           flag: '🇬🇧' },
+  { code: 'JPY', name: 'Japanischer Yen',            flag: '🇯🇵' },
+  { code: 'CHF', name: 'Schweizer Franken',          flag: '🇨🇭' },
+  { code: 'CAD', name: 'Kanadischer Dollar',         flag: '🇨🇦' },
+  { code: 'AUD', name: 'Australischer Dollar',       flag: '🇦🇺' },
+  { code: 'CNY', name: 'Chinesischer Yuan',          flag: '🇨🇳' },
+  { code: 'INR', name: 'Indische Rupie',             flag: '🇮🇳' },
+  { code: 'BRL', name: 'Brasilianischer Real',       flag: '🇧🇷' },
+  { code: 'MXN', name: 'Mexikanischer Peso',         flag: '🇲🇽' },
+  { code: 'KRW', name: 'Südkoreanischer Won',        flag: '🇰🇷' },
+  { code: 'SGD', name: 'Singapur-Dollar',            flag: '🇸🇬' },
+  { code: 'HKD', name: 'Hongkong-Dollar',            flag: '🇭🇰' },
+  { code: 'NOK', name: 'Norwegische Krone',          flag: '🇳🇴' },
+  { code: 'SEK', name: 'Schwedische Krone',          flag: '🇸🇪' },
+  { code: 'DKK', name: 'Dänische Krone',             flag: '🇩🇰' },
+  { code: 'PLN', name: 'Polnischer Zloty',           flag: '🇵🇱' },
+  { code: 'CZK', name: 'Tschechische Krone',         flag: '🇨🇿' },
+  { code: 'HUF', name: 'Ungarischer Forint',         flag: '🇭🇺' },
+  { code: 'RUB', name: 'Russischer Rubel',           flag: '🇷🇺' },
+  { code: 'TRY', name: 'Türkische Lira',             flag: '🇹🇷' },
+  { code: 'ZAR', name: 'Südafrikanischer Rand',      flag: '🇿🇦' },
+  { code: 'AED', name: 'Dirham (VAE)',               flag: '🇦🇪' },
+  { code: 'SAR', name: 'Saudi-Riyal',                flag: '🇸🇦' },
+];
+
+const QUICK_CURRENCIES = ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CNY', 'CAD', 'AUD'];
+
+// State
+let rates = {};         // code → rate relative to EUR
+let fromCurrency = 'EUR';
+let toCurrency   = 'USD';
+let lastUpdated  = null;
+let animTimer    = null;
+
+// ─────────────────────────────────────────────
+//  FETCH
+// ─────────────────────────────────────────────
+async function fetchRates() {
+  showLoader();
+  setStatus('loading', 'Lade Kurse…');
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spin');
+
+  try {
+    let data;
+    if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.fetch_currency_rates) {
+      const res = await pywebview.api.fetch_currency_rates();
+      if (!res.success) throw new Error(res.error || 'Fehler beim Laden der Kurse über das Backend');
+      data = res.data;
+    } else {
+      const res = await fetch('https://api.exchangerate-api.com/v4/latest/EUR', { cache: 'no-store' });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      data = await res.json();
+    }
+    
+    rates = data.rates || {};
+    rates['EUR'] = 1; // base
+    lastUpdated = new Date();
+    showMainUI();
+    renderDropdowns();
+    setTrigger('from', fromCurrency);
+    setTrigger('to', toCurrency);
+    convert();
+    renderQuickGrid();
+    setStatus('ok', `Zuletzt: ${formatTime(lastUpdated)}`);
+  } catch (err) {
+    showError(err.message);
+    setStatus('error', 'Verbindungsfehler');
+  }
+
+  btn.classList.remove('spin');
+}
+
+// ─────────────────────────────────────────────
+//  UI STATES
+// ─────────────────────────────────────────────
+function showLoader() {
+  document.getElementById('loader').style.display = 'flex';
+  document.getElementById('errorCard').classList.remove('visible');
+  document.getElementById('mainUI').style.display = 'none';
+  document.getElementById('quickCard').style.display = 'none';
+}
+
+function showMainUI() {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('errorCard').classList.remove('visible');
+  document.getElementById('mainUI').style.display = 'block';
+  document.getElementById('quickCard').style.display = 'block';
+  document.getElementById('statusBar').style.display = 'flex';
+}
+
+function showError(msg) {
+  document.getElementById('loader').style.display = 'none';
+  document.getElementById('errorCard').classList.add('visible');
+  document.getElementById('mainUI').style.display = 'none';
+  document.getElementById('statusBar').style.display = 'flex';
+  if (msg) document.getElementById('errorMsg').textContent =
+    'Fehler: ' + msg + '. Bitte überprüfe deine Internetverbindung.';
+}
+
+function setStatus(type, text) {
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot';
+  if (type === 'error')   dot.classList.add('error');
+  if (type === 'loading') dot.classList.add('loading');
+  document.getElementById('statusText').textContent = text;
+}
+
+// ─────────────────────────────────────────────
+//  DROPDOWNS
+// ─────────────────────────────────────────────
+function renderDropdowns() {
+  renderList('from', CURRENCIES);
+  renderList('to',   CURRENCIES);
+}
+
+function renderList(side, list) {
+  const container = document.getElementById(side + 'List');
+  container.innerHTML = '';
+  const active = side === 'from' ? fromCurrency : toCurrency;
+  list.forEach(c => {
+    const item = document.createElement('div');
+    item.className = 'dropdown-item' + (c.code === active ? ' active' : '');
+    item.innerHTML = `<span class="flag">${c.flag}</span><span class="code">${c.code}</span><span class="name">${c.name}</span>`;
+    item.onclick = () => selectCurrency(side, c.code);
+    container.appendChild(item);
+  });
+}
+
+function filterDropdown(side) {
+  const query = document.getElementById(side + 'Search').value.toLowerCase();
+  const filtered = CURRENCIES.filter(c =>
+    c.code.toLowerCase().includes(query) || c.name.toLowerCase().includes(query)
+  );
+  renderList(side, filtered);
+}
+
+function toggleDropdown(side) {
+  const dd = document.getElementById(side + 'Dropdown');
+  const chevron = document.getElementById(side + 'Chevron');
+  const isOpen = dd.classList.contains('open');
+
+  // close all
+  document.querySelectorAll('.select-dropdown').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.select-chevron').forEach(c => c.style.transform = '');
+
+  if (!isOpen) {
+    dd.classList.add('open');
+    chevron.style.transform = 'rotate(180deg)';
+    // focus search
+    setTimeout(() => {
+      const searchEl = document.getElementById(side + 'Search');
+      searchEl.value = '';
+      searchEl.focus();
+      filterDropdown(side);
+    }, 50);
+  }
+}
+
+function selectCurrency(side, code) {
+  if (side === 'from') fromCurrency = code;
+  else                 toCurrency   = code;
+  setTrigger(side, code);
+  closeDropdowns();
+  convert();
+  renderQuickGrid();
+}
+
+function setTrigger(side, code) {
+  const cur = CURRENCIES.find(c => c.code === code);
+  if (!cur) return;
+  document.getElementById(side + 'Flag').textContent = cur.flag;
+  document.getElementById(side + 'Code').textContent = cur.code;
+  document.getElementById(side + 'Name').textContent = cur.name;
+}
+
+function closeDropdowns() {
+  document.querySelectorAll('.select-dropdown').forEach(d => d.classList.remove('open'));
+  document.querySelectorAll('.select-chevron').forEach(c => c.style.transform = '');
+}
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.select-wrapper')) closeDropdowns();
+});
+
+// ─────────────────────────────────────────────
+//  SWAP
+// ─────────────────────────────────────────────
+function swapCurrencies() {
+  const btn = document.getElementById('swapBtn');
+  btn.classList.remove('spinning');
+  void btn.offsetWidth;
+  btn.classList.add('spinning');
+
+  [fromCurrency, toCurrency] = [toCurrency, fromCurrency];
+  setTrigger('from', fromCurrency);
+  setTrigger('to', toCurrency);
+  renderList('from', CURRENCIES);
+  renderList('to', CURRENCIES);
+  convert();
+  renderQuickGrid();
+}
+
+// ─────────────────────────────────────────────
+//  CONVERSION
+// ─────────────────────────────────────────────
+function getRate(from, to) {
+  if (!rates[from] || !rates[to]) return null;
+  const rawRate = rates[to] / rates[from];
+  const decimals = rawRate < 0.001 ? 6 : 4;
+  return parseFloat(rawRate.toFixed(decimals));
+}
+
+function convert() {
+  const amount = parseFloat(document.getElementById('amountInput').value);
+  const rate = getRate(fromCurrency, toCurrency);
+  const fromCur = CURRENCIES.find(c => c.code === fromCurrency);
+  const toCur   = CURRENCIES.find(c => c.code === toCurrency);
+
+  if (rate === null || isNaN(amount)) {
+    document.getElementById('resultValue').textContent = '—';
+    return;
+  }
+
+  const result = amount * rate;
+  const rateFormatted = formatNumber(rate, toCurrency, true);
+
+  // Animated count-up
+  animateNumber(result, toCurrency);
+
+  document.getElementById('resultCurrency').textContent =
+    `${fromCur ? fromCur.flag : ''} ${fromCurrency} → ${toCur ? toCur.flag : ''} ${toCurrency}`;
+
+  document.getElementById('rateText').textContent =
+    `1 ${fromCurrency} = ${rateFormatted} ${toCurrency}`;
+}
+
+// ─────────────────────────────────────────────
+//  ANIMATED NUMBER
+// ─────────────────────────────────────────────
+function animateNumber(target, currency) {
+  const el = document.getElementById('resultValue');
+  if (animTimer) { clearInterval(animTimer); animTimer = null; }
+
+  const current = parseFloat(el.dataset.raw) || 0;
+  const start = current;
+  const end   = target;
+  const duration = 400;
+  const startTime = performance.now();
+
+  el.classList.remove('pop');
+
+  function step(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+    const val = start + (end - start) * eased;
+    el.textContent = formatNumber(val, currency);
+    el.dataset.raw = val;
+
+    if (progress < 1) {
+      animTimer = requestAnimationFrame(step);
+    } else {
+      el.textContent = formatNumber(end, currency);
+      el.dataset.raw = end;
+      void el.offsetWidth;
+      el.classList.add('pop');
+    }
+  }
+
+  animTimer = requestAnimationFrame(step);
+}
+
+// ─────────────────────────────────────────────
+//  QUICK GRID
+// ─────────────────────────────────────────────
+function renderQuickGrid() {
+  const amount = parseFloat(document.getElementById('amountInput').value) || 1;
+  const grid = document.getElementById('quickGrid');
+  grid.innerHTML = '';
+
+  const targets = QUICK_CURRENCIES.filter(c => c !== fromCurrency);
+  // Always show 8 slots; add fromCurrency at start if needed
+  const list = [fromCurrency, ...targets].slice(0, 8);
+
+  list.forEach((code, i) => {
+    const cur = CURRENCIES.find(c => c.code === code);
+    if (!cur) return;
+    const rate = getRate(fromCurrency, code);
+    const val = rate !== null ? amount * rate : null;
+
+    const item = document.createElement('div');
+    item.className = 'quick-item';
+    item.style.animationDelay = (i * 0.04) + 's';
+    item.innerHTML = `
+      <div class="quick-flag">${cur.flag}</div>
+      <div class="quick-code">${cur.code}</div>
+      <div class="quick-amount" id="quick-${code}">${val !== null ? formatNumber(val, code) : '—'}</div>
+    `;
+    grid.appendChild(item);
+  });
+}
+
+// ─────────────────────────────────────────────
+//  FORMATTING
+// ─────────────────────────────────────────────
+const COMPACT_CODES = new Set(['JPY', 'KRW', 'HUF', 'CZK', 'IDR', 'VND']);
+
+function formatNumber(num, currency, isRate = false) {
+  if (isNaN(num)) return '—';
+
+  let decimals;
+  if (isRate) {
+    decimals = num < 0.001 ? 6 : 4;
+  } else {
+    const isCompact = COMPACT_CODES.has(currency);
+    if (isCompact) {
+      decimals = 0;
+    } else if (num === 0) {
+      decimals = 2;
+    } else {
+      const absNum = Math.abs(num);
+      if (absNum < 0.01) {
+        let d = 2;
+        while (d < 8 && absNum < Math.pow(10, -d + 1)) {
+          d++;
+        }
+        decimals = d;
+      } else {
+        decimals = 2;
+      }
+    }
+  }
+
+  try {
+    return new Intl.NumberFormat('de-DE', {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    }).format(num);
+  } catch {
+    return num.toFixed(decimals);
+  }
+}
+
+function formatTime(date) {
+  return date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+}
+
+// ─────────────────────────────────────────────
+//  EVENTS
+// ─────────────────────────────────────────────
+document.getElementById('amountInput').addEventListener('input', () => {
+  convert();
+  renderQuickGrid();
+});
+
+// Also handle Enter key in amount
+document.getElementById('amountInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.target.blur(); }
+});
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+fetchRates();
+
+// Auto-refresh every 5 minutes
+setInterval(() => {
+  if (Object.keys(rates).length > 0) {
+    fetchRates();
+  }
+}, 5 * 60 * 1000);
+</script>
+</body>
+</html>

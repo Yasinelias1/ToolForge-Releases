@@ -1,0 +1,25 @@
+# Caches and byte-code
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# Virtual Environments
+venv/
+ENV/
+env/
+.env
+.venv
+
+# Build and Packaging
+build/
+dist/
+*.spec
+*.exe
+
+# Local configs and temp files
+config.json
+temp_video_*
+temp_preview_*
+*_backup.*
+

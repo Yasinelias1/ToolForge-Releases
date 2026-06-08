@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dateikompressor – ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09090e;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(255,255,255,0.14);
+      --text: #f0f0ff;
+      --text-muted: #8888aa;
+      --accent: #06b6d4;
+      --accent-hover: #22d3ee;
+      --accent2: #6366f1;
+      --gradient: linear-gradient(135deg, #06b6d4, #6366f1);
+      --radius: 18px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 80% 10%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 20% 90%, rgba(99, 102, 241, 0.08) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      z-index: 999;
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(6, 182, 212, 0.4);
+      color: #f1f5f9;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .app-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 90px 20px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Tabs */
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      padding: 6px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--gradient);
+      box-shadow: 0 4px 12px rgba(6, 182, 212, 0.2);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .group-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Upload box */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 30px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.01);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .dropzone:hover {
+      border-color: var(--accent);
+      background: rgba(6, 182, 212, 0.02);
+    }
+    .dropzone-icon {
+      font-size: 2.2rem;
+    }
+    .dropzone-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .dropzone-subtext {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Metadata Info */
+    .meta-card {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-top: 14px;
+      align-items: center;
+    }
+    .meta-thumbnail {
+      width: 60px;
+      height: 60px;
+      border-radius: 6px;
+      object-fit: cover;
+      background: #111;
+      border: 1px solid var(--border);
+      display: none;
+    }
+    .meta-details {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .meta-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      word-break: break-all;
+    }
+    .meta-size-row {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Settings inputs */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 550px) {
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+    .settings-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .settings-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .settings-select, .url-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .settings-select:focus, .url-input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .settings-select option {
+      background: #111118;
+      color: var(--text);
+    }
+
+    /* Quality Slider */
+    .slider-wrap {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .quality-slider {
+      flex: 1;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+    }
+    .btn.primary {
+      background: var(--gradient);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.25);
+    }
+    .btn.primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--accent-hover), #818cf8);
+      box-shadow: 0 6px 20px rgba(6, 182, 212, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Comparison statistics */
+    .comp-box {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(6, 182, 212, 0.04);
+      border: 1px solid rgba(6, 182, 212, 0.15);
+      border-radius: var(--radius-sm);
+      display: flex;
+      justify-content: space-around;
+      text-align: center;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .comp-stat-val {
+      font-size: 1.25rem;
+      font-weight: 800;
+    }
+    .comp-stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-top: 4px;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--gradient);
+      color: white;
+      padding: 12px 26px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 32px rgba(6, 182, 212, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 9999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="../ToolForge.html" class="back-btn">⬅ Zurück</a>
+
+  <div class="app-container">
+    <header>
+      <h1>Dateikompressor</h1>
+      <p>Komprimiere Bilder und Audio-Dateien offline mit einstellbarer Qualität und Dimension.</p>
+    </header>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('image')">🖼️ Bilder komprimieren</button>
+      <button class="tab-btn" onclick="switchTab('audio')">🎵 Audio komprimieren</button>
+    </div>
+
+    <!-- TAB 1: IMAGES -->
+    <div class="tab-content active" id="tab-image">
+      <div class="card">
+        <div class="group-title">Bild-Kompressor</div>
+
+        <div class="dropzone" id="imgDropzone" onclick="selectImageFile()">
+          <span class="dropzone-icon">🖼️</span>
+          <span class="dropzone-text" id="imgFilenameText">Bild-Datei auswählen</span>
+          <span class="dropzone-subtext" id="imgSubtext">Klicke, um ein Bild (JPG, PNG, WebP) auszuwählen</span>
+        </div>
+
+        <div class="meta-card" id="imgMetaCard" style="display: none;">
+          <img id="imgThumbnail" class="meta-thumbnail" src="" alt="Thumbnail" />
+          <div class="meta-details">
+            <div id="imgMetaTitle" class="meta-title">Dateiname.jpg</div>
+            <div id="imgMetaSizeRow" class="meta-size-row">Größe: 0 KB · Dimensionen: 0x0</div>
+          </div>
+        </div>
+
+        <div id="imgConfigWrap" style="display: none; margin-top: 20px;">
+          <div class="settings-grid">
+            <div class="settings-item" style="grid-column: span 2;">
+              <span class="settings-label">
+                <span>Kompressions-Qualität</span>
+                <span id="qualityValLabel">80%</span>
+              </span>
+              <div class="slider-wrap">
+                <input type="range" id="imgQualitySlider" class="quality-slider" min="5" max="100" value="80" oninput="updateQualityLabel()" />
+              </div>
+            </div>
+            
+            <div class="settings-item">
+              <span class="settings-label">Bild-Dimensionen (Skalierung)</span>
+              <select id="imgScaleSelect" class="settings-select">
+                <option value="100">Originalgröße (100%)</option>
+                <option value="75">Mittel (75%)</option>
+                <option value="50">Klein (50%)</option>
+                <option value="25">Sehr klein (25%)</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <span class="settings-label">Ausgabeformat</span>
+              <select id="imgFormatSelect" class="settings-select">
+                <option value="match">Wie Original</option>
+                <option value="jpg">JPEG (.jpg)</option>
+                <option value="png">PNG (.png)</option>
+                <option value="webp">WebP (.webp)</option>
+              </select>
+            </div>
+
+            <div class="settings-item" style="grid-column: span 2;">
+              <span class="settings-label">Dateiname (ohne Endung)</span>
+              <input type="text" id="imgFilenameInput" class="url-input" placeholder="z.B. bild_komprimiert" />
+            </div>
+          </div>
+
+          <button class="btn primary" onclick="runImageCompression()">
+            ⚡ Bild komprimieren &amp; speichern
+          </button>
+        </div>
+
+        <div class="comp-box" id="imgCompBox" style="display: none;">
+          <div>
+            <div class="comp-stat-val" id="imgOriginalSizeVal" style="color: var(--text-muted)">0 MB</div>
+            <div class="comp-stat-label">Original</div>
+          </div>
+          <div style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center; color: var(--accent);">➔</div>
+          <div>
+            <div class="comp-stat-val" id="imgCompressedSizeVal" style="color: var(--accent)">0 MB</div>
+            <div class="comp-stat-label">Komprimiert</div>
+          </div>
+          <div>
+            <div class="comp-stat-val" id="imgSavingsVal" style="color: #34d399">-0%</div>
+            <div class="comp-stat-label">Gespart</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: AUDIO -->
+    <div class="tab-content" id="tab-audio">
+      <div class="card">
+        <div class="group-title">Audio-Kompressor</div>
+
+        <div class="dropzone" id="audioDropzone" onclick="selectAudioFile()">
+          <span class="dropzone-icon">🎵</span>
+          <span class="dropzone-text" id="audioFilenameText">Audio-Datei auswählen</span>
+          <span class="dropzone-subtext" id="audioSubtext">Klicke, um eine Audio-Datei (MP3, WAV, M4A, OGG) auszuwählen</span>
+        </div>
+
+        <div class="meta-card" id="audioMetaCard" style="display: none;">
+          <div class="meta-details">
+            <div id="audioMetaTitle" class="meta-title">audiodom.mp3</div>
+            <div id="audioMetaSizeRow" class="meta-size-row">Größe: 0 KB</div>
+          </div>
+        </div>
+
+        <div id="audioConfigWrap" style="display: none; margin-top: 20px;">
+          <div class="settings-grid">
+            <div class="settings-item">
+              <span class="settings-label">Ziel-Bitrate (Audioqualität)</span>
+              <select id="audioBitrateSelect" class="settings-select">
+                <option value="128">Standard (128 kbps)</option>
+                <option value="192">Gut (192 kbps)</option>
+                <option value="320">Sehr gut (320 kbps)</option>
+                <option value="64">Niedrig (64 kbps)</option>
+              </select>
+            </div>
+
+            <div class="settings-item">
+              <span class="settings-label">Ziel-Format</span>
+              <select id="audioFormatSelect" class="settings-select">
+                <option value="mp3">MP3 (.mp3)</option>
+                <option value="m4a">M4A (.m4a)</option>
+                <option value="wav">WAV (.wav)</option>
+              </select>
+            </div>
+
+            <div class="settings-item" style="grid-column: span 2;">
+              <span class="settings-label">Dateiname (ohne Endung)</span>
+              <input type="text" id="audioFilenameInput" class="url-input" placeholder="z.B. lied_komprimiert" />
+            </div>
+          </div>
+
+          <button class="btn primary" onclick="runAudioCompression()">
+            ⚡ Audio komprimieren &amp; speichern
+          </button>
+        </div>
+
+        <div class="comp-box" id="audioCompBox" style="display: none;">
+          <div>
+            <div class="comp-stat-val" id="audioOriginalSizeVal" style="color: var(--text-muted)">0 MB</div>
+            <div class="comp-stat-label">Original</div>
+          </div>
+          <div style="font-size: 1.5rem; display: flex; align-items: center; justify-content: center; color: var(--accent2);">➔</div>
+          <div>
+            <div class="comp-stat-val" id="audioCompressedSizeVal" style="color: var(--accent2)">0 MB</div>
+            <div class="comp-stat-label">Komprimiert</div>
+          </div>
+          <div>
+            <div class="comp-stat-val" id="audioSavingsVal" style="color: #34d399">-0%</div>
+            <div class="comp-stat-label">Gespart</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Erfolgreich! ✓</div>
+
+  <script>
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+      
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // Helper: wait for pywebview API to be ready, then call fn
+    function withApi(fn) {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        fn();
+      } else {
+        // pywebview v6: listen for ready event
+        window.addEventListener('pywebviewready', fn, { once: true });
+        // Fallback poll (in case event already fired)
+        const poll = setInterval(() => {
+          if (typeof pywebview !== 'undefined' && pywebview.api) {
+            clearInterval(poll);
+            fn();
+          }
+        }, 100);
+        setTimeout(() => clearInterval(poll), 10000);
+      }
+    }
+
+    // State
+    let loadedImageFile = "";
+    let loadedImageSize = 0;
+    
+    let loadedAudioFile = "";
+    let loadedAudioSize = 0;
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      if (type === 'error') {
+        toast.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+        toast.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.4)';
+      } else {
+        toast.style.background = 'var(--gradient)';
+        toast.style.boxShadow = '0 8px 32px rgba(6, 182, 212, 0.4)';
+      }
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    function updateQualityLabel() {
+      const sliderVal = document.getElementById('imgQualitySlider').value;
+      document.getElementById('qualityValLabel').textContent = sliderVal + '%';
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const dm = decimals < 0 ? 0 : decimals;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    // ==========================================
+    // TAB 1: IMAGE COMPRESSOR
+    // ==========================================
+    function selectImageFile() {
+      withApi(() => {
+        const fileTypes = JSON.stringify([
+          ["Bilddateien", "*.jpg;*.jpeg;*.png;*.webp"],
+          ["Alle Dateien", "*.*"]
+        ]);
+
+        pywebview.api.select_file(fileTypes).then(filePath => {
+          if (!filePath) return;
+          loadedImageFile = filePath;
+
+          const filename = filePath.split('\\').pop().split('/').pop();
+          document.getElementById('imgFilenameText').textContent = filename;
+          document.getElementById('imgSubtext').textContent = 'Pfad: ' + filePath;
+          document.getElementById('imgDropzone').style.borderColor = 'var(--accent)';
+          
+          document.getElementById('imgMetaTitle').textContent = filename;
+          
+          // Hide comparison box from previous runs
+          document.getElementById('imgCompBox').style.display = 'none';
+
+          // Load size and dimensions
+          pywebview.api.get_file_size(filePath).then(res => {
+            if (res && res.success) {
+              loadedImageSize = res.size;
+              document.getElementById('imgMetaSizeRow').textContent = 'Lade Abmessungen... · Größe: ' + formatBytes(res.size);
+            }
+          });
+
+          // Load thumbnail base64 and dimensions
+          pywebview.api.get_image_base64(filePath).then(res => {
+            if (res && res.success) {
+              const thumb = document.getElementById('imgThumbnail');
+              thumb.src = res.base64;
+              thumb.style.display = 'block';
+              
+              // Extract dimensions using temporary image element
+              const tempImg = new Image();
+              tempImg.onload = function() {
+                document.getElementById('imgMetaSizeRow').textContent = 
+                  `Größe: ${formatBytes(loadedImageSize)} · Abmessungen: ${tempImg.width}x${tempImg.height} px`;
+              };
+              tempImg.src = res.base64;
+            }
+          });
+
+          document.getElementById('imgMetaCard').style.display = 'flex';
+          
+          // Pre-fill filename field
+          const baseName = filename.substring(0, filename.lastIndexOf('.')) || filename;
+          document.getElementById('imgFilenameInput').value = baseName + '_komprimiert';
+          
+          document.getElementById('imgConfigWrap').style.display = 'block';
+        });
+      });
+    }
+
+    function runImageCompression() {
+      if (!loadedImageFile) return;
+
+      const scale = document.getElementById('imgScaleSelect').value;
+      const quality = document.getElementById('imgQualitySlider').value;
+      let format = document.getElementById('imgFormatSelect').value;
+      
+      const filename = loadedImageFile.split('\\').pop().split('/').pop();
+      let originalExt = filename.split('.').pop().toLowerCase();
+      if (format === 'match') {
+        format = originalExt;
+      }
+      if (format === 'jpg') format = 'jpeg';
+
+      const customName = document.getElementById('imgFilenameInput').value.trim() || 'bild_komprimiert';
+      const defaultName = customName + '.' + (format === 'jpeg' ? 'jpg' : format);
+      
+      const fileTypes = JSON.stringify([
+        [format.toUpperCase() + " Grafik", `*.${format === 'jpeg' ? 'jpg' : format}`],
+        ["Alle Dateien", "*.*"]
+      ]);
+
+      pywebview.api.save_file_dialog(fileTypes, defaultName).then(outputPath => {
+        if (!outputPath) return;
+
+        showToast('Bild wird komprimiert...');
+        pywebview.api.compress_image(loadedImageFile, outputPath, scale, quality, format).then(res => {
+          if (res && res.success) {
+            showToast('Bild erfolgreich komprimiert gespeichert! 💾');
+            
+            // Read compressed size
+            pywebview.api.get_file_size(outputPath).then(sizeRes => {
+              if (sizeRes && sizeRes.success) {
+                const compSize = sizeRes.size;
+                
+                document.getElementById('imgOriginalSizeVal').textContent = formatBytes(loadedImageSize);
+                document.getElementById('imgCompressedSizeVal').textContent = formatBytes(compSize);
+                
+                const savings = ((loadedImageSize - compSize) / loadedImageSize * 100).toFixed(1);
+                document.getElementById('imgSavingsVal').textContent = savings + '%';
+                
+                document.getElementById('imgCompBox').style.display = 'flex';
+              }
+            });
+          } else {
+            showToast('Fehler bei der Kompression: ' + (res.error || ''), 'error');
+          }
+        });
+      });
+    }
+
+    // ==========================================
+    // TAB 2: AUDIO COMPRESSOR
+    // ==========================================
+    function selectAudioFile() {
+      withApi(() => {
+        const fileTypes = JSON.stringify([
+          ["Audiodateien", "*.mp3;*.wav;*.m4a;*.ogg"],
+          ["Alle Dateien", "*.*"]
+        ]);
+
+        pywebview.api.select_file(fileTypes).then(filePath => {
+          if (!filePath) return;
+          loadedAudioFile = filePath;
+
+          const filename = filePath.split('\\').pop().split('/').pop();
+          document.getElementById('audioFilenameText').textContent = filename;
+          document.getElementById('audioSubtext').textContent = 'Pfad: ' + filePath;
+          document.getElementById('audioDropzone').style.borderColor = 'var(--accent2)';
+          
+          document.getElementById('audioMetaTitle').textContent = filename;
+          document.getElementById('audioCompBox').style.display = 'none';
+
+          // Load size
+          pywebview.api.get_file_size(filePath).then(res => {
+            if (res && res.success) {
+              loadedAudioSize = res.size;
+              document.getElementById('audioMetaSizeRow').textContent = 'Größe: ' + formatBytes(res.size);
+            }
+          });
+
+          document.getElementById('audioMetaCard').style.display = 'flex';
+          
+          // Pre-fill filename field
+          const baseName = filename.substring(0, filename.lastIndexOf('.')) || filename;
+          document.getElementById('audioFilenameInput').value = baseName + '_komprimiert';
+          
+          document.getElementById('audioConfigWrap').style.display = 'block';
+        });
+      });
+    }
+
+    function runAudioCompression() {
+      if (!loadedAudioFile) return;
+
+      const bitrate = document.getElementById('audioBitrateSelect').value;
+      const format = document.getElementById('audioFormatSelect').value;
+      const customName = document.getElementById('audioFilenameInput').value.trim() || 'audio_komprimiert';
+      const defaultName = customName + '.' + format;
+
+      const fileTypes = JSON.stringify([
+        [format.toUpperCase() + " Audio", `*.${format}`],
+        ["Alle Dateien", "*.*"]
+      ]);
+
+      pywebview.api.save_file_dialog(fileTypes, defaultName).then(outputPath => {
+        if (!outputPath) return;
+
+        showToast('Audio wird komprimiert...');
+        pywebview.api.compress_audio(loadedAudioFile, outputPath, format, bitrate).then(res => {
+          if (res && res.success) {
+            showToast('Audio erfolgreich komprimiert gespeichert! 💾');
+            
+            // Read compressed size
+            pywebview.api.get_file_size(outputPath).then(sizeRes => {
+              if (sizeRes && sizeRes.success) {
+                const compSize = sizeRes.size;
+                
+                document.getElementById('audioOriginalSizeVal').textContent = formatBytes(loadedAudioSize);
+                document.getElementById('audioCompressedSizeVal').textContent = formatBytes(compSize);
+                
+                const savings = ((loadedAudioSize - compSize) / loadedAudioSize * 100).toFixed(1);
+                document.getElementById('audioSavingsVal').textContent = savings + '%';
+                
+                document.getElementById('audioCompBox').style.display = 'flex';
+              }
+            });
+          } else {
+            showToast('Fehler bei der Audio-Kompression: ' + (res.error || ''), 'error');
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>

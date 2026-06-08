@@ -1,0 +1,2738 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Medien-Studio – ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      color-scheme: dark;
+      --bg: #09090e;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(255,255,255,0.14);
+      --text: #f0f0ff;
+      --text-muted: #8888aa;
+      --accent: #a855f7;
+      --accent-hover: #b56cf8;
+      --accent2: #ec4899;
+      --accent3: #06b6d4;
+      --gradient: linear-gradient(135deg, #a855f7, #ec4899);
+      --radius: 18px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 80% 10%, rgba(168, 85, 247, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 20% 90%, rgba(236, 72, 153, 0.08) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      z-index: 999;
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #f1f5f9;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .app-container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 90px 20px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Tabs Navigation */
+    .tabs-nav {
+      display: flex;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 6px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(10px);
+      justify-content: center;
+      gap: 6px;
+    }
+    @media (max-width: 768px) {
+      .tabs-nav { flex-wrap: wrap; }
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 12px 16px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: var(--surface);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--gradient);
+      box-shadow: 0 4px 16px rgba(168, 85, 247, 0.25);
+    }
+
+    /* Tab Contents */
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.4s ease-out both;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Common Card design */
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .grid-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+    }
+    @media (max-width: 850px) {
+      .grid-layout { grid-template-columns: 1fr; }
+    }
+
+    .sidebar-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* File Dropzone/Selector */
+    .file-selector-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 40px;
+      text-align: center;
+      border: 2px dashed rgba(168, 85, 247, 0.3);
+      border-radius: var(--radius);
+      cursor: pointer;
+      background: rgba(168, 85, 247, 0.01);
+      transition: all 0.25s;
+    }
+    .file-selector-card:hover {
+      border-color: var(--accent2);
+      background: rgba(168, 85, 247, 0.04);
+      transform: scale(1.005);
+    }
+    .upload-icon { font-size: 64px; margin-bottom: 16px; }
+    .upload-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 6px; }
+    .upload-desc { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Button and form controls */
+    .control-item {
+      margin-bottom: 18px;
+    }
+    .control-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: block;
+    }
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .tool-btn-style {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+    .tool-btn-style:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+    }
+    .tool-btn-style.active {
+      background: var(--gradient);
+      border-color: transparent;
+      box-shadow: 0 4px 16px rgba(168,85,247,0.3);
+    }
+    .file-info-box {
+      background: rgba(255,255,255,0.01);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+    .file-info-box strong { color: var(--text); }
+
+    .action-btn {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 13.5px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .action-btn.primary {
+      background: #10b981;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(16,185,129,0.25);
+    }
+    .action-btn.primary:hover:not(:disabled) {
+      background: #059669;
+      box-shadow: 0 6px 20px rgba(16,185,129,0.4);
+    }
+    .action-btn.secondary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .action-btn.secondary:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+    }
+    .action-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Progress Overlay */
+    .progress-card {
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .progress-bar-wrap {
+      width: 100%;
+      height: 8px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--gradient);
+      border-radius: 99px;
+      transition: width 0.15s ease-out;
+    }
+    .progress-text-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .progress-val { font-weight: 700; color: var(--text); }
+
+    /* Zoom and image editor specifics */
+    .viewport {
+      flex: 1;
+      overflow: auto;
+      min-height: 450px;
+      max-height: 70vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      background: #050508;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .canvas-wrapper {
+      position: relative;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px var(--border);
+      border-radius: 4px;
+      background: repeating-conic-gradient(#111 0% 25%, #18181e 0% 50%) 50% / 20px 20px;
+      transform-origin: center center;
+      display: none;
+    }
+    .magnifier {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      border: 2px solid #fff;
+      border-radius: 50%;
+      pointer-events: none;
+      display: none;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+      z-index: 1000;
+    }
+    .control-bar {
+      height: 48px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10, 10, 18, 0.5);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      width: 100%;
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+    .zoom-ctrls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .zoom-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+    .zoom-btn:hover { background: var(--surface-hover); border-color: var(--border-bright); }
+    .zoom-val { font-size: 12px; color: var(--text-muted); min-width: 44px; text-align: center; }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--gradient);
+      color: white;
+      padding: 12px 26px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 32px rgba(168,85,247,0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 9999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Custom Timeline Trimmer styles for Video Editor */
+    .range-slider-container {
+      position: relative;
+      width: 100%;
+      height: 40px;
+      margin-top: 15px;
+      margin-bottom: 25px;
+      display: flex;
+      align-items: center;
+    }
+
+    .slider-track {
+      position: absolute;
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 99px;
+      z-index: 1;
+    }
+
+    .slider-range-fill {
+      position: absolute;
+      height: 8px;
+      background: var(--gradient);
+      border-radius: 99px;
+      z-index: 2;
+    }
+
+    .range-slider-container input[type="range"] {
+      position: absolute;
+      width: 100%;
+      height: 8px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      pointer-events: none;
+      -webkit-appearance: none !important;
+      appearance: none !important;
+      z-index: 3;
+      margin: 0;
+      outline: none;
+      accent-color: transparent !important;
+    }
+
+    .range-slider-container input[type="range"]::-webkit-slider-runnable-track {
+      background: transparent !important;
+      background-image: none !important;
+      border: none !important;
+      -webkit-appearance: none !important;
+    }
+    .range-slider-container input[type="range"]::-moz-range-track {
+      background: transparent !important;
+      background-image: none !important;
+      border: none !important;
+    }
+    .range-slider-container input[type="range"]::-moz-range-progress {
+      background: transparent !important;
+    }
+    .range-slider-container input[type="range"]::-ms-track {
+      background: transparent !important;
+      border-color: transparent !important;
+      color: transparent !important;
+    }
+    .range-slider-container input[type="range"]::-ms-fill-lower {
+      background: transparent !important;
+    }
+    .range-slider-container input[type="range"]::-ms-fill-upper {
+      background: transparent !important;
+    }
+
+    .range-slider-container input[type="range"]::-webkit-slider-thumb {
+      height: 20px;
+      width: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      border: 2px solid var(--accent);
+      cursor: pointer;
+      pointer-events: auto;
+      -webkit-appearance: none;
+      box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+      transition: transform 0.1s;
+    }
+
+    .range-slider-container input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Style select and options with solid dark background to fix white-on-white browser fallback */
+    select {
+      background-color: #12121a !important;
+      color: #f0f0ff !important;
+    }
+    select option {
+      background-color: #12121a !important;
+      color: #f0f0ff !important;
+    }
+
+    .time-label-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: -15px;
+      margin-bottom: 15px;
+    }
+
+    .player-controls-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    .control-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: var(--radius-sm);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .control-btn.active {
+      background: var(--gradient);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <a href="../ToolForge.html" class="back-btn">⬅ Zurück</a>
+
+  <div class="app-container">
+    <header>
+      <h1>Medien-Studio</h1>
+      <p>Bilder &amp; Videos bearbeiten, zensieren, skalieren oder GIFs erstellen – komplett lokal.</p>
+    </header>
+
+    <!-- Tab Bar -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" data-tab="video-censor" onclick="switchTab('video-censor')">🎞️ Video-Zensur</button>
+      <button class="tab-btn" data-tab="video-editor" onclick="switchTab('video-editor')">✂️ Video-Editor</button>
+      <button class="tab-btn" data-tab="image-editor" onclick="switchTab('image-editor')">🎨 Bild-Editor</button>
+      <button class="tab-btn" data-tab="gif-creator" onclick="switchTab('gif-creator')">🎬 GIF Creator</button>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         TAB 1: VIDEO ZENSIEREN
+         ───────────────────────────────────────────────────────────────── -->
+    <div id="tab-video-censor" class="tab-content active">
+      <div class="grid-layout">
+        <!-- Left: Preview -->
+        <div class="card">
+          <!-- Dropzone -->
+          <div class="file-selector-card" id="vidCensorDrop" onclick="window.vidCensor.openVideo()">
+            <span class="upload-icon">🎬</span>
+            <div class="upload-title">Video auswählen</div>
+            <div class="upload-desc">Klicke, um ein Video zum Zensieren auszuwählen (MP4, AVI, MKV, MOV).</div>
+          </div>
+          <!-- Workspace -->
+          <div id="vidCensorWorkspace" style="display:none; flex-direction:column; gap:16px;">
+            <div class="group-title" style="margin-bottom: 6px;">Vorschau &amp; Bereichsauswahl</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom: 4px;">
+              Ziehe eine Box über das Wasserzeichen oder den Bereich, den du zensieren möchtest.
+            </div>
+            <div style="position:relative; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; background:repeating-conic-gradient(#111 0% 25%, #18181e 0% 50%) 50% / 20px 20px; display:flex; align-items:center; justify-content:center; width:100%; min-height:300px;">
+              <canvas id="vidCensorCanvas" style="max-width:100%; max-height:60vh; display:block; cursor:crosshair;"></canvas>
+              <video id="vidCensorPlayer" controls style="display:none; max-width:100%; max-height:60vh; border-radius:10px;"></video>
+            </div>
+            <div class="file-info-box" id="vidCensorCoords" style="display:none;">
+              Gewählte Box: X: <strong id="vidValX">0</strong>, Y: <strong id="vidValY">0</strong>, Breite: <strong id="vidValW">0</strong>px, Höhe: <strong id="vidValH">0</strong>px
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Settings -->
+        <div class="sidebar-controls">
+          <div class="card">
+            <div class="group-title">Aktive Datei</div>
+            <div class="file-info-box" id="vidCensorFileInfo">Kein Video geladen</div>
+          </div>
+          <div class="card" id="vidCensorSettings" style="opacity: 0.4; pointer-events: none;">
+            <div class="group-title">Einstellungen</div>
+            <div class="control-item">
+              <span class="control-label">Methode</span>
+              <div class="btn-group">
+                <button class="tool-btn-style active" id="vMethodBlur" onclick="window.vidCensor.setMethod('blur')">🌫️ Weichzeichnen (Blur)</button>
+                <button class="tool-btn-style" id="vMethodPixel" onclick="window.vidCensor.setMethod('pixelate')">👾 Verpixeln (Pixelate)</button>
+                <button class="tool-btn-style" id="vMethodBlack" onclick="window.vidCensor.setMethod('black')">⬛ Schwärzen (Black box)</button>
+                <button class="tool-btn-style" id="vMethodColor" onclick="window.vidCensor.setMethod('color')">🎨 Farbe füllen (Color fill)</button>
+                <button class="tool-btn-style" id="vMethodInpaint" onclick="window.vidCensor.setMethod('inpaint')">✨ Retuschieren (Inpaint/KI)</button>
+              </div>
+            </div>
+            
+            <div class="control-item" id="vColorPickerContainer" style="display:none; margin-top:10px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius-sm); padding:10px; display:flex; align-items:center; gap:10px;">
+              <input type="color" id="vColorPicker" value="#ff5722" style="width:40px; height:30px; border:none; border-radius:4px; cursor:pointer; padding:0; background:none;" />
+              <span style="font-size:12px; color:var(--text-muted);">Füllfarbe wählen</span>
+            </div>
+
+            <div class="control-item" style="margin-top: 18px; border-top:1px solid var(--border); padding-top:16px; display:flex; flex-direction:column; gap:12px;">
+              <label class="control-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin-bottom:0;">
+                <input type="checkbox" id="vTrackingCheck" style="accent-color:var(--accent); width:18px; height:18px;" /> Bewegung verfolgen (Tracking)
+              </label>
+              <label class="control-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin-bottom:0;">
+                <input type="checkbox" id="vAutoFaceCheck" style="accent-color:var(--accent); width:18px; height:18px;" /> Gesichter automatisch erkennen (Auto-Detect)
+              </label>
+              <label class="control-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin-bottom:0;">
+                <input type="checkbox" id="vAutodetectCheck" style="accent-color:var(--accent); width:18px; height:18px;" /> Automatisch pausieren, wenn nicht sichtbar
+              </label>
+            </div>
+
+            <div class="control-item" style="margin-top: 18px; border-top:1px solid var(--border); padding-top:16px;">
+              <span class="control-label">Zeitbereich</span>
+              <select id="vTimeRangeSelect" onchange="window.vidCensor.toggleTimeRange()" style="width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); margin-bottom:10px;">
+                <option value="all">Ganzes Video</option>
+                <option value="custom">Benutzerdefinierter Bereich</option>
+              </select>
+              <div id="vTimeRangeInputs" style="display:none; gap:12px; align-items:center;">
+                <div style="flex:1;">
+                  <span style="font-size:11px; color:var(--text-muted);">Start (Sekunden)</span>
+                  <input type="number" id="vTimeStart" value="0" min="0" step="0.1" style="width:100%; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+                </div>
+                <div style="flex:1;">
+                  <span style="font-size:11px; color:var(--text-muted);">Ende (Sekunden)</span>
+                  <input type="number" id="vTimeEnd" value="10" min="0" step="0.1" style="width:100%; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card" id="vidCensorActions" style="opacity: 0.4; pointer-events: none;">
+            <div class="group-title">Aktionen</div>
+            <div class="control-item" style="margin-bottom: 10px;">
+              <span class="control-label" style="font-size:12px;">Dateiname (ohne Endung)</span>
+              <input type="text" id="vidCensorFilename" placeholder="z.B. video-zensiert" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
+            </div>
+            <div class="btn-group">
+              <button class="action-btn primary" id="vidCensorRunBtn" onclick="window.vidCensor.runProcessing()" disabled>⚙️ Video verarbeiten &amp; speichern</button>
+              <button class="action-btn secondary" onclick="window.vidCensor.resetAll()">❌ Anderes Video laden</button>
+            </div>
+            <div class="progress-card" id="vidCensorProgress">
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="vidCensorFill"></div>
+              </div>
+              <div class="progress-text-row">
+                <span id="vidCensorStatus">Verarbeite Frames...</span>
+                <span class="progress-val" id="vidCensorPct">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         TAB 2: VIDEO-EDITOR
+         ───────────────────────────────────────────────────────────────── -->
+    <div id="tab-video-editor" class="tab-content">
+      <div class="grid-layout">
+        <!-- Left: Workspace -->
+        <div class="card">
+          <!-- Dropzone -->
+          <div class="file-selector-card" id="veDrop" onclick="window.videoEditor.openVideo()">
+            <span class="upload-icon">🎬</span>
+            <div class="upload-title">Video auswählen</div>
+            <div class="upload-desc">Wähle ein lokales Video aus (MP4, AVI, MKV, MOV, WebM) zum Schneiden und Bearbeiten.</div>
+          </div>
+          <!-- Workspace -->
+          <div id="veWorkspace" style="display:none; flex-direction:column; gap:16px;">
+            <div class="group-title" style="margin-bottom: 6px;">Vorschau &amp; Schnittbereich</div>
+            
+            <div style="position:relative; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; background:#050508; display:flex; align-items:center; justify-content:center; width:100%; aspect-ratio: 16/9; max-height: 50vh;">
+              <video id="vePlayer" controls style="width:100%; height:100%; border-radius:var(--radius-sm);"></video>
+            </div>
+
+            <!-- Custom control buttons -->
+            <div class="player-controls-row" id="veControlsRow" style="display: flex; justify-content: center; gap: 12px; margin-top: 10px;">
+              <button class="control-btn" id="vePlaySelectedBtn" onclick="window.videoEditor.togglePlaySelected()">
+                <span>▶</span> Bereich abspielen
+              </button>
+              <button class="control-btn" onclick="window.videoEditor.seekToStart()">
+                <span>⏮</span> Zum Start
+              </button>
+              <button class="control-btn" onclick="window.videoEditor.seekToEnd()">
+                <span>⏭</span> Zum Ende
+              </button>
+            </div>
+
+            <!-- Visual Timeline Slider -->
+            <div class="range-slider-container">
+              <div class="slider-track"></div>
+              <div class="slider-range-fill" id="veSliderRangeFill"></div>
+              <input type="range" id="veSliderStart" min="0" max="100" value="0" step="0.1" oninput="window.videoEditor.onSliderStartInput()" onchange="window.videoEditor.onSliderStartChange()" />
+              <input type="range" id="veSliderEnd" min="0" max="100" value="100" step="0.1" oninput="window.videoEditor.onSliderEndInput()" onchange="window.videoEditor.onSliderEndChange()" />
+            </div>
+
+            <!-- Time Labels -->
+            <div class="time-label-row">
+              <span id="veLabelStart">00:00:00</span>
+              <span id="veLabelCurrent" style="color: var(--accent2); font-weight: 700; display: none;">00:00:00</span>
+              <span id="veLabelEnd">00:00:00</span>
+            </div>
+
+            <!-- Time Inputs (Grid) -->
+            <div style="display: grid; gap: 12px; grid-template-columns: 1fr 1fr;">
+              <div class="settings-item">
+                <span class="settings-label">Startzeit (z.B. 00:00:05)</span>
+                <input type="text" id="veTrimStart" class="url-input" placeholder="00:00:00" style="padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); width: 100%;" onchange="window.videoEditor.onTrimStartTextChange()" />
+              </div>
+              <div class="settings-item">
+                <span class="settings-label">Endzeit (z.B. 00:00:20)</span>
+                <input type="text" id="veTrimEnd" class="url-input" placeholder="00:00:00" style="padding: 10px 12px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); width: 100%;" onchange="window.videoEditor.onTrimEndTextChange()" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Settings -->
+        <div class="sidebar-controls">
+          <div class="card">
+            <div class="group-title">Aktive Datei</div>
+            <div class="file-info-box" id="veFileInfo">Kein Video geladen</div>
+          </div>
+
+          <div class="card" id="veSettings" style="opacity: 0.4; pointer-events: none;">
+            <div class="group-title">Einstellungen</div>
+            
+            <div class="control-item">
+              <span class="control-label">Format / Endung</span>
+              <select id="veFormatSelect" style="width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);">
+                <option value="mp4">MP4 Video (.mp4)</option>
+                <option value="mov">MOV Video (.mov)</option>
+                <option value="mkv">MKV Video (.mkv)</option>
+                <option value="webm">WebM Video (.webm)</option>
+              </select>
+            </div>
+
+            <div class="control-item">
+              <span class="control-label">Auflösung</span>
+              <select id="veResolutionSelect" style="width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);">
+                <option value="original">Originalauflösung</option>
+                <option value="1920x1080">Full HD (1080p)</option>
+                <option value="1280x720">HD (720p)</option>
+                <option value="854x480">Standard (480p)</option>
+              </select>
+              <div style="font-size:11px; color:var(--text-muted); margin-top:4px;" id="veResolutionInfo">
+                Ziel-Auflösung (Export): Original
+              </div>
+            </div>
+
+            <div class="control-item">
+              <span class="control-label">Geschwindigkeit</span>
+              <select id="veSpeedSelect" style="width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);">
+                <option value="0.5">0.5x (Langsam)</option>
+                <option value="0.75">0.75x</option>
+                <option value="1.0" selected>1.0x (Normal)</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+                <option value="2.0">2.0x (Schnell)</option>
+              </select>
+            </div>
+
+            <div class="control-item" style="margin-top: 18px; border-top:1px solid var(--border); padding-top:16px;">
+              <label class="control-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin-bottom:0;">
+                <input type="checkbox" id="veMuteCheck" style="accent-color:var(--accent); width:18px; height:18px;" /> Ton stummschalten
+              </label>
+            </div>
+          </div>
+
+          <div class="card" id="veActions" style="opacity: 0.4; pointer-events: none;">
+            <div class="group-title">Aktionen</div>
+            <div class="control-item" style="margin-bottom: 10px;">
+              <span class="control-label" style="font-size:12px;">Dateiname (ohne Endung)</span>
+              <input type="text" id="veFilename" placeholder="z.B. mein-video-export" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
+            </div>
+            <div class="btn-group" style="display: flex; flex-direction: column;">
+              <button class="action-btn primary" id="veRunBtn" onclick="window.videoEditor.runProcessing()">⚙️ Video exportieren</button>
+              <button class="action-btn secondary" onclick="window.videoEditor.resetAll()">❌ Anderes Video laden</button>
+            </div>
+            
+            <div class="progress-card" id="veProgress" style="display: none; margin-top: 15px;">
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="veProgressFill"></div>
+              </div>
+              <div class="progress-text-row">
+                <span id="veProgressStatus">Verarbeite Video...</span>
+                <span class="progress-val" id="veProgressPct">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         TAB 3: BILD-EDITOR (ZENSIEREN + RESIZER)
+         ───────────────────────────────────────────────────────────────── -->
+    <div id="tab-image-editor" class="tab-content">
+      <div class="grid-layout">
+        <!-- Left: Workspace -->
+        <div class="card" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
+          <div class="control-bar" id="imgCensorBar" style="display:none;">
+            <div class="zoom-ctrls">
+              <button class="zoom-btn" onclick="window.imgCensor.zoomOut()">−</button>
+              <span class="zoom-val" id="imgCensorZoomText">100%</span>
+              <button class="zoom-btn" onclick="window.imgCensor.zoomIn()">+</button>
+              <button class="zoom-btn" onclick="window.imgCensor.zoomFit()" style="width:auto; padding:0 10px; font-size:11px; font-weight:600;">Anpassen</button>
+            </div>
+            <span style="font-size:11px; color:var(--text-muted); margin-left:auto;">
+              Tipp: Drücke <b>Strg+V</b> zum Einfügen aus der Zwischenablage.
+            </span>
+          </div>
+          <div class="viewport" id="imgCensorViewport">
+            <!-- Dropzone -->
+            <div class="file-selector-card" id="imgCensorDrop" onclick="window.imgCensor.openImage()" style="max-width:500px; width:100%;">
+              <span class="upload-icon">🖼️</span>
+              <div class="upload-title">Bild auswählen oder ablegen</div>
+              <div class="upload-desc">Klicke, um ein Bild auszuwählen (PNG, JPG, WebP). Oder Screenshot per <b>Strg+V</b> einfügen.</div>
+            </div>
+            <input type="file" id="imgCensorInput" style="display:none;" accept="image/*" />
+            <!-- Canvas -->
+            <div class="canvas-wrapper" id="imgCensorCanvasWrapper">
+              <canvas id="imgCensorCanvas"></canvas>
+              <canvas id="imgCensorMag" width="80" height="80" class="magnifier"></canvas>
+              <div id="brushCursor" style="position: absolute; pointer-events: none; border: 1.5px solid rgba(255, 255, 255, 0.95); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5); border-radius: 50%; display: none; z-index: 1000; transform: translate(-50%, -50%); background: rgba(255, 64, 128, 0.15); box-sizing: border-box;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Toolbar & Controls -->
+        <div class="sidebar-controls">
+          <div class="card">
+            <div class="group-title">Werkzeuge</div>
+            <div class="btn-group">
+              <button class="tool-btn-style" id="iToolEyedropper" onclick="window.imgCensor.setTool('eyedropper')">🧪 Pipette (Farbe wählen)</button>
+              <button class="tool-btn-style active" id="iToolBrush" onclick="window.imgCensor.setTool('brush')">🖌️ Pinsel (Freihand)</button>
+              <button class="tool-btn-style" id="iToolRect" onclick="window.imgCensor.setTool('rect')">⬜ Balken (Rechteck)</button>
+              <button class="tool-btn-style" id="iToolInpaint" onclick="window.imgCensor.setTool('inpaint')">✨ KI-Retusche (Inpaint)</button>
+            </div>
+            <div id="imgToolInstruction" style="margin-top: 12px; font-size: 11px; color: var(--text-muted); line-height: 1.45; background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 10px; border-radius: 8px;">
+              🖌️ <b>Pinsel</b>: Zeichne frei auf dem Bild mit der ausgewählten Pinselgröße und Farbe.
+            </div>
+          </div>
+          <div class="card">
+            <div class="group-title">Farbe &amp; Pinsel</div>
+            <div class="control-item" style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; display:flex; align-items:center; gap:12px;">
+              <div style="width:44px; height:44px; border-radius:8px; border:2px solid var(--border-bright); cursor:pointer; position:relative; overflow:hidden;">
+                <input type="color" id="imgCensorColor" value="#000000" style="position:absolute; inset:-5px; width:150%; height:150%; cursor:pointer; border:none; padding:0;" />
+              </div>
+              <div style="display:flex; flex-direction:column; gap:2px;">
+                <span id="imgCensorHex" style="font-size:13px; font-weight:700; cursor:pointer;" onclick="window.imgCensor.copyHex()" title="Kopieren">#000000</span>
+                <span style="font-size:10px; color:var(--text-muted)">Aktive Pufferfarbe</span>
+              </div>
+            </div>
+            <div class="control-item" style="background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:var(--radius-sm); padding:14px; margin-top:10px;">
+              <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:6px;">
+                <span>Pinselgröße</span>
+                <span id="imgCensorSizeVal" style="font-weight:600;">20 px</span>
+              </div>
+              <input type="range" id="imgCensorSizeRange" min="2" max="100" value="20" style="width: 100%;" />
+            </div>
+          </div>
+
+          <!-- Integrated Resizer Options -->
+          <div class="card" id="imgResizeCard">
+            <div class="group-title">Abmessungen &amp; Export</div>
+            
+            <div style="display:flex; align-items:center; gap:8px;">
+              <div style="flex:1;">
+                <span class="control-label" style="font-size:11px; margin-bottom:4px;">Breite (px)</span>
+                <input type="number" id="imgResizeWidth" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+              </div>
+              <div style="cursor:pointer; margin-top:16px; display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:8px;" id="imgResizeLockBtn" onclick="window.imgCensor.toggleLock()">
+                <span id="imgResizeLockIcon">🔒</span>
+              </div>
+              <div style="flex:1;">
+                <span class="control-label" style="font-size:11px; margin-bottom:4px;">Höhe (px)</span>
+                <input type="number" id="imgResizeHeight" disabled style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); opacity:0.6;" />
+              </div>
+            </div>
+            
+            <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="imgResizeInfo">
+              Ziel-Größe (Export): Original
+            </div>
+            
+            <div style="margin-top:12px;">
+              <span class="control-label" style="font-size:11px; margin-bottom:4px;">Ausgabeformat</span>
+              <select id="imgResizeFormat" onchange="window.imgCensor.updateFormat()" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);">
+                <option value="PNG" selected>PNG Grafik (.png)</option>
+                <option value="JPG">JPG Bild (.jpg)</option>
+                <option value="WEBP">WebP Grafik (.webp)</option>
+              </select>
+            </div>
+            
+            <div id="imgResizeQualityWrap" style="display:none; margin-top:12px;">
+              <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                <span>Komprimierungsqualität</span>
+                <span id="imgResizeQualityVal" style="font-weight:600;">85%</span>
+              </div>
+              <input type="range" id="imgResizeQualityRange" min="1" max="100" value="85" style="width:100%;" oninput="window.imgCensor.updateQuality()" />
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="group-title">Aktionen</div>
+            <div class="control-item" style="margin-bottom: 10px;">
+              <span class="control-label" style="font-size:12px;">Dateiname (ohne Endung)</span>
+              <input type="text" id="imgFilename" placeholder="z.B. bearbeitetes-bild" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
+            </div>
+            <div class="btn-group" style="display: flex; flex-direction: column;">
+              <button class="action-btn primary" id="imgCensorInpaintBtn" onclick="window.imgCensor.applyInpaint()" style="display:none; margin-bottom:8px;">✨ KI-Retusche anwenden</button>
+              <button class="action-btn secondary" id="imgCensorUndo" onclick="window.imgCensor.undo()" disabled>↩️ Rückgängig</button>
+              <button class="action-btn primary" id="imgCensorSave" onclick="window.imgCensor.downloadImage()" disabled>💾 Bild speichern unter...</button>
+              <button class="action-btn secondary" id="imgCensorReset" onclick="window.imgCensor.resetApp()" style="display:none; margin-top:4px;">❌ Neues Bild laden</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         TAB 4: GIF CREATOR
+         ───────────────────────────────────────────────────────────────── -->
+    <div id="tab-gif-creator" class="tab-content">
+      <div class="card">
+        <!-- Dropzone -->
+        <div class="file-selector-card" id="gifDrop" onclick="window.gifCreator.openVideo()">
+          <span class="upload-icon">🎬</span>
+          <div class="upload-title">Video auswählen</div>
+          <div class="upload-desc">Wähle ein Video aus (MP4, AVI, MKV, MOV), um ein animiertes GIF daraus zu erstellen.</div>
+        </div>
+        <!-- Workspace -->
+        <div id="gifWorkspace" style="display:none; flex-direction:column; gap:16px;">
+          <video id="gifPreviewPlayer" controls muted style="width:100%; max-height:300px; border-radius:10px; background:#000; object-fit:contain;"></video>
+          <div class="file-info-box" id="gifVideoName" style="text-align:center;"></div>
+          
+          <!-- Trim settings -->
+          <div class="card" style="padding:16px;">
+            <div class="group-title">Zeitraum für GIF</div>
+            <div style="display:flex; gap:16px; align-items:center;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; color:var(--text-muted);">Von</span>
+                <input type="number" id="gifStart" value="0" min="0" step="0.1" style="width:80px; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+                <span style="font-size:12px; color:var(--text-muted);">Sek</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="font-size:12px; color:var(--text-muted);">Bis</span>
+                <input type="number" id="gifEnd" value="5" min="0" step="0.1" style="width:80px; padding:6px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+                <span style="font-size:12px; color:var(--text-muted);">Sek</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings grid -->
+          <div class="grid-layout" style="grid-template-columns:1fr; gap:0;">
+            <div class="card" style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:0;">
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                  <span>FPS</span>
+                  <span id="gifFpsVal" style="font-weight:600; color:var(--accent);">10 FPS</span>
+                </div>
+                <input type="range" id="gifFpsRange" min="5" max="30" value="10" style="width: 100%;" />
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                  <span>Breite</span>
+                  <span id="gifWidthVal" style="font-weight:600; color:var(--accent);">480 px</span>
+                </div>
+                <input type="range" id="gifWidthRange" min="100" max="800" value="480" step="10" style="width: 100%;" />
+              </div>
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                  <span>Max. Dauer</span>
+                  <span id="gifDurationVal" style="font-weight:600; color:var(--accent);">5 s</span>
+                </div>
+                <input type="range" id="gifDurationRange" min="1" max="30" value="5" style="width: 100%;" />
+              </div>
+            </div>
+          </div>
+          
+          <div style="font-size:12px; color:var(--text-muted); margin-top:8px; text-align:center; font-weight:600;" id="gifEstSize">
+            Geschätzte Größe: ~0.00 MB
+          </div>
+
+          <div style="margin-top: 12px;">
+            <span style="font-size:12px; color:var(--text-muted); font-weight:600;">Dateiname (ohne Endung)</span>
+            <input type="text" id="gifFilename" placeholder="z.B. mein-gif" style="width:100%; margin-top:6px; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
+          </div>
+
+          <div class="btn-group" style="margin-top:12px; display:flex; flex-direction:column; gap:8px;">
+            <button class="action-btn primary" id="gifConvertBtn" onclick="window.gifCreator.startConvert()">🎬 GIF erstellen</button>
+            <button class="action-btn secondary" onclick="window.gifCreator.resetAll()">❌ Anderes Video laden</button>
+          </div>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="progress-card" id="gifProgress" style="margin-top:16px;">
+          <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="gifProgressFill"></div>
+          </div>
+          <div class="progress-text-row">
+            <span id="gifProgressText">Frames werden verarbeitet...</span>
+            <span class="progress-val" id="gifProgressPct">0%</span>
+          </div>
+        </div>
+
+        <!-- Result -->
+        <div id="gifResult" style="display:none; margin-top:20px; text-align:center;">
+          <img id="gifResultImg" src="" alt="GIF Result" style="max-width:100%; border-radius:12px; border:1px solid var(--border); box-shadow:0 0 30px rgba(124,58,237,0.2);" />
+          <div id="gifResultSize" style="margin-top:10px; font-size:14px; font-weight:700; color:#10b981;">Tatsächliche Größe: 0.0 MB</div>
+          <button class="action-btn secondary" onclick="window.gifCreator.resetAll()" style="margin-top:12px; max-width:200px; margin-left:auto; margin-right:auto;">↩ Neues Video laden</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast">Kopiert! ✓</div>
+
+  <!-- ─────────────────────────────────────────────────────────────────
+       JAVASCRIPT MERGED LOGIC
+       ───────────────────────────────────────────────────────────────── -->
+  <script>
+    // Tab switching logic
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    }
+
+    // Shared toast helper
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      if (type === 'error') {
+        toast.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+        toast.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.4)';
+      } else {
+        toast.style.background = 'var(--gradient)';
+        toast.style.boxShadow = '0 8px 32px rgba(168, 85, 247, 0.4)';
+      }
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    // ==========================================
+    // TAB 1: VIDEO ZENSIEREN SCOPE
+    // ==========================================
+    (function() {
+      const dropzone = document.getElementById('vidCensorDrop');
+      const workspace = document.getElementById('vidCensorWorkspace');
+      const canvas = document.getElementById('vidCensorCanvas');
+      const ctx = canvas.getContext('2d');
+      const player = document.getElementById('vidCensorPlayer');
+      const coordsInfo = document.getElementById('vidCensorCoords');
+      const fileInfo = document.getElementById('vidCensorFileInfo');
+      const valX = document.getElementById('vidValX');
+      const valY = document.getElementById('vidValY');
+      const valW = document.getElementById('vidValW');
+      const valH = document.getElementById('vidValH');
+      const settings = document.getElementById('vidCensorSettings');
+      const actions = document.getElementById('vidCensorActions');
+      const runBtn = document.getElementById('vidCensorRunBtn');
+      const progressCard = document.getElementById('vidCensorProgress');
+      const fill = document.getElementById('vidCensorFill');
+      const pctVal = document.getElementById('vidCensorPct');
+      const statusText = document.getElementById('vidCensorStatus');
+      const trackingCheckbox = document.getElementById('vTrackingCheck');
+      const autoFaceCheckbox = document.getElementById('vAutoFaceCheck');
+      
+      const autodetectCheckbox = document.getElementById('vAutodetectCheck');
+      const timeRangeSelect = document.getElementById('vTimeRangeSelect');
+      const timeRangeInputs = document.getElementById('vTimeRangeInputs');
+      const timeStartInput = document.getElementById('vTimeStart');
+      const timeEndInput = document.getElementById('vTimeEnd');
+      const colorPickerContainer = document.getElementById('vColorPickerContainer');
+      const colorPicker = document.getElementById('vColorPicker');
+
+      let videoPath = null;
+      let videoWidth = 0;
+      let videoHeight = 0;
+      let videoDuration = 0;
+      let frameImg = new Image();
+      let isProcessed = false;
+      let tempVideoPath = null;
+      let activeMethod = 'blur';
+      let isDrawing = false;
+      let startX = 0, startY = 0, endX = 0, endY = 0;
+      let isBoxSelected = false;
+      let lastCensoredVideoPath = null;
+
+      function openVideo() {
+        if (typeof pywebview === 'undefined') {
+          showToast('System nicht bereit. Läuft die Desktop-App?');
+          return;
+        }
+        const fileTypes = JSON.stringify([
+          ["Videodateien", "*.mp4;*.avi;*.mov;*.mkv;*.webm"],
+          ["Alle Dateien", "*.*"]
+        ]);
+        pywebview.api.select_file(fileTypes).then(path => {
+          if (path) {
+            if (typeof path === 'object' && path.hasOwnProperty('success') && path.success === false) {
+              showToast('Fehler: ' + path.error);
+            } else {
+              loadVideo(path);
+            }
+          }
+        });
+      }
+
+      function loadVideo(path) {
+        videoPath = path;
+        fileInfo.innerHTML = `<strong>Pfad:</strong> ${path.split('\\').pop()}<br><div class="progress-card" style="display:flex; margin-top:8px;"><span>Lade Frame-Vorschau...</span></div>`;
+        
+        pywebview.api.get_video_frame(path).then(res => {
+          if (res && res.success) {
+            videoWidth = res.original_width;
+            videoHeight = res.original_height;
+            videoDuration = res.duration || 0;
+            
+            fileInfo.innerHTML = `<strong>Pfad:</strong> ${path.split('\\').pop()}<br><strong>Auflösung:</strong> ${videoWidth} x ${videoHeight} px<br><strong>Dauer:</strong> ${videoDuration.toFixed(1)}s`;
+            
+            timeStartInput.value = "0";
+            timeStartInput.max = videoDuration.toString();
+            timeEndInput.value = videoDuration.toFixed(1);
+            timeEndInput.max = videoDuration.toString();
+            
+            frameImg.onload = () => {
+              canvas.width = frameImg.naturalWidth;
+              canvas.height = frameImg.naturalHeight;
+              drawFrame();
+              
+              dropzone.style.display = 'none';
+              workspace.style.display = 'flex';
+              settings.style.opacity = '1';
+              settings.style.pointerEvents = 'auto';
+              actions.style.opacity = '1';
+              actions.style.pointerEvents = 'auto';
+              
+              isBoxSelected = false;
+              runBtn.disabled = true;
+              coordsInfo.style.display = 'none';
+            };
+            frameImg.src = res.frame;
+          } else {
+            fileInfo.innerHTML = `<span style="color:red">Fehler: ${res.error || 'Vorschau fehlgeschlagen.'}</span>`;
+          }
+        });
+      }
+
+      function drawFrame() {
+        ctx.drawImage(frameImg, 0, 0);
+        if (isBoxSelected || isDrawing) {
+          ctx.strokeStyle = '#ec4899';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          
+          const x = Math.min(startX, endX);
+          const y = Math.min(startY, endY);
+          const w = Math.abs(startX - endX);
+          const h = Math.abs(startY - endY);
+          
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.15)';
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeRect(x, y, w, h);
+          ctx.setLineDash([]);
+        }
+      }
+
+      canvas.addEventListener('mousedown', e => {
+        if (!videoPath) return;
+        const coords = getCanvasCoords(e);
+        startX = coords.x; startY = coords.y;
+        endX = coords.x; endY = coords.y;
+        isDrawing = true;
+        isBoxSelected = false;
+        runBtn.disabled = !autoFaceCheckbox.checked;
+        drawFrame();
+      });
+
+      canvas.addEventListener('mousemove', e => {
+        if (!isDrawing) return;
+        const coords = getCanvasCoords(e);
+        endX = coords.x; endY = coords.y;
+        drawFrame();
+        updateBoxInfo();
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        const w = Math.abs(startX - endX);
+        const h = Math.abs(startY - endY);
+        
+        if (w > 5 && h > 5) {
+          isBoxSelected = true;
+          runBtn.disabled = false;
+        } else {
+          isBoxSelected = false;
+          runBtn.disabled = !autoFaceCheckbox.checked;
+          coordsInfo.style.display = 'none';
+        }
+        drawFrame();
+      });
+
+      function getCanvasCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+        return { x, y };
+      }
+
+      function updateBoxInfo() {
+        const xRatio = videoWidth / canvas.width;
+        const yRatio = videoHeight / canvas.height;
+        const cx = Math.min(startX, endX), cy = Math.min(startY, endY);
+        const cw = Math.abs(startX - endX), ch = Math.abs(startY - endY);
+        
+        coordsInfo.style.display = 'block';
+        valX.textContent = Math.round(cx * xRatio);
+        valY.textContent = Math.round(cy * yRatio);
+        valW.textContent = Math.round(cw * xRatio);
+        valH.textContent = Math.round(ch * yRatio);
+      }
+
+      function setMethod(method) {
+        activeMethod = method;
+        document.querySelectorAll('#vidCensorSettings .tool-btn-style').forEach(btn => btn.classList.remove('active'));
+        if (method === 'blur') document.getElementById('vMethodBlur').classList.add('active');
+        if (method === 'pixelate') document.getElementById('vMethodPixel').classList.add('active');
+        if (method === 'black') document.getElementById('vMethodBlack').classList.add('active');
+        if (method === 'color') document.getElementById('vMethodColor').classList.add('active');
+        if (method === 'inpaint') document.getElementById('vMethodInpaint').classList.add('active');
+
+        if (method === 'color') {
+          colorPickerContainer.style.display = 'flex';
+        } else {
+          colorPickerContainer.style.display = 'none';
+        }
+      }
+
+      function toggleTimeRange() {
+        if (timeRangeSelect.value === 'custom') {
+          timeRangeInputs.style.display = 'flex';
+        } else {
+          timeRangeInputs.style.display = 'none';
+        }
+      }
+
+      autoFaceCheckbox.addEventListener('change', () => {
+        if (autoFaceCheckbox.checked) {
+          trackingCheckbox.checked = false;
+          trackingCheckbox.disabled = true;
+          trackingCheckbox.parentElement.style.opacity = '0.4';
+          if (videoPath) runBtn.disabled = false;
+        } else {
+          trackingCheckbox.disabled = false;
+          trackingCheckbox.parentElement.style.opacity = '1';
+          if (videoPath) runBtn.disabled = !isBoxSelected;
+        }
+      });
+
+      trackingCheckbox.addEventListener('change', () => {
+        if (trackingCheckbox.checked) autoFaceCheckbox.checked = false;
+      });
+
+      function runProcessing() {
+        if (!videoPath || (!isBoxSelected && !autoFaceCheckbox.checked)) return;
+
+        if (!isProcessed) {
+          progressCard.style.display = 'flex';
+          fill.style.width = '0%';
+          pctVal.textContent = '0%';
+          statusText.textContent = 'Frames werden verarbeitet...';
+          runBtn.disabled = true;
+          
+          const xRatio = videoWidth / canvas.width;
+          const yRatio = videoHeight / canvas.height;
+          const rect = {
+            x: Math.round(Math.min(startX, endX) * xRatio),
+            y: Math.round(Math.min(startY, endY) * yRatio),
+            w: Math.round(Math.abs(startX - endX) * xRatio),
+            h: Math.round(Math.abs(startY - endY) * yRatio)
+          };
+
+          const startSec = timeRangeSelect.value === 'custom' ? parseFloat(timeStartInput.value) : -1.0;
+          const endSec = timeRangeSelect.value === 'custom' ? parseFloat(timeEndInput.value) : -1.0;
+          const autodetect = autodetectCheckbox.checked;
+          const fillHex = colorPicker.value;
+
+          pywebview.api.process_video(
+            videoPath, 
+            JSON.stringify(rect), 
+            activeMethod, 
+            trackingCheckbox.checked, 
+            autoFaceCheckbox.checked,
+            startSec,
+            endSec,
+            autodetect,
+            fillHex
+          ).then(res => {
+            runBtn.disabled = false;
+            if (res && res.success) {
+              isProcessed = true;
+              tempVideoPath = res.temp_path;
+
+              fill.style.width = '100%';
+              pctVal.textContent = '100%';
+              statusText.textContent = 'Vorschau bereit!';
+              showToast('Video verarbeitet! Vorschau geladen. 🎬');
+
+              canvas.style.display = 'none';
+              player.style.display = 'block';
+              player.src = './' + tempVideoPath.split('\\').pop().split('/').pop();
+              player.play();
+
+              runBtn.innerHTML = '💾 Video auf PC speichern';
+              runBtn.className = 'action-btn primary';
+            } else {
+              statusText.textContent = 'Fehler aufgetreten.';
+              showToast('Fehler: ' + (res.error || 'Video-Verarbeitung fehlgeschlagen.'), 'error');
+            }
+          });
+        } else {
+          const customName = (document.getElementById('vidCensorFilename').value || '').trim();
+          const defaultCensorName = (customName || 'video_zensiert') + '.mp4';
+          const fileTypes = JSON.stringify([["MP4 Video", "*.mp4"], ["All Files", "*.*"]]);
+          pywebview.api.save_file_dialog(fileTypes, defaultCensorName).then(outputPath => {
+            if (!outputPath) return;
+            runBtn.disabled = true;
+            statusText.textContent = 'Kopiere Video...';
+            
+            pywebview.api.copy_file(tempVideoPath, outputPath).then(res => {
+              runBtn.disabled = false;
+              if (res && res.success) {
+                statusText.textContent = 'Heruntergeladen!';
+                showToast('Video erfolgreich gespeichert! 💾');
+              } else {
+                statusText.textContent = 'Fehler beim Speichern.';
+                showToast('Fehler beim Speichern: ' + (res.error || ''), 'error');
+              }
+            });
+          });
+        }
+      }
+
+
+
+      window.updateVideoProgress = function(pct) {
+        fill.style.width = pct + '%';
+        pctVal.textContent = pct + '%';
+        if (pct === 100) statusText.textContent = 'Video wird finalisiert (Audio wird kopiert)...';
+      };
+
+      function resetAll() {
+        videoPath = null; isBoxSelected = false; isProcessed = false; tempVideoPath = null;
+        document.getElementById('vidCensorFilename').value = '';
+        autoFaceCheckbox.checked = false; autoFaceCheckbox.disabled = false; autoFaceCheckbox.parentElement.style.opacity = '1';
+        trackingCheckbox.checked = false; trackingCheckbox.disabled = false; trackingCheckbox.parentElement.style.opacity = '1';
+        autodetectCheckbox.checked = false;
+        
+        timeRangeSelect.value = 'all';
+        timeRangeInputs.style.display = 'none';
+        timeStartInput.value = '0';
+        timeEndInput.value = '10';
+        colorPickerContainer.style.display = 'none';
+        colorPicker.value = '#ff5722';
+        
+        canvas.style.display = 'block';
+        player.style.display = 'none';
+        player.src = '';
+        runBtn.innerHTML = '⚙️ Video verarbeiten &amp; speichern';
+        runBtn.className = 'action-btn primary';
+        
+        coordsInfo.style.display = 'none';
+        dropzone.style.display = 'flex';
+        workspace.style.display = 'none';
+        settings.style.opacity = '0.4'; settings.style.pointerEvents = 'none';
+        actions.style.opacity = '0.4'; actions.style.pointerEvents = 'none';
+        progressCard.style.display = 'none';
+        
+        lastCensoredVideoPath = null;
+      }
+
+      window.vidCensor = { openVideo, setMethod, runProcessing, resetAll, toggleTimeRange };
+    })();
+
+    // ==========================================
+    // TAB 2: VIDEO-EDITOR SCOPE
+    // ==========================================
+    (function() {
+      const dropzone = document.getElementById('veDrop');
+      const workspace = document.getElementById('veWorkspace');
+      const player = document.getElementById('vePlayer');
+      const fileInfo = document.getElementById('veFileInfo');
+      const settings = document.getElementById('veSettings');
+      const actions = document.getElementById('veActions');
+      const runBtn = document.getElementById('veRunBtn');
+      const progressSection = document.getElementById('veProgress');
+      const progressFill = document.getElementById('veProgressFill');
+      const progressPct = document.getElementById('veProgressPct');
+      
+      const sliderStart = document.getElementById('veSliderStart');
+      const sliderEnd = document.getElementById('veSliderEnd');
+      const sliderRangeFill = document.getElementById('veSliderRangeFill');
+      const labelStart = document.getElementById('veLabelStart');
+      const labelCurrent = document.getElementById('veLabelCurrent');
+      const labelEnd = document.getElementById('veLabelEnd');
+      
+      const trimStartInput = document.getElementById('veTrimStart');
+      const trimEndInput = document.getElementById('veTrimEnd');
+      
+      const formatSelect = document.getElementById('veFormatSelect');
+      const resolutionSelect = document.getElementById('veResolutionSelect');
+      const speedSelect = document.getElementById('veSpeedSelect');
+      const muteCheck = document.getElementById('veMuteCheck');
+      
+      let videoPath = null;
+      let isPlayingSelected = false;
+      let loopInterval = null;
+
+      speedSelect.addEventListener('change', () => {
+        player.playbackRate = parseFloat(speedSelect.value) || 1.0;
+      });
+
+      muteCheck.addEventListener('change', () => {
+        player.muted = muteCheck.checked;
+      });
+
+      resolutionSelect.addEventListener('change', () => {
+        const val = resolutionSelect.value;
+        const info = document.getElementById('veResolutionInfo');
+        if (info) {
+          if (val === 'original') {
+            info.textContent = `Ziel-Auflösung (Export): Original (${player.videoWidth || 1920} x ${player.videoHeight || 1080} px)`;
+          } else {
+            const parts = val.split('x').map(Number);
+            const targetW = parts[0];
+            const targetH = parts[1];
+            const origW = player.videoWidth || 1920;
+            let actionText = '';
+            if (targetW < origW) {
+              actionText = ' (Herunterskalieren)';
+            } else if (targetW > origW) {
+              actionText = ' (Hochskalieren)';
+            } else {
+              actionText = ' (Gleiche Größe)';
+            }
+            info.textContent = `Ziel-Auflösung (Export): ${targetW} x ${targetH} px${actionText}`;
+          }
+        }
+      });
+
+      function updateResolutionOptions(w, h) {
+        const select = document.getElementById('veResolutionSelect');
+        if (!select) return;
+        
+        select.innerHTML = '';
+        
+        const ratio = w / h;
+        
+        // Add original option
+        const origOpt = document.createElement('option');
+        origOpt.value = 'original';
+        origOpt.textContent = `Originalauflösung (${w}x${h})`;
+        origOpt.selected = true;
+        select.appendChild(origOpt);
+        
+        let options = [];
+        if (ratio < 0.9) {
+          // Vertical
+          options = [
+            { value: '1080x1920', label: 'Full HD (1080p vertikal)' },
+            { value: '720x1280', label: 'HD (720p vertikal)' },
+            { value: '480x854', label: 'Standard (480p vertikal)' }
+          ];
+        } else if (ratio >= 0.9 && ratio <= 1.1) {
+          // Square
+          options = [
+            { value: '1080x1080', label: '1080p Quadrat' },
+            { value: '720x720', label: '720p Quadrat' },
+            { value: '480x480', label: '480p Quadrat' }
+          ];
+        } else {
+          // Landscape
+          options = [
+            { value: '1920x1080', label: 'Full HD (1080p)' },
+            { value: '1280x720', label: 'HD (720p)' },
+            { value: '854x480', label: 'Standard (480p)' }
+          ];
+        }
+        
+        options.forEach(opt => {
+          const o = document.createElement('option');
+          o.value = opt.value;
+          o.textContent = opt.label;
+          select.appendChild(o);
+        });
+        
+        // Reset info text
+        const info = document.getElementById('veResolutionInfo');
+        if (info) {
+          info.textContent = `Ziel-Auflösung (Export): Original (${w} x ${h} px)`;
+        }
+      }
+
+      function openVideo() {
+        if (typeof pywebview === 'undefined') {
+          showToast('System nicht bereit. Läuft die Desktop-App?');
+          return;
+        }
+        const fileTypes = JSON.stringify([
+          ["Videodateien", "*.mp4;*.avi;*.mov;*.mkv;*.webm"],
+          ["Alle Dateien", "*.*"]
+        ]);
+        pywebview.api.select_file(fileTypes).then(path => {
+          if (path) {
+            if (typeof path === 'object' && path.hasOwnProperty('success') && path.success === false) {
+              showToast('Fehler: ' + path.error);
+            } else {
+              loadVideo(path);
+            }
+          }
+        });
+      }
+
+      function loadVideo(path) {
+        videoPath = path;
+        fileInfo.innerHTML = `<strong>Pfad:</strong> ${path.split('\\').pop()}<br><div class="progress-card" style="display:flex; margin-top:8px;"><span>Bereite Video vor...</span></div>`;
+        
+        pywebview.api.prepare_video_preview(path).then(res => {
+          if (res && res.success) {
+            player.src = './' + res.temp_name;
+            
+            player.onloadedmetadata = () => {
+              const duration = player.duration;
+              fileInfo.innerHTML = `<strong>Pfad:</strong> ${path.split('\\').pop()}<br><strong>Auflösung:</strong> ${player.videoWidth} x ${player.videoHeight} px<br><strong>Dauer:</strong> ${duration.toFixed(1)}s`;
+              
+              updateResolutionOptions(player.videoWidth, player.videoHeight);
+              
+              sliderStart.max = duration;
+              sliderEnd.max = duration;
+              sliderStart.value = 0;
+              sliderEnd.value = duration;
+              
+              dropzone.style.display = 'none';
+              workspace.style.display = 'flex';
+              settings.style.opacity = '1';
+              settings.style.pointerEvents = 'auto';
+              actions.style.opacity = '1';
+              actions.style.pointerEvents = 'auto';
+              
+              player.muted = muteCheck.checked;
+              player.playbackRate = parseFloat(speedSelect.value) || 1.0;
+              
+              updateSliderUI();
+            };
+          } else {
+            fileInfo.innerHTML = `<span style="color:red">Fehler: ${res.error || 'Vorbereitung fehlgeschlagen.'}</span>`;
+          }
+        });
+      }
+
+      function parseDurationToSeconds(durationStr) {
+        if (!durationStr) return 0;
+        const parts = durationStr.split(':').map(Number);
+        if (parts.some(isNaN)) return 0;
+        if (parts.length === 2) {
+          return parts[0] * 60 + parts[1];
+        } else if (parts.length === 3) {
+          return parts[0] * 3600 + parts[1] * 60 + parts[2];
+        }
+        return parseFloat(durationStr) || 0;
+      }
+
+      function formatSeconds(secs) {
+        if (isNaN(secs) || secs < 0) return '00:00:00';
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        const s = Math.floor(secs % 60);
+        return [h, m, s].map(v => v < 10 ? '0' + v : v).join(':');
+      }
+
+      function updateSliderUI() {
+        const startVal = parseFloat(sliderStart.value);
+        const endVal = parseFloat(sliderEnd.value);
+        const maxVal = parseFloat(sliderStart.max) || 100;
+
+        const leftPct = (startVal / maxVal) * 100;
+        const widthPct = ((endVal - startVal) / maxVal) * 100;
+
+        sliderRangeFill.style.left = leftPct + '%';
+        sliderRangeFill.style.width = widthPct + '%';
+
+        labelStart.textContent = formatSeconds(startVal);
+        labelEnd.textContent = formatSeconds(endVal);
+
+        trimStartInput.value = formatSeconds(startVal);
+        trimEndInput.value = formatSeconds(endVal);
+      }
+
+      function onSliderStartInput() {
+        const startVal = parseFloat(sliderStart.value);
+        const endVal = parseFloat(sliderEnd.value);
+        if (startVal >= endVal) {
+          sliderStart.value = Math.max(0, endVal - 0.1);
+        }
+        updateSliderUI();
+        player.currentTime = parseFloat(sliderStart.value);
+      }
+
+      function onSliderStartChange() {
+        player.currentTime = parseFloat(sliderStart.value);
+      }
+
+      function onSliderEndInput() {
+        const startVal = parseFloat(sliderStart.value);
+        const endVal = parseFloat(sliderEnd.value);
+        const maxVal = parseFloat(sliderEnd.max) || 100;
+        if (endVal <= startVal) {
+          sliderEnd.value = Math.min(maxVal, startVal + 0.1);
+        }
+        updateSliderUI();
+        player.currentTime = parseFloat(sliderEnd.value);
+      }
+
+      function onSliderEndChange() {
+        player.currentTime = parseFloat(sliderEnd.value);
+      }
+
+      function onTrimStartTextChange() {
+        const textVal = trimStartInput.value.trim();
+        const secs = parseDurationToSeconds(textVal);
+        const maxVal = parseFloat(sliderStart.max) || 100;
+
+        if (secs >= 0 && secs <= maxVal) {
+          const endVal = parseFloat(sliderEnd.value);
+          if (secs >= endVal) {
+            sliderStart.value = Math.max(0, endVal - 0.1);
+          } else {
+            sliderStart.value = secs;
+          }
+          updateSliderUI();
+          player.currentTime = parseFloat(sliderStart.value);
+        } else {
+          trimStartInput.value = formatSeconds(parseFloat(sliderStart.value));
+        }
+      }
+
+      function onTrimEndTextChange() {
+        const textVal = trimEndInput.value.trim();
+        const secs = parseDurationToSeconds(textVal);
+        const maxVal = parseFloat(sliderEnd.max) || 100;
+
+        if (secs >= 0 && secs <= maxVal) {
+          const startVal = parseFloat(sliderStart.value);
+          if (secs <= startVal) {
+            sliderEnd.value = Math.min(maxVal, startVal + 0.1);
+          } else {
+            sliderEnd.value = secs;
+          }
+          updateSliderUI();
+          player.currentTime = parseFloat(sliderEnd.value);
+        } else {
+          trimEndInput.value = formatSeconds(parseFloat(sliderEnd.value));
+        }
+      }
+
+      function togglePlaySelected() {
+        const playBtn = document.getElementById('vePlaySelectedBtn');
+        
+        if (isPlayingSelected) {
+          stopLooping();
+        } else {
+          isPlayingSelected = true;
+          playBtn.innerHTML = "<span>⏸</span> Pause";
+          playBtn.classList.add('active');
+          
+          const startTime = parseFloat(sliderStart.value);
+          player.currentTime = startTime;
+          player.play();
+          
+          labelCurrent.style.display = 'inline';
+          
+          loopInterval = setInterval(() => {
+            const currTime = player.currentTime;
+            const startTime = parseFloat(sliderStart.value);
+            const endTime = parseFloat(sliderEnd.value);
+            
+            labelCurrent.textContent = formatSeconds(currTime);
+            
+            if (currTime >= endTime || currTime < startTime - 0.5) {
+              player.currentTime = startTime;
+            }
+          }, 100);
+        }
+      }
+
+      function stopLooping() {
+        isPlayingSelected = false;
+        const playBtn = document.getElementById('vePlaySelectedBtn');
+        if (playBtn) {
+          playBtn.innerHTML = "<span>▶</span> Bereich abspielen";
+          playBtn.classList.remove('active');
+        }
+        
+        if (loopInterval) {
+          clearInterval(loopInterval);
+          loopInterval = null;
+        }
+        
+        if (labelCurrent) {
+          labelCurrent.style.display = 'none';
+        }
+        
+        player.pause();
+      }
+
+      function seekToStart() {
+        const startTime = parseFloat(sliderStart.value);
+        player.currentTime = startTime;
+        if (!isPlayingSelected) player.pause();
+      }
+
+      function seekToEnd() {
+        const endTime = parseFloat(sliderEnd.value);
+        player.currentTime = endTime;
+        if (!isPlayingSelected) player.pause();
+      }
+
+      player.addEventListener('pause', () => {
+        if (isPlayingSelected && player.currentTime >= parseFloat(sliderEnd.value)) {
+          // Allow looping interval to handle it
+        } else {
+          stopLooping();
+        }
+      });
+
+      function runProcessing() {
+        if (!videoPath) return;
+
+        const format = formatSelect.value;
+        const resolution = resolutionSelect.value;
+        const speed = speedSelect.value;
+        const mute = muteCheck.checked;
+        
+        const fileTypes = JSON.stringify([
+          [`Video Datei`, `*.${format}`],
+          ["Alle Dateien", "*.*"]
+        ]);
+        
+        const veCustomName = (document.getElementById('veFilename').value || '').trim();
+        const veDefaultName = (veCustomName || 'export_video') + '.' + format;
+        pywebview.api.save_file_dialog(fileTypes, veDefaultName).then(outputPath => {
+          if (!outputPath) return;
+          if (typeof outputPath === 'object' && outputPath.success === false) {
+            showToast('Fehler beim Speicher-Dialog: ' + outputPath.error, 'error');
+            return;
+          }
+          
+          stopLooping();
+          runBtn.disabled = true;
+          progressSection.style.display = 'flex';
+          progressFill.style.width = '50%';
+          progressPct.textContent = '50%';
+          
+          const startVal = trimStartInput.value.trim();
+          const endVal = trimEndInput.value.trim();
+
+          pywebview.api.edit_video(
+            videoPath, 
+            outputPath, 
+            startVal, 
+            endVal, 
+            format, 
+            resolution, 
+            mute, 
+            speed
+          ).then(res => {
+            runBtn.disabled = false;
+            progressSection.style.display = 'none';
+            if (res && res.success) {
+              const sizeMB = res.size_bytes ? (res.size_bytes / (1024 * 1024)).toFixed(2) + ' MB' : 'Unbekannte Größe';
+              const resText = (res.width && res.height) ? `${res.width}x${res.height} px` : 'Original';
+              showToast(`Video erfolgreich verarbeitet & exportiert! 💾\nGröße: ${resText} | Größe: ${sizeMB}`);
+            } else {
+              showToast('Fehler bei der Bearbeitung: ' + (res.error || 'Verarbeitung fehlgeschlagen.'), 'error');
+            }
+          });
+        });
+      }
+
+
+
+      function resetAll() {
+        stopLooping();
+        videoPath = null;
+        player.src = '';
+        dropzone.style.display = 'flex';
+        workspace.style.display = 'none';
+        settings.style.opacity = '0.4';
+        settings.style.pointerEvents = 'none';
+        actions.style.opacity = '0.4';
+        actions.style.pointerEvents = 'none';
+        progressSection.style.display = 'none';
+        
+        formatSelect.value = 'mp4';
+        updateResolutionOptions(1920, 1080);
+        resolutionSelect.value = 'original';
+        speedSelect.value = '1.0';
+        muteCheck.checked = false;
+        document.getElementById('veFilename').value = '';
+      }
+
+      window.videoEditor = {
+        openVideo, loadVideo, updateSliderUI,
+        onSliderStartInput, onSliderStartChange,
+        onSliderEndInput, onSliderEndChange,
+        onTrimStartTextChange, onTrimEndTextChange,
+        togglePlaySelected, seekToStart, seekToEnd,
+        runProcessing, resetAll
+      };
+    })();
+
+    // ==========================================
+    // TAB 3: BILD-EDITOR (ZENSIEREN + RESIZER)
+    // ==========================================
+    (function() {
+      const dropzone = document.getElementById('imgCensorDrop');
+      const input = document.getElementById('imgCensorInput');
+      const canvas = document.getElementById('imgCensorCanvas');
+      const ctx = canvas.getContext('2d');
+      const wrapper = document.getElementById('imgCensorCanvasWrapper');
+      const controlBar = document.getElementById('imgCensorBar');
+      const magnifier = document.getElementById('imgCensorMag');
+      const magCtx = magnifier.getContext('2d');
+      const colorPicker = document.getElementById('imgCensorColor');
+      const hexVal = document.getElementById('imgCensorHex');
+      const sizeRange = document.getElementById('imgCensorSizeRange');
+      const sizeVal = document.getElementById('imgCensorSizeVal');
+      const zoomText = document.getElementById('imgCensorZoomText');
+      const undoBtn = document.getElementById('imgCensorUndo');
+      const saveBtn = document.getElementById('imgCensorSave');
+      const resetBtn = document.getElementById('imgCensorReset');
+      const viewport = document.getElementById('imgCensorViewport');
+      const brushCursor = document.getElementById('brushCursor');
+
+      const resizeCard = document.getElementById('imgResizeCard');
+      const resizeWidth = document.getElementById('imgResizeWidth');
+      const resizeHeight = document.getElementById('imgResizeHeight');
+      const resizeLockBtn = document.getElementById('imgResizeLockBtn');
+      const resizeLockIcon = document.getElementById('imgResizeLockIcon');
+      const resizeFormat = document.getElementById('imgResizeFormat');
+      const resizeQualityRange = document.getElementById('imgResizeQualityRange');
+      const resizeQualityVal = document.getElementById('imgResizeQualityVal');
+      const resizeQualityWrap = document.getElementById('imgResizeQualityWrap');
+
+      let activeTool = 'brush';
+      let currentColor = '#000000';
+      let size = 20;
+      let scale = 1.0;
+      let isDrawing = false;
+      let startX = 0, startY = 0;
+      let originalImage = null;
+      let history = [];
+      let originalWidth = 0, originalHeight = 0, ratio = 1.0, isLocked = true;
+
+      let maskCanvas = null;
+      let maskCtx = null;
+      let maskHistory = [];
+      let cleanImageDataBeforeMask = null;
+
+      sizeRange.addEventListener('input', e => {
+        size = parseInt(e.target.value);
+        sizeVal.textContent = size + ' px';
+        if (brushCursor && brushCursor.style.display === 'block') {
+          brushCursor.style.width = size + 'px';
+          brushCursor.style.height = size + 'px';
+        }
+      });
+
+      colorPicker.addEventListener('input', e => {
+        setColor(e.target.value);
+      });
+
+      function setColor(hex) {
+        currentColor = hex.toUpperCase();
+        colorPicker.value = hex;
+        colorPicker.parentElement.style.background = hex;
+        hexVal.textContent = currentColor;
+      }
+
+      function copyHex() {
+        navigator.clipboard.writeText(currentColor).then(() => showToast('Farbe kopiert! ✓'));
+      }
+
+      function checkMaskEmpty() {
+        const inpaintBtn = document.getElementById('imgCensorInpaintBtn');
+        if (!maskCanvas || !maskCtx) {
+          if (inpaintBtn) inpaintBtn.style.display = 'none';
+          return;
+        }
+        const imgData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+        const data = imgData.data;
+        let empty = true;
+        for (let i = 3; i < data.length; i += 4) {
+          if (data[i] > 0) {
+            empty = false;
+            break;
+          }
+        }
+        if (inpaintBtn) {
+          inpaintBtn.style.display = empty ? 'none' : 'flex';
+        }
+      }
+
+      function setTool(toolName) {
+        if (activeTool === 'inpaint' && toolName !== 'inpaint') {
+          if (cleanImageDataBeforeMask) {
+            ctx.putImageData(cleanImageDataBeforeMask, 0, 0);
+            cleanImageDataBeforeMask = null;
+          }
+          if (maskCanvas && maskCtx) {
+            maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+            maskHistory = [];
+            checkMaskEmpty();
+          }
+        }
+
+        activeTool = toolName;
+        document.querySelectorAll('#tab-image-editor .tool-btn-style').forEach(btn => btn.classList.remove('active'));
+        if (toolName === 'eyedropper') document.getElementById('iToolEyedropper').classList.add('active');
+        if (toolName === 'brush') document.getElementById('iToolBrush').classList.add('active');
+        if (toolName === 'rect') document.getElementById('iToolRect').classList.add('active');
+        if (toolName === 'inpaint') document.getElementById('iToolInpaint').classList.add('active');
+
+        const instruction = document.getElementById('imgToolInstruction');
+        if (instruction) {
+          if (toolName === 'eyedropper') {
+            instruction.innerHTML = '🧪 <b>Pipette</b>: Klicke auf eine Stelle im Bild, um diese Farbe als aktive Pinselfarbe auszuwählen.';
+          } else if (toolName === 'brush') {
+            instruction.innerHTML = '🖌️ <b>Pinsel</b>: Zeichne frei auf dem Bild mit der ausgewählten Pinselgröße und Farbe.';
+          } else if (toolName === 'rect') {
+            instruction.innerHTML = '⬜ <b>Balken</b>: Ziehe mit der Maus ein Rechteck auf dem Bild, um Bereiche mit der ausgewählten Farbe abzudecken.';
+          } else if (toolName === 'inpaint') {
+            instruction.innerHTML = '✨ <b>KI-Retusche</b>: Male mit dem Pinsel über ein Objekt (wird rosa markiert). Klicke danach unten auf den grünen Button <b>"KI-Retusche anwenden"</b>, um es zu entfernen.';
+          }
+        }
+        
+        if (brushCursor) {
+          brushCursor.style.display = 'none';
+        }
+        canvas.style.cursor = 'default';
+      }
+
+      if (input) {
+        input.addEventListener('change', () => {
+          if (input.files[0]) handleImageFile(input.files[0]);
+        });
+      }
+
+      dropzone.addEventListener('dragover', e => e.preventDefault());
+      dropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+      });
+
+      document.addEventListener('paste', e => {
+        const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
+        if (activeTab !== 'image-editor') return;
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        for (const item of items) {
+          if (item.type.indexOf('image') === 0) {
+            handleImageFile(item.getAsFile());
+            break;
+          }
+        }
+      });
+
+      document.addEventListener('keydown', e => {
+        const activeTab = document.querySelector('.tab-btn.active').getAttribute('data-tab');
+        if (activeTab !== 'image-editor') return;
+        
+        // Ignore keybind if user is typing in text inputs
+        if (document.activeElement && (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA')) {
+          return;
+        }
+
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          undo();
+        }
+      });
+
+      viewport.addEventListener('wheel', e => {
+        if (!originalImage) return;
+        e.preventDefault();
+        if (e.deltaY < 0) {
+          zoomIn();
+        } else {
+          zoomOut();
+        }
+      }, { passive: false });
+
+      function handleImageFile(file) {
+        if (!file || !file.type.startsWith('image/')) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          const img = new Image();
+          img.onload = () => {
+            originalImage = img;
+            initCanvas(img);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function initCanvas(img) {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        scale = 1.0;
+        updateZoomUI();
+
+        dropzone.style.display = 'none';
+        wrapper.style.display = 'block';
+        controlBar.style.display = 'flex';
+        resetBtn.style.display = 'block';
+        saveBtn.disabled = false;
+
+        history = [ctx.getImageData(0, 0, canvas.width, canvas.height)];
+
+        maskCanvas = document.createElement('canvas');
+        maskCanvas.width = img.width;
+        maskCanvas.height = img.height;
+        maskCtx = maskCanvas.getContext('2d');
+        maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+        maskHistory = [];
+        cleanImageDataBeforeMask = null;
+        checkMaskEmpty();
+
+        originalWidth = img.width;
+        originalHeight = img.height;
+        ratio = img.width / img.height;
+        resizeWidth.value = img.width;
+        resizeHeight.value = img.height;
+        resizeCard.style.display = 'block';
+        updateResizeInfo();
+
+        updateUndoButton();
+        zoomFit();
+      }
+
+      function zoomIn() { scale = Math.min(scale + 0.1, 4.0); updateZoomUI(); }
+      function zoomOut() { scale = Math.max(scale - 0.1, 0.1); updateZoomUI(); }
+      function zoomFit() {
+        const wRatio = (viewport.clientWidth - 80) / canvas.width;
+        const hRatio = (viewport.clientHeight - 80) / canvas.height;
+        scale = Math.min(wRatio, hRatio, 1.0);
+        updateZoomUI();
+      }
+      function updateZoomUI() {
+        wrapper.style.transform = `scale(${scale})`;
+        zoomText.textContent = Math.round(scale * 100) + '%';
+      }
+
+      function updateBrushCursor(e) {
+        if (!originalImage || !brushCursor) return;
+        if (activeTool === 'brush' || activeTool === 'inpaint') {
+          const rect = canvas.getBoundingClientRect();
+          const x = (e.clientX - rect.left) / scale;
+          const y = (e.clientY - rect.top) / scale;
+          
+          brushCursor.style.width = size + 'px';
+          brushCursor.style.height = size + 'px';
+          brushCursor.style.left = x + 'px';
+          brushCursor.style.top = y + 'px';
+          brushCursor.style.display = 'block';
+          
+          if (activeTool === 'inpaint') {
+            brushCursor.style.background = 'rgba(244, 63, 94, 0.25)';
+            brushCursor.style.borderColor = 'rgba(244, 63, 94, 0.95)';
+          } else {
+            brushCursor.style.background = currentColor + '22';
+            brushCursor.style.borderColor = 'rgba(255, 255, 255, 0.85)';
+          }
+          canvas.style.cursor = 'none';
+        } else {
+          brushCursor.style.display = 'none';
+          canvas.style.cursor = activeTool === 'eyedropper' ? 'copy' : 'crosshair';
+        }
+      }
+
+      canvas.addEventListener('mouseenter', updateBrushCursor);
+
+      canvas.addEventListener('mousedown', e => {
+        if (!originalImage) return;
+        isDrawing = true;
+        const coords = getCanvasCoords(e);
+        startX = coords.x; startY = coords.y;
+
+        if (activeTool === 'eyedropper') pickColor(coords.x, coords.y);
+        else if (activeTool === 'brush') {
+          saveState();
+          ctx.beginPath();
+          ctx.moveTo(coords.x, coords.y);
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          ctx.lineWidth = size; ctx.strokeStyle = currentColor;
+          ctx.lineTo(coords.x, coords.y);
+          ctx.stroke();
+        } else if (activeTool === 'rect') saveState();
+        else if (activeTool === 'inpaint') {
+          if (!cleanImageDataBeforeMask) {
+            cleanImageDataBeforeMask = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          }
+          saveState();
+          if (maskHistory.length >= 20) maskHistory.shift();
+          maskHistory.push(maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height));
+
+          maskCtx.beginPath();
+          maskCtx.moveTo(coords.x, coords.y);
+          maskCtx.lineCap = 'round'; maskCtx.lineJoin = 'round';
+          maskCtx.lineWidth = size; maskCtx.strokeStyle = '#ffffff';
+          maskCtx.lineTo(coords.x, coords.y);
+          maskCtx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(coords.x, coords.y);
+          ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+          ctx.lineWidth = size; ctx.strokeStyle = 'rgba(244, 63, 94, 0.55)';
+          ctx.lineTo(coords.x, coords.y);
+          ctx.stroke();
+        }
+        updateBrushCursor(e);
+      });
+
+      canvas.addEventListener('mousemove', e => {
+        if (!originalImage) return;
+        const coords = getCanvasCoords(e);
+        updateBrushCursor(e);
+
+        if (activeTool === 'eyedropper') updateMagnifier(e, coords.x, coords.y);
+        else magnifier.style.display = 'none';
+
+        if (!isDrawing) return;
+        if (activeTool === 'eyedropper') pickColor(coords.x, coords.y);
+        else if (activeTool === 'brush') { ctx.lineTo(coords.x, coords.y); ctx.stroke(); }
+        else if (activeTool === 'rect') {
+          restoreState();
+          ctx.fillStyle = currentColor;
+          ctx.fillRect(startX, startY, coords.x - startX, coords.y - startY);
+        } else if (activeTool === 'inpaint') {
+          maskCtx.lineTo(coords.x, coords.y);
+          maskCtx.stroke();
+
+          ctx.lineTo(coords.x, coords.y);
+          ctx.stroke();
+        }
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (isDrawing) {
+          isDrawing = false;
+          if (activeTool === 'inpaint') {
+            checkMaskEmpty();
+          }
+        }
+        magnifier.style.display = 'none';
+      });
+      canvas.addEventListener('mouseleave', () => {
+        magnifier.style.display = 'none';
+        if (brushCursor) brushCursor.style.display = 'none';
+        canvas.style.cursor = 'default';
+      });
+
+      function getCanvasCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+        return { x, y };
+      }
+
+      function pickColor(x, y) {
+        if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) return;
+        const pixel = ctx.getImageData(x, y, 1, 1).data;
+        const hex = rgbToHex(pixel[0], pixel[1], pixel[2]);
+        setColor(hex);
+      }
+
+      function rgbToHex(r,g,b) {
+        return '#' + [r,g,b].map(v => {
+          const x = Math.max(0,Math.min(255,Math.round(v))).toString(16);
+          return x.length === 1 ? '0'+x : x;
+        }).join('').toUpperCase();
+      }
+
+      function updateMagnifier(e, x, y) {
+        if (x < 0 || x >= canvas.width || y < 0 || y >= canvas.height) {
+          magnifier.style.display = 'none';
+          return;
+        }
+        magnifier.style.display = 'block';
+        const wrapperRect = wrapper.getBoundingClientRect();
+        magnifier.style.left = (e.clientX - wrapperRect.left - 40) + 'px';
+        magnifier.style.top = (e.clientY - wrapperRect.top - 40) + 'px';
+
+        const zFactor = 10, mWidth = magnifier.width, mHeight = magnifier.height;
+        const pX = mWidth / zFactor, pY = mHeight / zFactor;
+        const srcX = Math.round(x - pX / 2), srcY = Math.round(y - pY / 2);
+
+        magCtx.fillStyle = '#000'; magCtx.fillRect(0, 0, mWidth, mHeight);
+        magCtx.imageSmoothingEnabled = false; magCtx.mozImageSmoothingEnabled = false; magCtx.webkitImageSmoothingEnabled = false;
+        magCtx.drawImage(canvas, srcX, srcY, pX, pY, 0, 0, mWidth, mHeight);
+
+        const centerStart = (mWidth / 2) - (zFactor / 2);
+        magCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'; magCtx.lineWidth = 1.5;
+        magCtx.strokeRect(centerStart, centerStart, zFactor, zFactor);
+
+        magCtx.strokeStyle = '#fff'; magCtx.lineWidth = 3;
+        magCtx.beginPath(); magCtx.arc(mWidth / 2, mHeight / 2, mWidth / 2 - 1.5, 0, Math.PI * 2); magCtx.stroke();
+      }
+
+      function saveState() {
+        if (history.length >= 20) history.shift();
+        history.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+        updateUndoButton();
+      }
+      function restoreState() {
+        if (history.length > 0) ctx.putImageData(history[history.length - 1], 0, 0);
+      }
+      function undo() {
+        if (history.length > 1) {
+          history.pop();
+          ctx.putImageData(history[history.length - 1], 0, 0);
+
+          if (activeTool === 'inpaint' && maskHistory.length > 0) {
+            const prevMask = maskHistory.pop();
+            maskCtx.putImageData(prevMask, 0, 0);
+            checkMaskEmpty();
+            if (maskHistory.length === 0) {
+              cleanImageDataBeforeMask = null;
+            }
+          }
+
+          updateUndoButton();
+        }
+      }
+      function updateUndoButton() { undoBtn.disabled = history.length <= 1; }
+
+      function applyInpaint() {
+        if (!originalImage || !cleanImageDataBeforeMask || !maskCanvas) return;
+        if (typeof pywebview === 'undefined') {
+          showToast('System nicht bereit. Läuft die Desktop-App?');
+          return;
+        }
+
+        const inpaintBtn = document.getElementById('imgCensorInpaintBtn');
+        inpaintBtn.disabled = true;
+        inpaintBtn.textContent = '⏳ Retuschiere...';
+
+        ctx.putImageData(cleanImageDataBeforeMask, 0, 0);
+
+        const imgB64 = canvas.toDataURL('image/png');
+        const maskB64 = maskCanvas.toDataURL('image/png');
+
+        pywebview.api.inpaint_image(imgB64, maskB64).then(res => {
+          inpaintBtn.disabled = false;
+          inpaintBtn.textContent = '✨ KI-Retusche anwenden';
+
+          if (res && res.success) {
+            const resultImg = new Image();
+            resultImg.onload = () => {
+              maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+              maskHistory = [];
+              cleanImageDataBeforeMask = null;
+
+              ctx.drawImage(resultImg, 0, 0);
+
+              saveState();
+              checkMaskEmpty();
+              showToast('Retusche erfolgreich angewendet! ✨');
+            };
+            resultImg.src = res.image;
+          } else {
+            restoreState();
+            showToast('Fehler bei der Retusche: ' + (res.error || 'Verarbeitung fehlgeschlagen.'), 'error');
+          }
+        });
+      }
+
+      function updateResizeInfo() {
+        const info = document.getElementById('imgResizeInfo');
+        if (!info || !originalWidth || !originalHeight) return;
+        const targetW = parseInt(resizeWidth.value) || originalWidth;
+        const targetH = parseInt(resizeHeight.value) || originalHeight;
+        
+        let actionText = '';
+        if (targetW < originalWidth) {
+          actionText = ' (Herunterskalieren)';
+        } else if (targetW > originalWidth) {
+          actionText = ' (Hochskalieren)';
+        } else {
+          actionText = ' (Gleiche Größe)';
+        }
+        info.textContent = `Ziel-Größe (Export): ${targetW} x ${targetH} px${actionText}`;
+      }
+
+      resizeWidth.addEventListener('input', () => {
+        if (!originalImage) return;
+        const w = parseInt(resizeWidth.value) || 0;
+        if (isLocked) {
+          resizeHeight.value = Math.round(w / ratio);
+        }
+        updateResizeInfo();
+      });
+
+      resizeHeight.addEventListener('input', () => {
+        if (!originalImage) return;
+        const h = parseInt(resizeHeight.value) || 0;
+        if (isLocked) {
+          resizeWidth.value = Math.round(h * ratio);
+        }
+        updateResizeInfo();
+      });
+
+      function toggleLock() {
+        isLocked = !isLocked;
+        if (isLocked) {
+          resizeLockIcon.textContent = '🔒';
+          resizeHeight.disabled = true;
+          resizeHeight.style.opacity = '0.6';
+          const w = parseInt(resizeWidth.value) || 0;
+          resizeHeight.value = Math.round(w / ratio);
+        } else {
+          resizeLockIcon.textContent = '🔓';
+          resizeHeight.disabled = false;
+          resizeHeight.style.opacity = '1';
+        }
+        updateResizeInfo();
+      }
+
+      function updateFormat() {
+        const fmt = resizeFormat.value;
+        if (fmt === 'JPG' || fmt === 'WEBP') {
+          resizeQualityWrap.style.display = 'block';
+        } else {
+          resizeQualityWrap.style.display = 'none';
+        }
+      }
+
+      function updateQuality() {
+        resizeQualityVal.textContent = resizeQualityRange.value + '%';
+      }
+
+      function downloadImage() {
+        if (!originalImage) return;
+        
+        const targetW = parseInt(resizeWidth.value) || canvas.width;
+        const targetH = parseInt(resizeHeight.value) || canvas.height;
+        const format = resizeFormat.value;
+        const qualityVal = parseInt(resizeQualityRange.value) / 100;
+        
+        const scaleCanvas = document.createElement('canvas');
+        scaleCanvas.width = targetW;
+        scaleCanvas.height = targetH;
+        const scaleCtx = scaleCanvas.getContext('2d');
+        
+        if (format === 'JPG') {
+          scaleCtx.fillStyle = '#FFFFFF';
+          scaleCtx.fillRect(0, 0, targetW, targetH);
+        }
+        
+        scaleCtx.drawImage(canvas, 0, 0, targetW, targetH);
+        
+        let mimeType = 'image/png';
+        let ext = '.png';
+        if (format === 'JPG') { mimeType = 'image/jpeg'; ext = '.jpg'; }
+        else if (format === 'WEBP') { mimeType = 'image/webp'; ext = '.webp'; }
+        
+        const dataUrl = scaleCanvas.toDataURL(mimeType, qualityVal);
+        const imgCustomName = (document.getElementById('imgFilename').value || '').trim();
+        const imgDefaultName = (imgCustomName || 'bearbeitet') + ext;
+        const fileTypes = JSON.stringify([[`${format} Bild`, `*${ext}`], ["Alle Dateien", "*.*"]]);
+        
+        pywebview.api.save_file_dialog(fileTypes, imgDefaultName).then(outputPath => {
+          if (!outputPath) return;
+          if (typeof outputPath === 'object' && outputPath.success === false) {
+            showToast('Fehler beim Speicher-Dialog: ' + outputPath.error, 'error');
+            return;
+          }
+          pywebview.api.save_base64_image(dataUrl, outputPath).then(res => {
+            if (res && res.success) {
+              const sizeKB = (res.size / 1024).toFixed(1);
+              showToast(`Bild erfolgreich gespeichert! 💾\nGröße: ${targetW}x${targetH} px (${sizeKB} KB)`);
+            } else {
+              showToast('Fehler: ' + (res.error || ''), 'error');
+            }
+          });
+        });
+      }
+
+      function openImage() {
+        if (typeof pywebview === 'undefined') {
+          showToast('System nicht bereit. Läuft die Desktop-App?');
+          return;
+        }
+        const fileTypes = JSON.stringify([
+          ["Bilddateien", "*.png;*.jpg;*.jpeg;*.webp"],
+          ["Alle Dateien", "*.*"]
+        ]);
+        pywebview.api.select_file(fileTypes).then(path => {
+          if (path) {
+            if (typeof path === 'object' && path.hasOwnProperty('success') && path.success === false) {
+              showToast('Fehler: ' + path.error);
+            } else {
+              let actualPath = Array.isArray(path) ? path[0] : path;
+              if (actualPath) {
+                pywebview.api.get_image_base64(actualPath).then(res => {
+                  if (res && res.success) {
+                    const img = new Image();
+                    img.onload = () => {
+                      originalImage = img;
+                      initCanvas(img);
+                      
+                      const filenameWithExt = actualPath.split('\\').pop().split('/').pop();
+                      const dotIdx = filenameWithExt.lastIndexOf('.');
+                      const baseName = dotIdx !== -1 ? filenameWithExt.substring(0, dotIdx) : filenameWithExt;
+                      document.getElementById('imgFilename').value = baseName + '_bearbeitet';
+                    };
+                    img.src = res.base64;
+                  } else {
+                    showToast('Fehler beim Laden des Bildes: ' + (res ? res.error : ''), 'error');
+                  }
+                });
+              }
+            }
+          }
+        });
+      }
+
+      function resetApp() {
+        originalImage = null; history = []; updateUndoButton();
+        canvas.width = 0; canvas.height = 0;
+        wrapper.style.display = 'none'; controlBar.style.display = 'none'; resetBtn.style.display = 'none';
+        saveBtn.disabled = true; dropzone.style.display = 'flex'; if (input) input.value = '';
+        maskCanvas = null; maskCtx = null; maskHistory = []; cleanImageDataBeforeMask = null;
+        resizeCard.style.display = 'none';
+        const info = document.getElementById('imgResizeInfo');
+        if (info) info.textContent = 'Ziel-Größe (Export): Original';
+        document.getElementById('imgFilename').value = '';
+        checkMaskEmpty();
+      }
+
+      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, toggleLock, updateFormat, updateQuality };
+    })();
+
+    // ==========================================
+    // TAB 4: GIF CREATOR SCOPE
+    // ==========================================
+    (function() {
+      const dropzone = document.getElementById('gifDrop');
+      const workspace = document.getElementById('gifWorkspace');
+      const player = document.getElementById('gifPreviewPlayer');
+      const videoName = document.getElementById('gifVideoName');
+      
+      const startTimeInput = document.getElementById('gifStart');
+      const endTimeInput = document.getElementById('gifEnd');
+      const fpsRange = document.getElementById('gifFpsRange');
+      const widthRange = document.getElementById('gifWidthRange');
+      const durationRange = document.getElementById('gifDurationRange');
+      
+      const fpsVal = document.getElementById('gifFpsVal');
+      const widthVal = document.getElementById('gifWidthVal');
+      const durationVal = document.getElementById('gifDurationVal');
+      
+      const convertBtn = document.getElementById('gifConvertBtn');
+      const progressSection = document.getElementById('gifProgress');
+      const progressFill = document.getElementById('gifProgressFill');
+      const progressPct = document.getElementById('gifProgressPct');
+      const progressText = document.getElementById('gifProgressText');
+      
+      const resultSection = document.getElementById('gifResult');
+      const resultImg = document.getElementById('gifResultImg');
+      const resultSize = document.getElementById('gifResultSize');
+
+      let videoPath = null;
+      let originalVideoFps = 25.0;
+      let originalVideoFrames = 0;
+      let lastActualBpp = null;
+
+      const estSizeEl = document.getElementById('gifEstSize');
+
+      function updateGifEstimate() {
+        if (!videoPath || !estSizeEl) return;
+        
+        const fps = parseInt(fpsRange.value) || 10;
+        const width = parseInt(widthRange.value) || 480;
+        const start = parseFloat(startTimeInput.value) || 0;
+        let end = parseFloat(endTimeInput.value);
+        const maxDur = parseInt(durationRange.value) || 5;
+        
+        if (isNaN(end) || end <= start) end = start + maxDur;
+        if (player.duration) {
+          end = Math.min(end, start + player.duration);
+        }
+        const duration = Math.max(0.1, end - start);
+        
+        const origFps = originalVideoFps || 25.0;
+        const totalFrames = originalVideoFrames || Math.ceil(player.duration * origFps) || 125;
+        const startFrame = Math.floor(start * origFps);
+        const requestedFrames = Math.floor(duration * fps);
+        const step = Math.max(1.0, origFps / fps);
+        
+        let actualFrames = 0;
+        for (let i = 0; i < requestedFrames; i++) {
+          const targetFrame = Math.floor(startFrame + i * step);
+          if (totalFrames > 0 && targetFrame >= totalFrames) {
+            break;
+          }
+          actualFrames++;
+        }
+        
+        const videoW = player.videoWidth || 640;
+        const videoH = player.videoHeight || 360;
+        const ratio = videoW / videoH;
+        const targetHeight = Math.round(width / ratio);
+        
+        let factor;
+        if (lastActualBpp !== null) {
+          factor = lastActualBpp;
+        } else {
+          const actualFps = actualFrames / duration;
+          factor = 0.65 - (actualFps * 0.015);
+          factor = Math.max(0.32, Math.min(0.55, factor));
+        }
+        
+        const estBytes = width * targetHeight * actualFrames * factor;
+        const estMB = (estBytes / (1024 * 1024)).toFixed(2);
+        
+        estSizeEl.textContent = `Geschätzte Größe: ~${estMB} MB`;
+      }
+
+      fpsRange.addEventListener('input', () => {
+        fpsVal.textContent = fpsRange.value + ' FPS';
+        updateGifEstimate();
+      });
+      widthRange.addEventListener('input', () => {
+        widthVal.textContent = widthRange.value + ' px';
+        updateGifEstimate();
+      });
+      durationRange.addEventListener('input', () => {
+        durationVal.textContent = durationRange.value + ' s';
+        updateGifEstimate();
+      });
+      startTimeInput.addEventListener('input', updateGifEstimate);
+      endTimeInput.addEventListener('input', updateGifEstimate);
+
+      function openVideo() {
+        if (typeof pywebview === 'undefined') {
+          showToast('System nicht bereit. Läuft die Desktop-App?');
+          return;
+        }
+        const fileTypes = JSON.stringify([
+          ["Videodateien", "*.mp4;*.avi;*.mov;*.mkv;*.webm"],
+          ["Alle Dateien", "*.*"]
+        ]);
+        pywebview.api.select_file(fileTypes).then(path => {
+          if (path) {
+            if (typeof path === 'object' && path.hasOwnProperty('success') && path.success === false) {
+              showToast('Fehler: ' + path.error);
+            } else {
+              loadVideo(path);
+            }
+          }
+        });
+      }
+
+      function loadVideo(path) {
+        videoPath = path;
+        videoName.textContent = path.split('\\').pop();
+        
+        pywebview.api.prepare_video_preview(path).then(res => {
+          if (res && res.success) {
+            originalVideoFps = res.fps || 25.0;
+            originalVideoFrames = res.total_frames || 0;
+            
+            player.src = './' + res.temp_name;
+            workspace.style.display = 'flex';
+            dropzone.style.display = 'none';
+            resultSection.style.display = 'none';
+            progressSection.style.display = 'none';
+          } else {
+            showToast("Konnte Video nicht laden: " + (res.error || ""));
+          }
+        });
+
+        player.onloadedmetadata = () => {
+          const dur = player.duration;
+          startTimeInput.max = dur;
+          endTimeInput.max = dur;
+          const maxDur = Math.min(dur, parseFloat(durationRange.value));
+          endTimeInput.value = maxDur.toFixed(1);
+          updateGifEstimate();
+        };
+      }
+
+      function startConvert() {
+        if (!videoPath) return;
+        
+        const gifCustomName = (document.getElementById('gifFilename').value || '').trim();
+        const gifDefaultName = (gifCustomName || 'output') + '.gif';
+        const fileTypes = JSON.stringify([["GIF Grafik", "*.gif"], ["Alle Dateien", "*.*"]]);
+        pywebview.api.save_file_dialog(fileTypes, gifDefaultName).then(outputPath => {
+          if (!outputPath) return;
+          
+          convertBtn.disabled = true;
+          progressSection.style.display = 'flex';
+          progressFill.style.width = '0%';
+          progressPct.textContent = '0%';
+          progressText.textContent = 'Frames werden extrahiert...';
+
+          const fps = parseInt(fpsRange.value);
+          const width = parseInt(widthRange.value);
+          const start = parseFloat(startTimeInput.value) || 0;
+          let end = parseFloat(endTimeInput.value);
+          const maxDur = parseInt(durationRange.value);
+
+          if (isNaN(end) || end <= start) end = start + maxDur;
+          end = Math.min(end, start + player.duration);
+
+          const duration = end - start;
+
+          pywebview.api.create_gif(videoPath, start, duration, fps, width, outputPath).then(res => {
+            convertBtn.disabled = false;
+            if (res && res.success) {
+              progressSection.style.display = 'none';
+              resultSection.style.display = 'block';
+              resultImg.src = res.base64;
+              
+              const size = res.size;
+              let actualSizeText = "";
+              if (size < 1024 * 1024) actualSizeText = (size / 1024).toFixed(1) + " KB";
+              else actualSizeText = (size / (1024 * 1024)).toFixed(2) + " MB";
+              
+              resultSize.textContent = "GIF erfolgreich gespeichert! Tatsächliche Größe: " + actualSizeText;
+              showToast('GIF erfolgreich erstellt! 🎬');
+
+              // Empirical feedback calibration
+              const videoW = player.videoWidth || 640;
+              const videoH = player.videoHeight || 360;
+              const ratio = videoW / videoH;
+              const targetHeight = Math.round(width / ratio);
+
+              const origFps = originalVideoFps || 25.0;
+              const totalFrames = originalVideoFrames || Math.ceil(player.duration * origFps) || 125;
+              const startFrame = Math.floor(start * origFps);
+              const requestedFrames = Math.floor(duration * fps);
+              const step = Math.max(1.0, origFps / fps);
+
+              let actualFrames = 0;
+              for (let i = 0; i < requestedFrames; i++) {
+                const targetFrame = Math.floor(startFrame + i * step);
+                if (totalFrames > 0 && targetFrame >= totalFrames) {
+                  break;
+                }
+                actualFrames++;
+              }
+
+              if (actualFrames > 0 && width > 0 && targetHeight > 0) {
+                lastActualBpp = size / (width * targetHeight * actualFrames);
+                updateGifEstimate();
+              }
+            } else {
+              showToast('Fehler: ' + (res.error || 'Konnte GIF nicht erstellen.'), 'error');
+              progressSection.style.display = 'none';
+            }
+          });
+        });
+      }
+
+
+
+      window.updateGifProgress = function(pct) {
+        progressFill.style.width = pct + '%';
+        progressPct.textContent = pct + '%';
+        if (pct >= 90) progressText.textContent = 'GIF wird optimiert und gespeichert...';
+        else progressText.textContent = 'Frames werden verarbeitet...';
+      };
+
+      function resetAll() {
+        videoPath = null; player.src = '';
+        originalVideoFps = 25.0;
+        originalVideoFrames = 0;
+        lastActualBpp = null;
+        dropzone.style.display = 'flex';
+        workspace.style.display = 'none';
+        resultSection.style.display = 'none';
+        progressSection.style.display = 'none';
+        if (estSizeEl) estSizeEl.textContent = 'Geschätzte Größe: ~0.00 MB';
+        document.getElementById('gifFilename').value = '';
+      }
+
+      window.gifCreator = { openVideo, startConvert, resetAll };
+    })();
+  </script>
+</body>
+</html>

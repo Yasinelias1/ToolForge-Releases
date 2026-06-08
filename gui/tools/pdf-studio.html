@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PDF-Studio – ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #09090e;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(255,255,255,0.14);
+      --text: #f0f0ff;
+      --text-muted: #8888aa;
+      --accent: #ef4444;
+      --accent-hover: #f87171;
+      --accent2: #f97316;
+      --gradient: linear-gradient(135deg, #ef4444, #f97316);
+      --radius: 18px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 80% 10%, rgba(239, 68, 68, 0.12) 0%, transparent 60%),
+        radial-gradient(ellipse 50% 40% at 20% 90%, rgba(249, 115, 22, 0.08) 0%, transparent 55%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .back-btn {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      color: #94a3b8;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      z-index: 999;
+    }
+    .back-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(239, 68, 68, 0.4);
+      color: #f1f5f9;
+      transform: translateX(-4px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .app-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 90px 20px 40px;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    header h1 {
+      font-size: 2.5rem;
+      font-weight: 900;
+      background: var(--gradient);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* Tabs */
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      padding: 6px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      overflow-x: auto;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 16px;
+      background: none;
+      border: none;
+      border-radius: 10px;
+      color: var(--text-muted);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--gradient);
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    .group-title {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    /* Drag zone / Upload card */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 30px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.01);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .dropzone:hover {
+      border-color: var(--accent);
+      background: rgba(239, 68, 68, 0.02);
+    }
+    .dropzone-icon {
+      font-size: 2.2rem;
+    }
+    .dropzone-text {
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .dropzone-subtext {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* List view */
+    .file-list {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .file-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      gap: 12px;
+    }
+    .file-name {
+      font-size: 13.5px;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+    .file-actions {
+      display: flex;
+      gap: 6px;
+    }
+    .action-icon-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+    .action-icon-btn:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    .action-icon-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    /* Inputs */
+    .settings-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 16px;
+      margin-bottom: 16px;
+    }
+    @media (max-width: 550px) {
+      .settings-grid { grid-template-columns: 1fr; }
+    }
+    .settings-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .settings-label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+    .url-input {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 12px 14px;
+      color: var(--text);
+      font-size: 13.5px;
+      outline: none;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+    .url-input:focus {
+      border-color: var(--accent);
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .btn {
+      padding: 14px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+    .btn.primary {
+      background: var(--gradient);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
+    }
+    .btn.primary:hover:not(:disabled) {
+      background: linear-gradient(135deg, var(--accent-hover), #f97316);
+      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+      transform: translateY(-1px);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--gradient);
+      color: white;
+      padding: 12px 26px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 32px rgba(239, 68, 68, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 9999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <a href="../ToolForge.html" class="back-btn">⬅ Zurück</a>
+
+  <div class="app-container">
+    <header>
+      <h1>PDF-Studio</h1>
+      <p>PDFs zusammenfügen, Seiten aufteilen, Bilder konvertieren oder PDFs komprimieren.</p>
+    </header>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs-header">
+      <button class="tab-btn active" onclick="switchTab('merge')">🔗 Zusammenfügen</button>
+      <button class="tab-btn" onclick="switchTab('split')">✂️ Aufteilen</button>
+      <button class="tab-btn" onclick="switchTab('img2pdf')">🖼️ Bilder zu PDF</button>
+      <button class="tab-btn" onclick="switchTab('compress')">🗜️ Komprimieren</button>
+    </div>
+
+    <!-- TAB 1: MERGE -->
+    <div class="tab-content active" id="tab-merge">
+      <div class="card">
+        <div class="group-title">PDF-Dateien zusammenfügen</div>
+        
+        <div class="dropzone" onclick="addMergeFile()">
+          <span class="dropzone-icon">➕</span>
+          <span class="dropzone-text">PDF-Datei hinzufügen</span>
+          <span class="dropzone-subtext">Klicke, um eine Datei auszuwählen</span>
+        </div>
+
+        <div class="file-list" id="mergeFileList">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div id="mergeActionsWrap" style="display: none; margin-top: 20px;">
+          <div class="settings-grid">
+            <div class="settings-item" style="grid-column: span 2;">
+              <span class="settings-label">Ausgabe-Dateiname (ohne Endung)</span>
+              <input type="text" id="mergeFilename" class="url-input" placeholder="z.B. zusammengefuegt" />
+            </div>
+          </div>
+          <button class="btn primary" style="width: 100%;" onclick="runMerge()">
+            🔗 PDF-Dateien zusammenfügen &amp; speichern
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: SPLIT -->
+    <div class="tab-content" id="tab-split">
+      <div class="card">
+        <div class="group-title">PDF-Seiten aufteilen</div>
+        
+        <div class="dropzone" id="splitDropzone" onclick="selectSplitFile()">
+          <span class="dropzone-icon">📄</span>
+          <span class="dropzone-text" id="splitFilenameText">PDF-Datei auswählen</span>
+          <span class="dropzone-subtext" id="splitSubtext">Klicke, um eine Datei auszuwählen</span>
+        </div>
+
+        <div id="splitConfigWrap" style="display: none; margin-top: 20px;">
+          <div class="settings-grid">
+            <div class="settings-item">
+              <span class="settings-label">Seitenauswahl (z. B. 1-3, 5, 8-10)</span>
+              <input type="text" id="splitPagesInput" class="url-input" placeholder="z.B. 1-2, 4" />
+            </div>
+            <div class="settings-item">
+              <span class="settings-label">Dateiname (ohne Endung)</span>
+              <input type="text" id="splitFilename" class="url-input" placeholder="z.B. extrahierte_seiten" />
+            </div>
+          </div>
+          <button class="btn primary" style="width: 100%;" onclick="runSplit()">
+            ✂️ Ausgewählte Seiten speichern
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: IMAGES TO PDF -->
+    <div class="tab-content" id="tab-img2pdf">
+      <div class="card">
+        <div class="group-title">Bilder in PDF umwandeln</div>
+        
+        <div class="dropzone" onclick="addImageFile()">
+          <span class="dropzone-icon">🖼️</span>
+          <span class="dropzone-text">Bild hinzufügen (JPG, PNG)</span>
+          <span class="dropzone-subtext">Klicke, um ein Bild auszuwählen</span>
+        </div>
+
+        <div class="file-list" id="imageFileList">
+          <!-- Populated dynamically -->
+        </div>
+
+        <div id="img2pdfActionsWrap" style="display: none; margin-top: 20px;">
+          <div class="settings-grid">
+            <div class="settings-item" style="grid-column: span 2;">
+              <span class="settings-label">Dateiname (ohne Endung)</span>
+              <input type="text" id="img2pdfFilename" class="url-input" placeholder="z.B. bildergalerie" />
+            </div>
+          </div>
+          <button class="btn primary" style="width: 100%;" onclick="runImg2Pdf()">
+            📄 PDF aus Bildern erstellen
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: COMPRESS -->
+    <div class="tab-content" id="tab-compress">
+      <div class="card">
+        <div class="group-title">PDF-Größe komprimieren</div>
+        
+        <div class="dropzone" id="compressDropzone" onclick="selectCompressFile()">
+          <span class="dropzone-icon">🗜️</span>
+          <span class="dropzone-text" id="compressFilenameText">PDF-Datei auswählen</span>
+          <span class="dropzone-subtext" id="compressSubtext">Klicke, um eine Datei auszuwählen</span>
+        </div>
+
+        <div id="compressActionsWrap" style="display: none; margin-top: 20px;">
+          <div class="settings-grid">
+            <div class="settings-item" style="grid-column: span 2;">
+              <span class="settings-label">Dateiname für komprimiertes PDF (ohne Endung)</span>
+              <input type="text" id="compressFilename" class="url-input" placeholder="z.B. mein_pdf_komprimiert" />
+            </div>
+          </div>
+          <button class="btn primary" style="width: 100%;" onclick="runCompress()">
+            ⚡ PDF komprimieren &amp; speichern
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Erfolgreich! ✓</div>
+
+  <script>
+    // Tab switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      const activeBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+      
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // State Variables
+    let mergeFiles = [];
+    let splitFile = "";
+    let imageFiles = [];
+    let compressFile = "";
+
+    function showToast(msg, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      if (type === 'error') {
+        toast.style.background = 'linear-gradient(135deg, #ef4444 0%, #b91c1c 100%)';
+        toast.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.4)';
+      } else {
+        toast.style.background = 'var(--gradient)';
+        toast.style.boxShadow = '0 8px 32px rgba(239, 68, 68, 0.4)';
+      }
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // ==========================================
+    // TAB 1: MERGE CODE
+    // ==========================================
+    function addMergeFile() {
+      if (typeof pywebview === 'undefined') {
+        showToast('System nicht bereit. Läuft die Desktop-App?', 'error');
+        return;
+      }
+
+      const fileTypes = JSON.stringify([
+        ["PDF Dokument", "*.pdf"],
+        ["Alle Dateien", "*.*"]
+      ]);
+
+      pywebview.api.select_file(fileTypes).then(filePath => {
+        if (!filePath) return;
+        if (mergeFiles.includes(filePath)) {
+          showToast('Diese Datei ist bereits in der Liste!', 'error');
+          return;
+        }
+        mergeFiles.push(filePath);
+        renderMergeList();
+      });
+    }
+
+    function renderMergeList() {
+      const listContainer = document.getElementById('mergeFileList');
+      listContainer.innerHTML = '';
+      
+      mergeFiles.forEach((file, idx) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        
+        const filename = file.split('\\').pop().split('/').pop();
+        
+        item.innerHTML = `
+          <span class="file-name" title="${file}">${filename}</span>
+          <div class="file-actions">
+            <button class="action-icon-btn" onclick="moveMergeItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+            <button class="action-icon-btn" onclick="moveMergeItem(${idx}, 1)" ${idx === mergeFiles.length - 1 ? 'disabled' : ''}>▼</button>
+            <button class="action-icon-btn" style="color:var(--accent)" onclick="removeMergeItem(${idx})">❌</button>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+
+      document.getElementById('mergeActionsWrap').style.display = mergeFiles.length >= 2 ? 'block' : 'none';
+    }
+
+    function removeMergeItem(idx) {
+      mergeFiles.splice(idx, 1);
+      renderMergeList();
+    }
+
+    function moveMergeItem(idx, direction) {
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= mergeFiles.length) return;
+      
+      const temp = mergeFiles[idx];
+      mergeFiles[idx] = mergeFiles[targetIdx];
+      mergeFiles[targetIdx] = temp;
+      renderMergeList();
+    }
+
+    function runMerge() {
+      if (mergeFiles.length < 2) return;
+      
+      const customName = document.getElementById('mergeFilename').value.trim() || 'zusammengefuegt';
+      const defaultName = customName + '.pdf';
+      const fileTypes = JSON.stringify([["PDF Dokument", "*.pdf"]]);
+      
+      pywebview.api.save_file_dialog(fileTypes, defaultName).then(outputPath => {
+        if (!outputPath) return;
+        
+        showToast('PDFs werden zusammengefügt...');
+        pywebview.api.pdf_merge(JSON.stringify(mergeFiles), outputPath).then(res => {
+          if (res && res.success) {
+            showToast('PDF erfolgreich zusammengefügt! 💾');
+            mergeFiles = [];
+            document.getElementById('mergeFilename').value = '';
+            renderMergeList();
+          } else {
+            showToast('Fehler: ' + (res.error || 'Verbindung fehlgeschlagen.'), 'error');
+          }
+        });
+      });
+    }
+
+    // ==========================================
+    // TAB 2: SPLIT CODE
+    // ==========================================
+    function selectSplitFile() {
+      if (typeof pywebview === 'undefined') return;
+      
+      const fileTypes = JSON.stringify([["PDF Dokument", "*.pdf"]]);
+      
+      pywebview.api.select_file(fileTypes).then(filePath => {
+        if (!filePath) return;
+        splitFile = filePath;
+        const filename = filePath.split('\\').pop().split('/').pop();
+        
+        document.getElementById('splitFilenameText').textContent = filename;
+        document.getElementById('splitSubtext').textContent = 'Pfad: ' + filePath;
+        document.getElementById('splitDropzone').style.borderColor = 'var(--accent)';
+        
+        // Pre-fill default name
+        const cleanName = filename.replace(/\.pdf$/i, '') + '_aufgeteilt';
+        document.getElementById('splitFilename').value = cleanName;
+        
+        document.getElementById('splitConfigWrap').style.display = 'block';
+      });
+    }
+
+    function runSplit() {
+      if (!splitFile) return;
+      
+      const pages = document.getElementById('splitPagesInput').value.trim();
+      if (!pages) {
+        showToast('Bitte wähle die Seiten aus (z. B. 1-2, 4)!', 'error');
+        return;
+      }
+      
+      const customName = document.getElementById('splitFilename').value.trim() || 'extrahierte_seiten';
+      const defaultName = customName + '.pdf';
+      const fileTypes = JSON.stringify([["PDF Dokument", "*.pdf"]]);
+      
+      pywebview.api.save_file_dialog(fileTypes, defaultName).then(outputPath => {
+        if (!outputPath) return;
+        
+        showToast('PDF wird aufgeteilt...');
+        pywebview.api.pdf_split(splitFile, pages, outputPath).then(res => {
+          if (res && res.success) {
+            showToast('Seiten erfolgreich exportiert! 💾');
+            document.getElementById('splitPagesInput').value = '';
+            document.getElementById('splitFilename').value = '';
+            document.getElementById('splitFilenameText').textContent = 'PDF-Datei auswählen';
+            document.getElementById('splitSubtext').textContent = 'Klicke, um eine Datei auszuwählen';
+            document.getElementById('splitDropzone').style.borderColor = 'var(--border)';
+            document.getElementById('splitConfigWrap').style.display = 'none';
+            splitFile = "";
+          } else {
+            showToast('Fehler beim Aufteilen: ' + (res.error || ''), 'error');
+          }
+        });
+      });
+    }
+
+    // ==========================================
+    // TAB 3: IMAGES TO PDF CODE
+    // ==========================================
+    function addImageFile() {
+      if (typeof pywebview === 'undefined') return;
+
+      const fileTypes = JSON.stringify([
+        ["Bilder (JPG, PNG)", "*.jpg;*.jpeg;*.png"],
+        ["Alle Dateien", "*.*"]
+      ]);
+
+      pywebview.api.select_file(fileTypes).then(filePath => {
+        if (!filePath) return;
+        if (imageFiles.includes(filePath)) {
+          showToast('Dieses Bild ist bereits in der Liste!', 'error');
+          return;
+        }
+        imageFiles.push(filePath);
+        renderImageList();
+      });
+    }
+
+    function renderImageList() {
+      const listContainer = document.getElementById('imageFileList');
+      listContainer.innerHTML = '';
+      
+      imageFiles.forEach((file, idx) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        
+        const filename = file.split('\\').pop().split('/').pop();
+        
+        item.innerHTML = `
+          <span class="file-name" title="${file}">${filename}</span>
+          <div class="file-actions">
+            <button class="action-icon-btn" onclick="moveImageItem(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+            <button class="action-icon-btn" onclick="moveImageItem(${idx}, 1)" ${idx === imageFiles.length - 1 ? 'disabled' : ''}>▼</button>
+            <button class="action-icon-btn" style="color:var(--accent)" onclick="removeImageItem(${idx})">❌</button>
+          </div>
+        `;
+        listContainer.appendChild(item);
+      });
+
+      document.getElementById('img2pdfActionsWrap').style.display = imageFiles.length >= 1 ? 'block' : 'none';
+    }
+
+    function removeImageItem(idx) {
+      imageFiles.splice(idx, 1);
+      renderImageList();
+    }
+
+    function moveImageItem(idx, direction) {
+      const targetIdx = idx + direction;
+      if (targetIdx < 0 || targetIdx >= imageFiles.length) return;
+      
+      const temp = imageFiles[idx];
+      imageFiles[idx] = imageFiles[targetIdx];
+      imageFiles[targetIdx] = temp;
+      renderImageList();
+    }
+
+    function runImg2Pdf() {
+      if (imageFiles.length < 1) return;
+      
+      const customName = document.getElementById('img2pdfFilename').value.trim() || 'bildergalerie';
+      const defaultName = customName + '.pdf';
+      const fileTypes = JSON.stringify([["PDF Dokument", "*.pdf"]]);
+      
+      pywebview.api.save_file_dialog(fileTypes, defaultName).then(outputPath => {
+        if (!outputPath) return;
+        
+        showToast('PDF wird erstellt...');
+        pywebview.api.images_to_pdf(JSON.stringify(imageFiles), outputPath).then(res => {
+          if (res && res.success) {
+            showToast('PDF erfolgreich aus Bildern erstellt! 💾');
+            imageFiles = [];
+            document.getElementById('img2pdfFilename').value = '';
+            renderImageList();
+          } else {
+            showToast('Fehler bei der PDF-Erstellung: ' + (res.error || ''), 'error');
+          }
+        });
+      });
+    }
+
+    // ==========================================
+    // TAB 4: COMPRESS CODE
+    // ==========================================
+    function selectCompressFile() {
+      if (typeof pywebview === 'undefined') return;
+      
+      const fileTypes = JSON.stringify([["PDF Dokument", "*.pdf"]]);
+      
+      pywebview.api.select_file(fileTypes).then(filePath => {
+        if (!filePath) return;
+        compressFile = filePath;
+        const filename = filePath.split('\\').pop().split('/').pop();
+        
+        document.getElementById('compressFilenameText').textContent = filename;
+        document.getElementById('compressSubtext').textContent = 'Pfad: ' + filePath;
+        document.getElementById('compressDropzone').style.borderColor = 'var(--accent)';
+        
+        // Pre-fill default name
+        const cleanName = filename.replace(/\.pdf$/i, '') + '_komprimiert';
+        document.getElementById('compressFilename').value = cleanName;
+        
+        document.getElementById('compressActionsWrap').style.display = 'block';
+      });
+    }
+
+    function runCompress() {
+      if (!compressFile) return;
+      
+      const customName = document.getElementById('compressFilename').value.trim() || 'mein_pdf_komprimiert';
+      const defaultName = customName + '.pdf';
+      const fileTypes = JSON.stringify([["PDF Dokument", "*.pdf"]]);
+      
+      pywebview.api.save_file_dialog(fileTypes, defaultName).then(outputPath => {
+        if (!outputPath) return;
+        
+        showToast('PDF wird komprimiert...');
+        pywebview.api.pdf_compress(compressFile, outputPath).then(res => {
+          if (res && res.success) {
+            showToast('PDF erfolgreich komprimiert gespeichert! ⚡');
+            document.getElementById('compressFilename').value = '';
+            document.getElementById('compressFilenameText').textContent = 'PDF-Datei auswählen';
+            document.getElementById('compressSubtext').textContent = 'Klicke, um eine Datei auszuwählen';
+            document.getElementById('compressDropzone').style.borderColor = 'var(--border)';
+            document.getElementById('compressActionsWrap').style.display = 'none';
+            compressFile = "";
+          } else {
+            showToast('Fehler beim Komprimieren: ' + (res.error || ''), 'error');
+          }
+        });
+      });
+    }
+  </script>
+</body>
+</html>
