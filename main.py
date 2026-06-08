@@ -2183,8 +2183,10 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
         if use_premium:
             models_installed = self.check_faceswap_models().get("downloaded", False)
             if not models_installed:
-                print("Face-Swap Premium models not installed. Falling back to classical mode.")
-                use_premium = False
+                return {
+                    "success": False,
+                    "error": "Die Premium KI-Modelle sind nicht installiert. Bitte lade sie in den Einstellungen unter 'KI-Modelle' herunter oder deaktiviere die Option 'Premium KI'."
+                }
                 
         # Load premium models if needed
         app = None
@@ -2212,11 +2214,15 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 if src_faces:
                     source_face = src_faces[0]
                 else:
-                    print("Kein Gesicht im Quellbild per KI erkannt. Wechsle zu klassischem Warping.")
-                    use_premium = False
+                    return {
+                        "success": False,
+                        "error": "Kein Gesicht im Quellbild per Premium-KI erkannt. Bitte verwende ein anderes Quellbild (z.B. ein Porträtfoto, auf dem das Gesicht groß und deutlich sichtbar ist)."
+                    }
             except Exception as load_err:
-                print("Error loading Premium KI swapper, falling back to classical:", load_err)
-                use_premium = False
+                return {
+                    "success": False,
+                    "error": f"Fehler beim Laden der Premium KI-Modelle: {str(load_err)}"
+                }
 
         # If classical, detect source landmarks once
         src_landmarks = None

@@ -10,3 +10,4 @@ static-ffmpeg
 numpy
 psutil
 onnxruntime
+insightface
