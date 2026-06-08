@@ -1031,6 +1031,41 @@
         </div>
       </div>
 
+      <!-- Smart-KI Modell-Verwaltung (Model Management) -->
+      <div class="db-card" id="smartAiModelCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;" id="lblSmartAiTitle">
+          🧠 Smart-KI Modell-Verwaltung (Retusche)
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.9rem; color: var(--text);" id="lblSmartAiStatus">Status: <strong style="color: #f87171;" id="smartAiStatusText">Nicht installiert</strong></span>
+            <span style="font-size: 0.85rem; color: var(--muted);" id="smartAiSizeText">Größe: ~208 MB</span>
+          </div>
+
+          <!-- Download Progress Container -->
+          <div id="smartAiDownloadProgressContainer" style="display: none; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text);">
+              <span id="lblSmartAiDownloading">Herunterladen...</span>
+              <span id="smartAiDownloadPercentText" style="font-weight: 600;">0%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid var(--border);">
+              <div id="smartAiDownloadProgressBar" style="width: 0%; height: 100%; background: var(--gradient); transition: width 0.1s;"></div>
+            </div>
+            <span id="smartAiDownloadBytesText" style="font-size: 0.75rem; color: var(--muted); text-align: right;">0 MB / 208 MB</span>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; width: 100%;">
+            <button id="btnSmartAiDownload" onclick="downloadSmartAiModel()" style="flex: 1; background: var(--gradient); border: none; color: white; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, opacity 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+              📥 Modell herunterladen
+            </button>
+            <button id="btnSmartAiDelete" onclick="deleteSmartAiModel()" style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: #f87171; padding: 0.75rem 1.2rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; font-family: inherit; display: none; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.background='rgba(220, 38, 38, 0.2)'; this.style.borderColor='rgba(220, 38, 38, 0.5)'" onmouseout="this.style.background='rgba(220, 38, 38, 0.1)'; this.style.borderColor='rgba(220, 38, 38, 0.3)'">
+              🗑️ Modell löschen
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Collapsible Versionsverlauf (Changelog) -->
       <div class="db-card" id="changelogCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
         <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;">
@@ -1038,12 +1073,29 @@
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-          <!-- v1.1.5 details -->
+          <!-- v1.1.6 details -->
           <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'" open>
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
-                🚀 Version 1.1.5
+                🚀 Version 1.1.6
                 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🧠 <strong style="color: var(--text);">Smart-KI (Deep-Learning)</strong>: Integration des LaMa ONNX Neuronalen Netzwerks für makellose, professionelle Retusche und Objektrekonstruktion auf Android Magic-Eraser Niveau.</li>
+                <li>⚙️ <strong style="color: var(--text);">Modell-Download & Löschen</strong>: Download und vollständiges Löschen des 208MB KI-Modells direkt im Einstellungs-Tab zur optimalen Speicherplatzkontrolle.</li>
+                <li>🔒 <strong style="color: var(--text);">Dynamische Aktivierung</strong>: Die Smart-KI Checkbox im Bild-Editor wird automatisch freigeschaltet, sobald das Modell in den Einstellungen heruntergeladen wurde.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.1.5 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                📦 Version 1.1.5
               </span>
               <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
             </summary>
@@ -1408,7 +1460,7 @@
     }
 
     // ── Settings Tab Actions ──
-    let installedAppVersion = 'v1.1.5';
+    let installedAppVersion = 'v1.1.6';
 
     function loadSettingsTab() {
       if (typeof pywebview !== 'undefined' && pywebview.api) {
@@ -1420,7 +1472,96 @@
           document.getElementById('currentVersionText').textContent = installedAppVersion;
           document.getElementById('versionBadge').textContent = installedAppVersion;
         });
+        updateSmartAiUIStatus();
       }
+    }
+
+    function updateSmartAiUIStatus() {
+      if (typeof pywebview === 'undefined' || !pywebview.api || !pywebview.api.check_lama_model) return;
+      pywebview.api.check_lama_model().then(res => {
+        const statusText = document.getElementById('smartAiStatusText');
+        const dlBtn = document.getElementById('btnSmartAiDownload');
+        const delBtn = document.getElementById('btnSmartAiDelete');
+        const sizeText = document.getElementById('smartAiSizeText');
+        const dict = langDict[currentLang] || langDict['de'];
+
+        if (res && res.success && res.downloaded) {
+          statusText.textContent = dict.smartAiStatusReady;
+          statusText.style.color = '#10b981'; // Green
+          dlBtn.style.display = 'none';
+          delBtn.style.display = 'flex';
+          const sizeMB = (res.size / (1024 * 1024)).toFixed(1);
+          sizeText.textContent = (currentLang === 'en' ? 'Size: ' : 'Größe: ') + sizeMB + ' MB';
+        } else {
+          statusText.textContent = dict.smartAiStatusNotInstalled;
+          statusText.style.color = '#f87171'; // Red
+          dlBtn.style.display = 'flex';
+          delBtn.style.display = 'none';
+          sizeText.textContent = currentLang === 'en' ? 'Size: ~208 MB' : 'Größe: ~208 MB';
+        }
+      });
+    }
+
+    function downloadSmartAiModel() {
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+      
+      const dlBtn = document.getElementById('btnSmartAiDownload');
+      const progressContainer = document.getElementById('smartAiDownloadProgressContainer');
+      const progressBar = document.getElementById('smartAiDownloadProgressBar');
+      const percentText = document.getElementById('smartAiDownloadPercentText');
+      const bytesText = document.getElementById('smartAiDownloadBytesText');
+      
+      dlBtn.disabled = true;
+      dlBtn.style.opacity = '0.5';
+      progressContainer.style.display = 'flex';
+      
+      window.onModelDownloadProgress = function(percent, downloaded, total) {
+        progressBar.style.width = percent + '%';
+        percentText.textContent = percent + '%';
+        const dlMB = (downloaded / (1024 * 1024)).toFixed(1);
+        const totalMB = (total / (1024 * 1024)).toFixed(1);
+        bytesText.textContent = `${dlMB} MB / ${totalMB} MB`;
+      };
+      
+      window.onModelDownloadComplete = function(success, errorMsg) {
+        dlBtn.disabled = false;
+        dlBtn.style.opacity = '1';
+        progressContainer.style.display = 'none';
+        
+        if (success) {
+          const dict = langDict[currentLang] || langDict['de'];
+          showCustomAlert("Smart-KI", dict.smartAiDownloadSuccess, '🧠');
+          updateSmartAiUIStatus();
+        } else {
+          showCustomAlert("Smart-KI", 'Fehler beim Download / Error downloading model: ' + errorMsg, '❌');
+          updateSmartAiUIStatus();
+        }
+      };
+      
+      pywebview.api.download_lama_model().then(res => {
+        if (!res || !res.success) {
+          showCustomAlert("Smart-KI", 'Fehler beim Starten des Downloads: ' + (res ? res.error : ''), '❌');
+          dlBtn.disabled = false;
+          dlBtn.style.opacity = '1';
+          progressContainer.style.display = 'none';
+        }
+      });
+    }
+
+    function deleteSmartAiModel() {
+      const dict = langDict[currentLang] || langDict['de'];
+      showCustomConfirm("Smart-KI", dict.smartAiDeleteConfirm, '🗑️').then(confirmed => {
+        if (confirmed) {
+          pywebview.api.delete_lama_model().then(res => {
+            if (res && res.success) {
+              showCustomAlert("Smart-KI", dict.smartAiDeleteSuccess, '🗑️');
+              updateSmartAiUIStatus();
+            } else {
+              showCustomAlert("Smart-KI", 'Fehler beim Löschen des Modells: ' + (res ? res.error : ''), '❌');
+            }
+          });
+        }
+      });
     }
 
     function saveSettings() {
@@ -1875,11 +2016,25 @@
         lblCurrentVersion: "Aktuelle Version:",
         btnCheckUpdate: "🔄 Jetzt prüfen",
         settingsDefaultCheckStatus: "Klicke auf \"Jetzt prüfen\", um nach Updates auf GitHub zu suchen.",
+        lblSmartAiTitle: "🧠 Smart-KI Modell-Verwaltung (Retusche)",
+        lblSmartAiStatus: "Status: ",
+        smartAiStatusNotInstalled: "Nicht installiert",
+        smartAiStatusReady: "Installiert (Bereit)",
+        smartAiSizeText: "Größe: ~208 MB",
+        lblSmartAiDownloading: "Herunterladen...",
+        btnSmartAiDownload: "📥 Modell herunterladen",
+        btnSmartAiDelete: "🗑️ Modell löschen",
+        smartAiDeleteConfirm: "Möchtest du das Smart-KI-Modell wirklich von deiner Festplatte löschen? (Belegt ca. 208 MB)",
+        smartAiDownloadSuccess: "Smart-KI-Modell erfolgreich heruntergeladen! 🎉",
+        smartAiDeleteSuccess: "Smart-KI-Modell gelöscht.",
         
         changelogTitle: "📜 Versionsverlauf & Changelog",
         badgeCurrent: "Aktuell",
         footerText: "Deine persönliche Toolbox · Made with <span>♥</span> · ",
         footerToolsSuffix: " Tools",
+        changelog_v116_list: `<li>🧠 <strong style="color: var(--text);">Smart-KI (Deep-Learning)</strong>: Integration des LaMa ONNX Neuronalen Netzwerks für makellose, professionelle Retusche und Objektrekonstruktion auf Android Magic-Eraser Niveau.</li>
+                <li>⚙️ <strong style="color: var(--text);">Modell-Download & Löschen</strong>: Download und vollständiges Löschen des 208MB KI-Modells direkt im Einstellungs-Tab zur optimalen Speicherplatzkontrolle.</li>
+                <li>🔒 <strong style="color: var(--text);">Dynamische Aktivierung</strong>: Die Smart-KI Checkbox im Bild-Editor wird automatisch freigeschaltet, sobald das Modell in den Einstellungen heruntergeladen wurde.</li>`,
         changelog_v115_list: `<li>🎨 <strong style="color: var(--text);">Bild-Editor Vollbildmodus</strong>: Neuer Button für den Vollbildmodus im Bild-Editor. Blendet die Tab-Navigation aus und passt das Canvas dynamisch an. Kann mit ESC beendet werden.</li>
                 <li>🖌️ <strong style="color: var(--text);">Verbesserte Pinsel-Maske</strong>: Der Retusche-Pinsel nutzt nun die aktuell ausgewählte Pinsel-Farbe und ist auf dem Canvas teiltransparent (0.45) gezeichnet, um das Bild darunter zu sehen.</li>
                 <li>✨ <strong style="color: var(--text);">Sidebar Schnell-Aktion</strong>: Ein zusätzlicher, synchronisierter Button "KI-Retusche anwenden" direkt in der rechten Tools-Sidebar erspart lästiges Herunterscrollen.</li>`,
@@ -1993,11 +2148,25 @@
         lblCurrentVersion: "Current Version:",
         btnCheckUpdate: "🔄 Check Now",
         settingsDefaultCheckStatus: "Click \"Check Now\" to search for updates on GitHub.",
+        lblSmartAiTitle: "🧠 Smart AI Model Management (Retouch)",
+        lblSmartAiStatus: "Status: ",
+        smartAiStatusNotInstalled: "Not installed",
+        smartAiStatusReady: "Installed (Ready)",
+        smartAiSizeText: "Size: ~208 MB",
+        lblSmartAiDownloading: "Downloading...",
+        btnSmartAiDownload: "📥 Download Model",
+        btnSmartAiDelete: "🗑️ Delete Model",
+        smartAiDeleteConfirm: "Are you sure you want to delete the Smart AI model from your disk? (Frees up approx. 208 MB)",
+        smartAiDownloadSuccess: "Smart AI model downloaded successfully! 🎉",
+        smartAiDeleteSuccess: "Smart AI model deleted.",
         
         changelogTitle: "📜 Version History & Changelog",
         badgeCurrent: "Current",
         footerText: "Your personal toolbox · Made with <span>♥</span> · ",
         footerToolsSuffix: " tools",
+        changelog_v116_list: `<li>🧠 <strong style="color: var(--text);">Smart AI (Deep Learning)</strong>: Integration of the LaMa ONNX Neural Network for flawless, professional retouching and object reconstruction at Android Magic-Eraser level.</li>
+                <li>⚙️ <strong style="color: var(--text);">Model Download & Deletion</strong>: Download and completely delete the 208MB AI model directly inside the settings tab for optimal storage space control.</li>
+                <li>🔒 <strong style="color: var(--text);">Dynamic Activation</strong>: The Smart AI checkbox in the Image Editor is automatically enabled once the model is downloaded in settings.</li>`,
         changelog_v115_list: `<li>🎨 <strong style="color: var(--text);">Image Editor Fullscreen</strong>: Added a fullscreen mode button to maximize the editor canvas, hiding tab menus. Easily exit fullscreen with the Escape key.</li>
                 <li>🖌️ <strong style="color: var(--text);">Improved Brush Masking</strong>: Inpainting brushes now adapt to the selected color and render with opacity (0.45) on the canvas to see underlying images.</li>
                 <li>✨ <strong style="color: var(--text);">Sidebar Quick-Action</strong>: A synchronized "Apply Inpaint" button directly in the right-side Tools sidebar eliminates the need to scroll down.</li>`,
@@ -2150,10 +2319,14 @@
       if (changelogCard) {
         changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
         const detailsElements = changelogCard.querySelectorAll('details');
-        if (detailsElements.length >= 7) {
-          const sum115 = detailsElements[0].querySelector('summary');
-          sum115.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.5 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
-          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v115_list;
+        if (detailsElements.length >= 8) {
+          const sum116 = detailsElements[0].querySelector('summary');
+          sum116.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.6 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v116_list;
+
+          const sum115 = detailsElements[1].querySelector('summary');
+          sum115.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.5`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v115_list;
 
           const sum114 = detailsElements[1].querySelector('summary');
           sum114.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.4`;
@@ -2175,11 +2348,23 @@
           sum110.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0`;
           detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v110_list;
 
-          const sum100 = detailsElements[6].querySelector('summary');
+          const sum100 = detailsElements[7].querySelector('summary');
           sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
-          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v100_list;
+          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v100_list;
         }
       }
+
+      // Smart-KI Model translation
+      const lblSmartAiTitle = document.getElementById('lblSmartAiTitle');
+      if (lblSmartAiTitle) lblSmartAiTitle.textContent = dict.lblSmartAiTitle;
+      const btnSmartAiDownload = document.getElementById('btnSmartAiDownload');
+      if (btnSmartAiDownload) btnSmartAiDownload.innerHTML = dict.btnSmartAiDownload;
+      const btnSmartAiDelete = document.getElementById('btnSmartAiDelete');
+      if (btnSmartAiDelete) btnSmartAiDelete.innerHTML = dict.btnSmartAiDelete;
+      const lblSmartAiDownloading = document.getElementById('lblSmartAiDownloading');
+      if (lblSmartAiDownloading) lblSmartAiDownloading.textContent = dict.lblSmartAiDownloading;
+      
+      updateSmartAiUIStatus();
       
       // Language picker label
       document.getElementById('lblLanguage').textContent = lang === 'en' ? 'Language / Sprache' : 'Sprache / Language';

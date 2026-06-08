@@ -896,6 +896,13 @@
             <div id="imgToolInstruction" style="margin-top: 12px; font-size: 11px; color: var(--text-muted); line-height: 1.45; background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 10px; border-radius: 8px;">
               🖌️ <b>Pinsel</b>: Zeichne frei auf dem Bild mit der ausgewählten Pinselgröße und Farbe.
             </div>
+            <div id="imgSmartAiToggleContainer" style="display:none; align-items:center; gap:8px; margin-top:12px; padding:10px; background:rgba(255,255,255,0.02); border:1px solid var(--border); border-radius:8px;">
+              <input type="checkbox" id="imgCensorSmartAiToggle" onchange="window.imgCensor.toggleSmartAi(this.checked)" style="width:16px; height:16px; cursor:pointer;" disabled />
+              <label for="imgCensorSmartAiToggle" id="lblSmartAiCheckbox" style="font-size:12px; font-weight:600; cursor:pointer; color:var(--text); display:flex; flex-direction:column; gap:2px; user-select:none;">
+                <span>🧠 Smart-KI verwenden (Bessere Qualität)</span>
+                <span id="imgSmartAiWarning" style="font-size:9px; color:#f87171; font-weight:normal;">(Bitte in Einstellungen herunterladen)</span>
+              </label>
+            </div>
             <div id="imgCensorSidebarInpaintContainer" style="display:none; margin-top:12px;">
               <button class="action-btn primary" id="imgCensorSidebarInpaintBtn" onclick="window.imgCensor.applyInpaint()" style="width:100%; margin:0;">✨ KI-Retusche anwenden</button>
             </div>
@@ -2023,8 +2030,13 @@
           } else if (toolName === 'rect') {
             instruction.innerHTML = '⬜ <b>Balken</b>: Ziehe mit der Maus ein Rechteck auf dem Bild, um Bereiche mit der ausgewählten Farbe abzudecken.';
           } else if (toolName === 'inpaint') {
-            instruction.innerHTML = '✨ <b>KI-Retusche</b>: Male mit dem Pinsel über ein Objekt (wird rosa markiert). Klicke danach unten auf den grünen Button <b>"KI-Retusche anwenden"</b>, um es zu entfernen.';
+            instruction.innerHTML = '✨ <b>KI-Retusche</b>: Zeichne über das Objekt, das entfernt werden soll, und klicke auf <b>"KI-Retusche anwenden"</b>.';
           }
+        }
+        
+        const smartAiToggle = document.getElementById('imgSmartAiToggleContainer');
+        if (smartAiToggle) {
+          smartAiToggle.style.display = (toolName === 'inpaint') ? 'flex' : 'none';
         }
         
         if (brushCursor) {
@@ -2587,7 +2599,75 @@
         }, 100);
       }
 
-      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, toggleLock, updateFormat, updateQuality, toggleFullscreen };
+      function initSmartAiSettings() {
+        if (typeof pywebview === 'undefined' || !pywebview.api) return;
+
+        window.onModelInitStatus = function(status, errorMsg) {
+          const warning = document.getElementById('imgSmartAiWarning');
+          if (!warning) return;
+          
+          if (status === 'loading') {
+            warning.style.display = 'inline';
+            warning.style.color = 'var(--accent3)';
+            warning.textContent = ' (🧠 Initialisiere KI...)';
+          } else if (status === 'ready') {
+            warning.style.display = 'inline';
+            warning.style.color = '#10b981';
+            warning.textContent = ' (🧠 KI bereit)';
+            setTimeout(() => {
+              warning.style.display = 'none';
+            }, 2000);
+          } else if (status === 'error') {
+            warning.style.display = 'inline';
+            warning.style.color = '#f87171';
+            warning.textContent = ' (⚠️ Ladefehler)';
+            showToast('Modell-Ladefehler: ' + errorMsg);
+          }
+        };
+
+        pywebview.api.check_lama_model().then(res => {
+          const toggle = document.getElementById('imgCensorSmartAiToggle');
+          const warning = document.getElementById('imgSmartAiWarning');
+          if (!toggle || !warning) return;
+
+          if (res && res.success && res.downloaded) {
+            toggle.disabled = false;
+            warning.style.display = 'none';
+            
+            pywebview.api.get_smart_inpaint_setting().then(settingRes => {
+              if (settingRes !== undefined) {
+                toggle.checked = !!settingRes;
+                if (toggle.checked) {
+                  pywebview.api.init_smart_inpaint();
+                }
+              }
+            });
+          } else {
+            toggle.disabled = true;
+            toggle.checked = false;
+            warning.style.display = 'inline';
+            warning.style.color = '#f87171';
+            warning.textContent = ' (Bitte in Einstellungen herunterladen)';
+          }
+        });
+      }
+
+      function toggleSmartAi(checked) {
+        if (typeof pywebview === 'undefined' || !pywebview.api) return;
+        pywebview.api.save_smart_inpaint_setting(checked).then(res => {
+          if (res && res.success && checked) {
+            pywebview.api.init_smart_inpaint();
+          }
+        });
+      }
+
+      if (typeof pywebview !== 'undefined') {
+        initSmartAiSettings();
+      } else {
+        window.addEventListener('pywebviewready', initSmartAiSettings);
+      }
+
+      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, toggleLock, updateFormat, updateQuality, toggleFullscreen, toggleSmartAi };
     })();
 
     // ==========================================

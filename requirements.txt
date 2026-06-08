@@ -9,3 +9,4 @@ pypdf
 static-ffmpeg
 numpy
 psutil
+onnxruntime

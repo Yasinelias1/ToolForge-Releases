@@ -77,7 +77,7 @@ WMO_CODES = {
 }
 
 class ToolForgeAPI:
-    APP_VERSION = "1.1.5"
+    APP_VERSION = "1.1.6"
 
     def __init__(self):
         self._window = None
@@ -91,6 +91,16 @@ class ToolForgeAPI:
         self._cached_gpu_pct = 0.0
         self._cached_gpu_temp = None
         self._cached_gpu_detected = False
+        
+        # Smart inpaint ONNX model configuration
+        appdata_dir = os.path.join(os.environ.get("APPDATA", os.path.expanduser("~")), "ToolForge")
+        self._model_path = os.path.join(appdata_dir, "models", "lama_fp32.onnx")
+        self._lama_session = None
+        self._download_thread = None
+        
+        # Load smart inpaint preference
+        config = self._load_config()
+        self._use_smart_inpaint = config.get("use_smart_inpaint", False)
         
         # Start background hardware stats polling thread
         self._hw_thread = threading.Thread(target=self._background_hw_polling, daemon=True)
@@ -584,6 +594,96 @@ class ToolForgeAPI:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    def check_lama_model(self):
+        try:
+            if os.path.exists(self._model_path):
+                size = os.path.getsize(self._model_path)
+                if size > 200000000:
+                    return {"success": True, "downloaded": True, "size": size}
+            return {"success": True, "downloaded": False}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def delete_lama_model(self):
+        try:
+            if os.path.exists(self._model_path):
+                os.remove(self._model_path)
+                self._lama_session = None
+                return {"success": True, "deleted": True}
+            return {"success": True, "deleted": False}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_smart_inpaint_setting(self):
+        config = self._load_config()
+        return config.get("use_smart_inpaint", False)
+
+    def save_smart_inpaint_setting(self, enabled):
+        try:
+            config = self._load_config()
+            config["use_smart_inpaint"] = bool(enabled)
+            self._save_config(config)
+            self._use_smart_inpaint = bool(enabled)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def download_lama_model(self):
+        try:
+            if self._download_thread and self._download_thread.is_alive():
+                return {"success": False, "error": "Download bereits aktiv."}
+            
+            self._download_thread = threading.Thread(target=self._background_download_model, daemon=True)
+            self._download_thread.start()
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _background_download_model(self):
+        url = "https://huggingface.co/Carve/LaMa-ONNX/resolve/main/lama_fp32.onnx"
+        os.makedirs(os.path.dirname(self._model_path), exist_ok=True)
+        try:
+            import requests
+            response = requests.get(url, stream=True)
+            total_size = int(response.headers.get('content-length', 0))
+            downloaded = 0
+            with open(self._model_path, "wb") as f:
+                for chunk in response.iter_content(chunk_size=1024 * 256):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        if total_size > 0:
+                            percent = int((downloaded / total_size) * 100)
+                            js_cmd = f"if (window.onModelDownloadProgress) window.onModelDownloadProgress({percent}, {downloaded}, {total_size});"
+                            self._window.evaluate_js(js_cmd)
+            
+            self._window.evaluate_js("if (window.onModelDownloadComplete) window.onModelDownloadComplete(true);")
+        except Exception as e:
+            error_msg = str(e).replace("'", "\\'")
+            self._window.evaluate_js(f"if (window.onModelDownloadComplete) window.onModelDownloadComplete(false, '{error_msg}');")
+
+    def init_smart_inpaint(self):
+        try:
+            if not os.path.exists(self._model_path):
+                return {"success": False, "error": "Modell-Datei nicht gefunden."}
+            if self._lama_session is not None:
+                return {"success": True, "status": "already_loaded"}
+            
+            threading.Thread(target=self._background_init_session, daemon=True).start()
+            return {"success": True, "status": "initializing"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _background_init_session(self):
+        try:
+            self._window.evaluate_js("if (window.onModelInitStatus) window.onModelInitStatus('loading');")
+            import onnxruntime as ort
+            self._lama_session = ort.InferenceSession(self._model_path, providers=['CPUExecutionProvider'])
+            self._window.evaluate_js("if (window.onModelInitStatus) window.onModelInitStatus('ready');")
+        except Exception as e:
+            error_msg = str(e).replace("'", "\\'")
+            self._window.evaluate_js(f"if (window.onModelInitStatus) window.onModelInitStatus('error', '{error_msg}');")
+
 
 
     def check_for_updates(self):
@@ -889,8 +989,19 @@ del "%~f0"
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
             mask = cv2.dilate(mask, kernel, iterations=1)
 
-            # Inpaint using Telea
-            dst = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
+            # Check if Smart-KI is active and model is available
+            if self._use_smart_inpaint and os.path.exists(self._model_path) and os.path.getsize(self._model_path) > 200000000:
+                try:
+                    if self._lama_session is None:
+                        import onnxruntime as ort
+                        self._lama_session = ort.InferenceSession(self._model_path, providers=['CPUExecutionProvider'])
+                    dst = self.inpaint_patch(img, mask, self._lama_session)
+                except Exception as smart_err:
+                    print("Smart inpaint error, falling back to Telea:", smart_err)
+                    dst = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
+            else:
+                # Inpaint using Telea
+                dst = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
 
             # Encode result back to PNG base64
             success, buffer = cv2.imencode('.png', dst)
@@ -901,6 +1012,72 @@ del "%~f0"
             return {"success": True, "image": f"data:image/png;base64,{res_b64}"}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def inpaint_patch(self, img, mask, session):
+        y_indices, x_indices = np.where(mask > 0)
+        if len(y_indices) == 0:
+            return img.copy()
+            
+        y1, y2 = y_indices.min(), y_indices.max()
+        x1, x2 = x_indices.min(), x_indices.max()
+        
+        h_orig, w_orig = img.shape[:2]
+        
+        pad = 32
+        y1 = max(0, y1 - pad)
+        y2 = min(h_orig, y2 + pad)
+        x1 = max(0, x1 - pad)
+        x2 = min(w_orig, x2 + pad)
+        
+        crop_h = y2 - y1
+        crop_w = x2 - x1
+        
+        max_side = max(crop_h, crop_w)
+        pad_y = max_side - crop_h
+        pad_x = max_side - crop_w
+        
+        y1_pad = max(0, y1 - pad_y // 2)
+        y2_pad = min(h_orig, y2 + (pad_y - pad_y // 2))
+        x1_pad = max(0, x1 - pad_x // 2)
+        x2_pad = min(w_orig, x2 + (pad_x - pad_x // 2))
+        
+        img_crop = img[y1_pad:y2_pad, x1_pad:x2_pad]
+        mask_crop = mask[y1_pad:y2_pad, x1_pad:x2_pad]
+        
+        img_512 = cv2.resize(img_crop, (512, 512), interpolation=cv2.INTER_AREA)
+        mask_512 = cv2.resize(mask_crop, (512, 512), interpolation=cv2.INTER_NEAREST)
+        
+        img_input = img_512.astype(np.float32) / 255.0
+        img_input = np.transpose(img_input, (2, 0, 1))
+        img_input = np.expand_dims(img_input, axis=0)
+        
+        mask_input = (mask_512 > 0).astype(np.float32)
+        mask_input = np.expand_dims(np.expand_dims(mask_input, axis=0), axis=0)
+        
+        inputs = {
+            session.get_inputs()[0].name: img_input,
+            session.get_inputs()[1].name: mask_input
+        }
+        outputs = session.run(None, inputs)
+        
+        output = outputs[0][0]
+        output = np.transpose(output, (1, 2, 0))
+        output = np.clip(output * 255.0, 0, 255).astype(np.uint8)
+        
+        output_crop = cv2.resize(output, (x2_pad - x1_pad, y2_pad - y1_pad), interpolation=cv2.INTER_CUBIC)
+        
+        res = img.copy()
+        c_mask = (mask_crop > 0).astype(np.float32)
+        c_mask = np.expand_dims(c_mask, axis=-1)
+        
+        c_mask_smooth = cv2.GaussianBlur(c_mask, (5, 5), 0)
+        if len(c_mask_smooth.shape) == 2:
+            c_mask_smooth = np.expand_dims(c_mask_smooth, axis=-1)
+            
+        blended = (1 - c_mask_smooth) * img_crop + c_mask_smooth * output_crop
+        res[y1_pad:y2_pad, x1_pad:x2_pad] = np.clip(blended, 0, 255).astype(np.uint8)
+        
+        return res
 
     # ── Video Operations & Frame Extract ──
     def get_video_frame(self, video_path):
