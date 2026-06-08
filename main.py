@@ -2250,21 +2250,21 @@ if __name__ == '__main__':
         print(f"Error: GUI entry point not found at {html_file}")
         sys.exit(1)
 
-    # Get theme and language from config to pass as query parameters to prevent startup flash
+    # Get theme and language from config to write to a temp JS file for synchronous loading
     config = api._load_config()
     theme_name = config.get("theme", "sunset")
     lang_name = config.get("language", "de")
-    
-    # Convert file path to a proper file:/// URL with query parameters
-    abs_path = os.path.abspath(html_file).replace(os.sep, '/')
-    if not abs_path.startswith('/'):
-        abs_path = '/' + abs_path
-    gui_url = f"file://{abs_path}?theme={theme_name}&lang={lang_name}"
+    theme_js_path = get_resource_path('gui/theme_config.js')
+    try:
+        with open(theme_js_path, 'w', encoding='utf-8') as f:
+            f.write(f'window.__themeConfig = {{ theme: "{theme_name}", lang: "{lang_name}" }};\n')
+    except Exception as e:
+        print("Error writing theme_config.js:", e)
 
     # Create window
     window = webview.create_window(
         title='ToolForge Desktop',
-        url=gui_url,
+        url=html_file,
         js_api=api,
         width=1220,
         height=850,

@@ -682,17 +682,15 @@
     summary { list-style: none; }
     details[open] .details-arrow { transform: rotate(180deg); }
   </style>
+  <script src="theme_config.js"></script>
   <script>
     // Immediate theme restoration to prevent Flash of Unstyled Content (FOUC)
     (function() {
       try {
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlTheme = urlParams.get('theme');
-        const urlLang = urlParams.get('lang');
-        
-        const savedTheme = urlTheme || localStorage.getItem('selected_theme') || 'sunset';
+        const config = window.__themeConfig || {};
+        const savedTheme = config.theme || localStorage.getItem('selected_theme') || 'sunset';
         window.__initialTheme = savedTheme;
-        if (urlLang) window.__initialLang = urlLang;
+        if (config.lang) window.__initialLang = config.lang;
         
         const themes = {
             sunset: {

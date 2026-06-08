@@ -22,4 +22,6 @@ config.json
 temp_video_*
 temp_preview_*
 *_backup.*
+gui/theme_config.js
+
 
