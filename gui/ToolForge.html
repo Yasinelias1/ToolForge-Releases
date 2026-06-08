@@ -1118,19 +1118,19 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 
-  <!-- Custom Confirm Modal -->
-  <div id="customConfirmModal" class="custom-modal-overlay">
+  <!-- Custom Modal (Alert & Confirm) -->
+  <div id="customModal" class="custom-modal-overlay">
     <div class="custom-modal-box">
       <div class="custom-modal-header">
-        <span class="custom-modal-icon">⚠️</span>
-        <h3 id="customConfirmTitle">Bestätigung</h3>
+        <span class="custom-modal-icon" id="customModalIcon">⚠️</span>
+        <h3 id="customModalTitle">Bestätigung</h3>
       </div>
-      <div class="custom-modal-body" id="customConfirmMessage">
+      <div class="custom-modal-body" id="customModalMessage">
         Möchtest du fortfahren?
       </div>
       <div class="custom-modal-footer">
-        <button id="customConfirmCancelBtn" class="modal-btn modal-btn-secondary">Abbrechen</button>
-        <button id="customConfirmOkBtn" class="modal-btn modal-btn-primary">OK</button>
+        <button id="customModalCancelBtn" class="modal-btn modal-btn-secondary">Abbrechen</button>
+        <button id="customModalOkBtn" class="modal-btn modal-btn-primary">OK</button>
       </div>
     </div>
   </div>
@@ -2209,16 +2209,50 @@
       }
     }
 
-    function showCustomConfirm(title, message) {
+    function showCustomAlert(title, message, icon = 'ℹ️') {
       return new Promise((resolve) => {
-        const modal = document.getElementById('customConfirmModal');
-        const titleEl = document.getElementById('customConfirmTitle');
-        const msgEl = document.getElementById('customConfirmMessage');
-        const cancelBtn = document.getElementById('customConfirmCancelBtn');
-        const okBtn = document.getElementById('customConfirmOkBtn');
+        const modal = document.getElementById('customModal');
+        const titleEl = document.getElementById('customModalTitle');
+        const msgEl = document.getElementById('customModalMessage');
+        const iconEl = document.getElementById('customModalIcon');
+        const cancelBtn = document.getElementById('customModalCancelBtn');
+        const okBtn = document.getElementById('customModalOkBtn');
         
+        iconEl.textContent = icon;
+        titleEl.textContent = title || (currentLang === 'en' ? 'Information' : 'Hinweis');
+        msgEl.textContent = message;
+        cancelBtn.style.display = 'none'; // Hide Cancel for Alert
+        okBtn.textContent = 'OK';
+        
+        modal.classList.add('active');
+        
+        function handleOk() {
+          cleanup();
+          resolve(true);
+        }
+        
+        function cleanup() {
+          modal.classList.remove('active');
+          okBtn.removeEventListener('click', handleOk);
+        }
+        
+        okBtn.addEventListener('click', handleOk);
+      });
+    }
+
+    function showCustomConfirm(title, message, icon = '⚠️') {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('customModal');
+        const titleEl = document.getElementById('customModalTitle');
+        const msgEl = document.getElementById('customModalMessage');
+        const iconEl = document.getElementById('customModalIcon');
+        const cancelBtn = document.getElementById('customModalCancelBtn');
+        const okBtn = document.getElementById('customModalOkBtn');
+        
+        iconEl.textContent = icon;
         titleEl.textContent = title || (currentLang === 'en' ? 'Confirmation' : 'Bestätigung');
         msgEl.textContent = message;
+        cancelBtn.style.display = 'inline-block'; // Show Cancel for Confirm
         cancelBtn.textContent = currentLang === 'en' ? 'Cancel' : 'Abbrechen';
         okBtn.textContent = 'OK';
         
@@ -2240,11 +2274,15 @@
           okBtn.removeEventListener('click', handleOk);
         }
         
-        // Add single-use event listeners
         cancelBtn.addEventListener('click', handleCancel);
         okBtn.addEventListener('click', handleOk);
       });
     }
+
+    // Intercept native browser alert with custom modal
+    window.alert = function(message) {
+      showCustomAlert(currentLang === 'en' ? 'Notification' : 'Hinweis', message, 'ℹ️');
+    };
 
     function resetSettings() {
       const dict = langDict[currentLang] || langDict['de'];
