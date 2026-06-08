@@ -220,7 +220,7 @@ class ToolForgeAPI:
                 pct = int(((i + 1) / 5) * 100)
                 current_ping_estimate = sum(pings) / len(pings) if pings else 0
                 self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
-                time.sleep(0.05)
+                time.sleep(0.3)
                 
             # 1.2 Fallback to TCP ping on Port 443 (HTTPS - never blocked, extremely reliable)
             if not pings:
@@ -235,7 +235,7 @@ class ToolForgeAPI:
                     pct = int(((i + 1) / 5) * 100)
                     current_ping_estimate = sum(pings) / len(pings) if pings else 0
                     self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
-                    time.sleep(0.05)
+                    time.sleep(0.3)
 
             # 1.3 Fallback to TCP ping on Port 80 (HTTP) if Port 443 also failed
             if not pings:
@@ -250,7 +250,7 @@ class ToolForgeAPI:
                     pct = int(((i + 1) / 5) * 100)
                     current_ping_estimate = sum(pings) / len(pings) if pings else 0
                     self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
-                    time.sleep(0.05)
+                    time.sleep(0.3)
                     
             # 1.4 Fallback to HTTP ping if all TCP failed
             if not pings:
@@ -269,7 +269,7 @@ class ToolForgeAPI:
                     pct = int(((i + 1) / 5) * 100)
                     current_ping_estimate = sum(pings) / len(pings) if pings else 0
                     self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
-                    time.sleep(0.05)
+                    time.sleep(0.3)
                     
             ping = sum(pings) / len(pings) if pings else 20.0
 
@@ -1920,4 +1920,5 @@ if __name__ == '__main__':
     window.events.loaded += on_loaded
     
     # Start app
-    webview.start(debug=False)
+    webview.start(debug=True, private_mode=True)
+

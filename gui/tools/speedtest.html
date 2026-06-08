@@ -4,6 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="color-scheme" content="dark" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
   <title>Internet Speedtest – ToolForge</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -357,6 +361,7 @@
     let backendUpload = 0;
 
     let animationFrameId = null;
+    let lastTextUpdateTime = 0;
 
     function resetUI() {
       targetPhase = 'idle';
@@ -387,11 +392,14 @@
       gradStop2.setAttribute('stop-color', '#a855f7');
       document.getElementById('gaugeLabel').textContent = currentLang === 'de' ? "BEREIT" : "READY";
 
+      lastTextUpdateTime = 0;
+
       if (animationFrameId) {
         cancelAnimationFrame(animationFrameId);
         animationFrameId = null;
       }
     }
+
 
     let currentLang = 'de';
     const langDict = {
@@ -559,42 +567,56 @@
           gradStop2.setAttribute('stop-color', '#a855f7');
           document.getElementById('gaugeLabel').textContent = currentLang === 'de' ? "FERTIG" : "COMPLETE";
         }
+        
+        lastTextUpdateTime = 0; // Force immediate update on phase transition
       }
       
       // Interpolate values for smooth movement at 60 FPS
       currentProgress += (targetProgress - currentProgress) * 0.08;
       currentSpeed += (targetSpeed - currentSpeed) * 0.06;
       currentPing += (targetPing - currentPing) * 0.08;
+
+      const now = performance.now();
+      const shouldUpdateText = (now - lastTextUpdateTime >= 250);
       
       // Render frame based on current phase
       if (currentPhase === 'ping') {
         statusText.textContent = dict.msgMeasuringPing;
         setGaugeProgress(currentProgress);
         
-        const dispPing = Math.round(currentPing);
-        gaugeVal.textContent = dispPing;
-        gaugeUnit.textContent = "ms";
-        valPing.textContent = dispPing || "-";
+        if (shouldUpdateText) {
+          const dispPing = Math.round(currentPing);
+          gaugeVal.textContent = dispPing;
+          gaugeUnit.textContent = "ms";
+          valPing.textContent = dispPing || "-";
+          lastTextUpdateTime = now;
+        }
       } 
       else if (currentPhase === 'download') {
         const displayPct = Math.round(currentProgress);
         statusText.textContent = `${dict.msgMeasuringDownload.replace('...', '')} (${displayPct}%)`;
         setGaugeProgress(currentProgress);
         
-        const dispSpeed = formatSpeed(currentSpeed);
-        gaugeVal.textContent = dispSpeed;
-        gaugeUnit.textContent = "Mbps";
-        valDownload.textContent = dispSpeed;
+        if (shouldUpdateText) {
+          const dispSpeed = formatSpeed(currentSpeed);
+          gaugeVal.textContent = dispSpeed;
+          gaugeUnit.textContent = "Mbps";
+          valDownload.textContent = dispSpeed;
+          lastTextUpdateTime = now;
+        }
       } 
       else if (currentPhase === 'upload') {
         const displayPct = Math.round(currentProgress);
         statusText.textContent = `${dict.msgMeasuringUpload.replace('...', '')} (${displayPct}%)`;
         setGaugeProgress(currentProgress);
         
-        const dispSpeed = formatSpeed(currentSpeed);
-        gaugeVal.textContent = dispSpeed;
-        gaugeUnit.textContent = "Mbps";
-        valUpload.textContent = dispSpeed;
+        if (shouldUpdateText) {
+          const dispSpeed = formatSpeed(currentSpeed);
+          gaugeVal.textContent = dispSpeed;
+          gaugeUnit.textContent = "Mbps";
+          valUpload.textContent = dispSpeed;
+          lastTextUpdateTime = now;
+        }
       } 
       else if (currentPhase === 'complete') {
         statusText.className = "status-text";
