@@ -1876,7 +1876,12 @@
     // Initialize version info on page load
     window.addEventListener('DOMContentLoaded', () => {
       updateToolCountText();
-      switchTab('dashboard');
+      const hash = window.location.hash.replace('#', '');
+      if (hash === 'tools' || hash === 'dashboard' || hash === 'settings') {
+        switchTab(hash);
+      } else {
+        switchTab('dashboard');
+      }
       
       setTimeout(() => {
         if (typeof pywebview !== 'undefined' && pywebview.api) {

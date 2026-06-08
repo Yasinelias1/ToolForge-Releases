@@ -85,6 +85,51 @@ class ToolForgeAPI:
         self._ffprobe_path = None
         self._init_ffmpeg()
         self._gpu_name = self._detect_gpu_name_once()
+        
+        # Caching variables for CPU and GPU details (updated asynchronously)
+        self._cached_cpu_temp = None
+        self._cached_gpu_pct = 0.0
+        self._cached_gpu_temp = None
+        self._cached_gpu_detected = False
+        
+        # Start background hardware stats polling thread
+        self._hw_thread = threading.Thread(target=self._background_hw_polling, daemon=True)
+        self._hw_thread.start()
+
+    def _background_hw_polling(self):
+        import shutil
+        import time
+        while True:
+            # 1. Query GPU stats
+            gpu_pct = 0.0
+            gpu_temp = None
+            gpu_detected = False
+            try:
+                if shutil.which("nvidia-smi"):
+                    cmd = ["nvidia-smi", "--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"]
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=1.5)
+                    if res.returncode == 0 and res.stdout.strip():
+                        parts = res.stdout.strip().split(",")
+                        if len(parts) >= 2:
+                            gpu_pct = float(parts[0].strip())
+                            gpu_temp = int(parts[1].strip())
+                            gpu_detected = True
+            except:
+                pass
+                
+            # 2. Query CPU stats
+            cpu_temp = self._query_cpu_temp()
+            
+            # 3. Update cache
+            self._cached_gpu_pct = gpu_pct
+            self._cached_gpu_temp = gpu_temp
+            self._cached_gpu_detected = gpu_detected
+            self._cached_cpu_temp = cpu_temp
+            
+            # Sleep 2 seconds between updates (reduces CPU overhead to virtually zero)
+            time.sleep(2.0)
 
     def _detect_gpu_name_once(self):
         try:
@@ -147,35 +192,14 @@ class ToolForgeAPI:
     def get_system_stats(self):
         try:
             import psutil
-            import shutil
             
+            # Fast, in-thread psutil queries
             cpu_pct = psutil.cpu_percent()
-            
             ram = psutil.virtual_memory()
             ram_used_gb = ram.used / (1024 ** 3)
             ram_total_gb = ram.total / (1024 ** 3)
             
-            gpu_pct = 0.0
-            gpu_temp = None
-            gpu_detected = False
-            
-            try:
-                if shutil.which("nvidia-smi"):
-                    cmd = ["nvidia-smi", "--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"]
-                    startupinfo = subprocess.STARTUPINFO()
-                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=1.5)
-                    if res.returncode == 0 and res.stdout.strip():
-                        parts = res.stdout.strip().split(",")
-                        if len(parts) >= 2:
-                            gpu_pct = float(parts[0].strip())
-                            gpu_temp = int(parts[1].strip())
-                            gpu_detected = True
-            except:
-                pass
-            
-            cpu_temp = self._query_cpu_temp()
-            
+            # Subprocess-heavy values are read instantly from the background cache
             return {
                 "success": True,
                 "cpu_pct": cpu_pct,
@@ -183,9 +207,9 @@ class ToolForgeAPI:
                 "ram_used": f"{ram_used_gb:.1f}",
                 "ram_total": f"{ram_total_gb:.1f}",
                 "gpu_name": self._gpu_name,
-                "gpu_pct": gpu_pct if gpu_detected else None,
-                "gpu_temp": gpu_temp,
-                "cpu_temp": cpu_temp
+                "gpu_pct": self._cached_gpu_pct if self._cached_gpu_detected else None,
+                "gpu_temp": self._cached_gpu_temp,
+                "cpu_temp": self._cached_cpu_temp
             }
         except Exception as e:
             return {"success": False, "error": str(e)}
