@@ -24,6 +24,112 @@ def get_resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+THEMES = {
+    "sunset": {
+        "--bg": "#080810",
+        "--surface": "#0f0f1a",
+        "--surface2": "#161624",
+        "--accent": "#7c3aed",
+        "--accent2": "#a855f7",
+        "--accent3": "#06b6d4",
+        "--accent4": "#f59e0b",
+        "--border": "rgba(124,58,237,0.15)"
+    },
+    "cyberpunk": {
+        "--bg": "#020604",
+        "--surface": "#061209",
+        "--surface2": "#0b2212",
+        "--accent": "#10b981",
+        "--accent2": "#059669",
+        "--accent3": "#00ffcc",
+        "--accent4": "#0ea5e9",
+        "--border": "rgba(16,185,129,0.15)"
+    },
+    "frost": {
+        "--bg": "#0b0f19",
+        "--surface": "#121824",
+        "--surface2": "#1b2234",
+        "--accent": "#3b82f6",
+        "--accent2": "#60a5fa",
+        "--accent3": "#38bdf8",
+        "--accent4": "#818cf8",
+        "--border": "rgba(59,130,246,0.15)"
+    },
+    "crimson": {
+        "--bg": "#0d0606",
+        "--surface": "#160c0c",
+        "--surface2": "#241414",
+        "--accent": "#dc2626",
+        "--accent2": "#ef4444",
+        "--accent3": "#f59e0b",
+        "--accent4": "#ec4899",
+        "--border": "rgba(220,38,38,0.15)"
+    },
+    "monochrome": {
+        "--bg": "#090d16",
+        "--surface": "#111827",
+        "--surface2": "#1f2937",
+        "--accent": "#4b5563",
+        "--accent2": "#9ca3af",
+        "--accent3": "#d1d5db",
+        "--accent4": "#f3f4f6",
+        "--border": "rgba(255,255,255,0.06)"
+    },
+    "forest": {
+        "--bg": "#040b07",
+        "--surface": "#08170f",
+        "--surface2": "#0f2b1c",
+        "--accent": "#10b981",
+        "--accent2": "#f59e0b",
+        "--accent3": "#14b8a6",
+        "--accent4": "#fbbf24",
+        "--border": "rgba(16,185,129,0.15)"
+    },
+    "synthwave": {
+        "--bg": "#0e051a",
+        "--surface": "#170b2b",
+        "--surface2": "#241142",
+        "--accent": "#ec4899",
+        "--accent2": "#f43f5e",
+        "--accent3": "#8b5cf6",
+        "--accent4": "#06b6d4",
+        "--border": "rgba(236,72,153,0.15)"
+    },
+    "dracula": {
+        "--bg": "#1e1f29",
+        "--surface": "#282a36",
+        "--surface2": "#343746",
+        "--accent": "#ff79c6",
+        "--accent2": "#bd93f9",
+        "--accent3": "#8be9fd",
+        "--accent4": "#50fa7b",
+        "--border": "rgba(189,147,249,0.2)"
+    }
+}
+
+def update_html_theme(html_path, theme_name):
+    if theme_name not in THEMES:
+        theme_name = "sunset"
+    theme = THEMES[theme_name]
+    try:
+        if not os.path.exists(html_path):
+            return
+        with open(html_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        import re
+        pattern = r":root\s*\{[^}]*\}"
+        new_root = ":root {\n      color-scheme: dark;\n"
+        for key, val in theme.items():
+            new_root += f"      {key}: {val};\n"
+        new_root += "      --text: #f0efff;\n"
+        new_root += "      --muted: #6b6a8a;\n    }"
+        content = re.sub(pattern, new_root, content)
+        with open(html_path, "w", encoding="utf-8") as f:
+            f.write(content)
+        print(f"Successfully updated HTML theme to {theme_name} in {html_path}")
+    except Exception as e:
+        print("Error updating HTML theme:", e)
+
 def get_executable_dir():
     if hasattr(sys, 'frozen'):
         return os.path.dirname(sys.executable)
@@ -537,6 +643,11 @@ class ToolForgeAPI:
             config = self._load_config()
             config["theme"] = theme.strip().lower()
             self._save_config(config)
+            
+            # Update the HTML file theme directly on disk in place to prevent startup flash
+            html_file = get_resource_path('gui/ToolForge.html')
+            update_html_theme(html_file, theme.strip().lower())
+            
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -2250,16 +2361,10 @@ if __name__ == '__main__':
         print(f"Error: GUI entry point not found at {html_file}")
         sys.exit(1)
 
-    # Get theme and language from config to write to a temp JS file for synchronous loading
+    # Get theme from config to update the HTML file directly on disk
     config = api._load_config()
     theme_name = config.get("theme", "sunset")
-    lang_name = config.get("language", "de")
-    theme_js_path = get_resource_path('gui/theme_config.js')
-    try:
-        with open(theme_js_path, 'w', encoding='utf-8') as f:
-            f.write(f'window.__themeConfig = {{ theme: "{theme_name}", lang: "{lang_name}" }};\n')
-    except Exception as e:
-        print("Error writing theme_config.js:", e)
+    update_html_theme(html_file, theme_name)
 
     # Create window
     window = webview.create_window(
