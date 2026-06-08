@@ -34,6 +34,7 @@ def main():
 
     # Locate insightface data objects (e.g. meanshape_68.pkl)
     insightface_data_dir = os.path.join(venv_dir, "Lib", "site-packages", "insightface", "data")
+    insightface_objects_dir = os.path.join(insightface_data_dir, "objects")
 
     # Build command
     cmd = [
@@ -50,8 +51,10 @@ def main():
         f"--add-data={os.path.join(project_dir, 'haarcascade_frontalface_alt2.xml')};.",
         # Add the ffmpeg binaries to the expected site-packages path inside sys._MEIPASS
         f"--add-data={ffmpeg_bin_dir};static_ffmpeg/bin",
-        # Add the insightface data package (contains meanshape_68.pkl)
+        # Add the insightface data package
         f"--add-data={insightface_data_dir};insightface/data",
+        # Add the objects folder to the root of sys._MEIPASS for frozen environments
+        f"--add-data={insightface_objects_dir};objects",
         os.path.join(project_dir, "main.py")
     ]
     
