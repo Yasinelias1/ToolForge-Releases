@@ -1041,14 +1041,17 @@
     }
 
     // ── Settings Tab Actions ──
+    let installedAppVersion = 'v1.0.0';
+
     function loadSettingsTab() {
       if (typeof pywebview !== 'undefined' && pywebview.api) {
         pywebview.api.get_github_repo().then(repo => {
           document.getElementById('githubRepoInput').value = repo;
         });
         pywebview.api.get_app_version().then(version => {
-          document.getElementById('currentVersionText').textContent = 'v' + version;
-          document.getElementById('versionBadge').textContent = 'v' + version;
+          installedAppVersion = 'v' + version;
+          document.getElementById('currentVersionText').textContent = installedAppVersion;
+          document.getElementById('versionBadge').textContent = installedAppVersion;
         });
       }
     }
@@ -1117,7 +1120,7 @@
           statusContainer.innerHTML = `
             <div style="color: #34d399; font-size: 0.85rem; display: flex; flex-direction: column; gap: 4px; align-items: center;">
               <span>🌟 ToolForge ist auf dem neuesten Stand!</span>
-              <span style="color: var(--muted); font-size: 0.8rem;">Installierte Version: ${res.latest_version}</span>
+              <span style="color: var(--muted); font-size: 0.8rem;">Installierte Version: ${installedAppVersion}</span>
             </div>
           `;
         }
