@@ -363,6 +363,10 @@ class ToolForgeAPI:
         self._init_ffmpeg()
         self._gpu_name = self._detect_gpu_name_once()
         self._file_share_server = None
+        import shutil
+        self._nvidia_smi_path = shutil.which("nvidia-smi")
+        self._cpu_temp_supported = True
+        self._cpu_temp_fail_count = 0
         
         # Caching variables for CPU and GPU details (updated asynchronously)
         self._cached_cpu_temp = None
@@ -385,7 +389,6 @@ class ToolForgeAPI:
         self._hw_thread.start()
 
     def _background_hw_polling(self):
-        import shutil
         import time
         counter = 0
         while True:
@@ -394,8 +397,8 @@ class ToolForgeAPI:
             gpu_temp = None
             gpu_detected = False
             try:
-                if shutil.which("nvidia-smi"):
-                    cmd = ["nvidia-smi", "--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"]
+                if self._nvidia_smi_path:
+                    cmd = [self._nvidia_smi_path, "--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"]
                     startupinfo = subprocess.STARTUPINFO()
                     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                     res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=1.0)
@@ -408,12 +411,18 @@ class ToolForgeAPI:
             except:
                 pass
                 
-            # 2. Query CPU stats (runs every 2.0 seconds, slow due to PowerShell overhead)
-            # 0.5s * 4 = 2.0s
-            if counter % 4 == 0 or self._cached_cpu_temp is None:
-                cpu_temp = self._query_cpu_temp()
-            else:
-                cpu_temp = self._cached_cpu_temp
+            # 2. Query CPU stats (runs every 5.0 seconds if supported, slow due to PowerShell overhead)
+            # 0.5s * 10 = 5.0s
+            cpu_temp = self._cached_cpu_temp
+            if self._cpu_temp_supported:
+                if counter % 10 == 0 or self._cached_cpu_temp is None:
+                    cpu_temp = self._query_cpu_temp()
+                    if cpu_temp is None:
+                        self._cpu_temp_fail_count += 1
+                        if self._cpu_temp_fail_count >= 3:
+                            self._cpu_temp_supported = False
+                    else:
+                        self._cpu_temp_fail_count = 0  # reset on success
             
             # 3. Update cache
             self._cached_gpu_pct = gpu_pct
