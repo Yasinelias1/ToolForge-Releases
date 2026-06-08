@@ -1,0 +1,1137 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Datei-Freigabe – ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      color-scheme: dark;
+      --bg: #09090e;
+      --surface: rgba(255,255,255,0.04);
+      --surface-hover: rgba(255,255,255,0.07);
+      --border: rgba(255,255,255,0.08);
+      --border-bright: rgba(255,255,255,0.14);
+      --text: #f0f0ff;
+      --muted: #8888aa;
+      --accent: #6366f1;
+      --accent2: #a855f7;
+      --accent3: #ec4899;
+      --gradient: linear-gradient(135deg, #6366f1, #a855f7);
+      --radius: 20px;
+      --radius-sm: 10px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background Orbs */
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.15;
+    }
+    .orb-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; left: -100px; }
+    .orb-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -50px; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .back-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .back-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+      transform: translateX(-2px);
+    }
+    .header-text {
+      display: flex;
+      flex-direction: column;
+    }
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header-desc {
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin-top: 2px;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2.2rem;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      gap: 1.8rem;
+    }
+
+    /* Tab navigation */
+    .tabs-header {
+      display: flex;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 6px;
+      border-radius: 14px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px 14px;
+      background: none;
+      border: none;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--gradient);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .sharing-desc {
+      font-size: 0.85rem;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.01);
+      border-left: 3px solid var(--accent);
+      padding: 10px 14px;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 35px 20px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.01);
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      user-select: none;
+    }
+    .dropzone:hover, .dropzone.dragover {
+      border-color: var(--accent2);
+      background: rgba(168, 85, 247, 0.02);
+    }
+    .dropzone-icon {
+      font-size: 2.5rem;
+    }
+    .dropzone-text {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .dropzone-subtext {
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+      padding: 0 10px;
+    }
+
+    .btn {
+      padding: 13px 24px;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+    .btn.primary {
+      background: var(--gradient);
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
+      width: 100%;
+    }
+    .btn.primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+      filter: brightness(1.1);
+    }
+    .btn.primary:active:not(:disabled) {
+      transform: translateY(-1px);
+    }
+    .btn.sm {
+      padding: 6px 12px;
+      font-size: 12px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .btn.sm:hover {
+      background: rgba(255, 255, 255, 0.07);
+      border-color: var(--border-bright);
+    }
+    .btn.stop {
+      background: rgba(220, 38, 38, 0.1);
+      border: 1px solid rgba(220, 38, 38, 0.25);
+      color: #f87171;
+    }
+    .btn.stop:hover {
+      background: rgba(220, 38, 38, 0.2);
+      border-color: rgba(220, 38, 38, 0.4);
+    }
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    /* Active shares table */
+    .shares-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 0.8rem;
+    }
+    .shares-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.01);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13px;
+    }
+    th {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px 16px;
+      font-weight: 600;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .file-name-cell {
+      font-weight: 600;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 10.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .badge.local { background: rgba(99, 102, 241, 0.12); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.25); }
+    .badge.tunnel { background: rgba(168, 85, 247, 0.12); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.25); }
+    .badge.cloud { background: rgba(236, 72, 153, 0.12); color: #f472b6; border: 1px solid rgba(236, 72, 153, 0.25); }
+
+    .actions-cell {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    .no-shares-msg {
+      padding: 30px;
+      text-align: center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+    .modal-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .modal-card {
+      background: rgba(25, 25, 35, 0.95);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 2.2rem;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+    .modal-overlay.show .modal-card {
+      transform: scale(1);
+    }
+    .qr-img {
+      width: 200px;
+      height: 200px;
+      background: white;
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid var(--border);
+    }
+    .modal-link {
+      font-size: 12.5px;
+      color: var(--muted);
+      word-break: break-all;
+      text-align: center;
+      background: rgba(255,255,255,0.02);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      width: 100%;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--gradient);
+      color: white;
+      padding: 12px 26px;
+      border-radius: 100px;
+      font-size: 14px;
+      font-weight: 700;
+      box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 99999;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <div class="container">
+    <header>
+      <a href="../ToolForge.html#tools" class="back-btn" id="btnBack">← Zurück</a>
+      <div class="header-text">
+        <h1 id="txtTitle">🔗 Datei-Freigabe</h1>
+        <div class="header-desc" id="txtSubtitle">Teile Dateien über dein lokales Netzwerk oder weltweit über das Internet.</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <!-- Tabs Selection -->
+      <div class="tabs-header">
+        <button class="tab-btn active" id="tabLocalBtn" onclick="switchShareType('local')">
+          📶 <span id="lblTabLocal">Lokales WLAN</span>
+        </button>
+        <button class="tab-btn" id="tabTunnelBtn" onclick="switchShareType('tunnel')">
+          🌐 <span id="lblTabTunnel">Direkt-Tunnel</span>
+        </button>
+        <button class="tab-btn" id="tabCloudBtn" onclick="switchShareType('cloud')">
+          ☁️ <span id="lblTabCloud">Cloud-Upload</span>
+        </button>
+        <button class="tab-btn" id="tabAdminBtn" onclick="switchShareType('admin')">
+          ⚙️ <span id="lblTabAdmin">Verwaltung</span>
+        </button>
+      </div>
+
+      <!-- Sharing UI Wrapper -->
+      <div id="sharingUiWrapper" style="display: flex; flex-direction: column; gap: 1.8rem;">
+        <div class="sharing-desc" id="lblSharingDesc">
+          Teilt die Datei in deinem aktuellen WLAN. Empfänger müssen im selben Netzwerk sein. Sehr schnell und privat.
+        </div>
+
+        <!-- Dropzone -->
+        <!-- Dropzone -->
+        <div class="dropzone" id="dropzone">
+          <span class="dropzone-icon">📦</span>
+          <span class="dropzone-text" id="lblDropzoneText">Datei oder Ordner hierher ziehen</span>
+          <div style="display: flex; gap: 12px; margin-top: 5px; z-index: 10;">
+            <button class="btn sm" id="btnSelectFile" onclick="triggerFileSelect(event)" style="cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff;">📄 Datei auswählen</button>
+            <button class="btn sm" id="btnSelectFolder" onclick="triggerFolderSelect(event)" style="cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: #fff;">📁 Ordner auswählen</button>
+          </div>
+          <span class="dropzone-subtext" id="lblDropzoneSubtext">Keine Auswahl</span>
+        </div>
+
+        <button class="btn primary" id="btnShareAction" onclick="shareSelectedFile()" disabled>
+          ⚡ <span id="lblBtnShare">Auswahl freigeben</span>
+        </button>
+      </div>
+
+      <!-- Admin Panel wrapper -->
+      <div id="adminPanelWrapper" style="display: none; flex-direction: column; gap: 1.5rem;">
+        <!-- Local Server Controls -->
+        <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+              <span id="serverStatusLight" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ef4444; transition: background-color 0.3s;"></span>
+              <span id="lblWebserver">Lokaler Webserver</span>
+            </div>
+            <button class="btn sm" id="btnToggleServer" onclick="toggleServer()">Server starten</button>
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--muted);" id="lblServerPort">Lokaler Port (0 = zufällig)</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" id="serverPortInput" placeholder="0" min="0" max="65535" style="flex: 1; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem;" />
+              <button class="btn sm" onclick="saveServerPort()" id="lblBtnSavePort">Speichern</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tunnel Controls -->
+        <div style="background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px; font-weight: 700;">
+              <span id="tunnelStatusLight" style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #ef4444; transition: background-color 0.3s;"></span>
+              <span id="lblTunnelName">Internet Direkt-Tunnel</span>
+            </div>
+            <button class="btn sm" id="btnToggleTunnel" onclick="toggleTunnel()">Tunnel starten</button>
+          </div>
+          
+          <div style="font-size: 0.78rem; color: var(--muted); word-break: break-all;" id="tunnelUrlText">
+            Tunnel-Status: Inaktiv
+          </div>
+          
+          <div style="display: flex; flex-direction: column; gap: 0.4rem;">
+            <label style="font-size: 0.8rem; font-weight: 600; color: var(--muted);" id="lblSubdomain">Wunsch-Subdomain</label>
+            <div style="display: flex; gap: 8px;">
+              <input type="text" id="tunnelSubdomainInput" placeholder="mein-pc-name" style="flex: 1; padding: 0.6rem 0.8rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 8px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem;" />
+              <button class="btn sm" onclick="saveTunnelSubdomain()" id="lblBtnSaveSubdomain">Speichern</button>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Tunnel Autostart Control -->
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 0.85rem; color: var(--text); padding: 0.75rem 1rem; background: rgba(255,255,255,0.01); border: 1px solid var(--border); border-radius: 12px; margin-top: 0.2rem;">
+          <input type="checkbox" id="autoStartTunnelCheckbox" onchange="toggleAutoStartTunnel(this.checked)" style="accent-color: var(--accent2); width: 18px; height: 18px; cursor: pointer;" />
+          <span id="lblAutoStartTunnelText">Tunnel automatisch mit ToolForge starten</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Active Shares List -->
+    <div class="card" style="padding: 1.8rem;">
+      <div class="shares-title">
+        <span>🔗</span>
+        <span id="lblActiveShares">Aktive Freigaben</span>
+      </div>
+
+      <div class="shares-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th id="thFile">Datei</th>
+              <th id="thSize">Größe</th>
+              <th id="thType">Typ</th>
+              <th id="thLink">Link / Aktionen</th>
+            </tr>
+          </thead>
+          <tbody id="sharesTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+        <div id="noSharesMsg" class="no-shares-msg">
+          Keine aktiven Freigaben vorhanden.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Code Modal -->
+  <div class="modal-overlay" id="qrModal" onclick="closeQrModal()">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <h3 style="font-weight: 800; font-size: 1.2rem;" id="lblQrTitle">QR-Code scannen</h3>
+      <img src="" alt="QR Code" class="qr-img" id="qrModalImage" />
+      <div class="modal-link" id="qrModalLinkText">http://...</div>
+      <div style="display: flex; gap: 8px; width: 100%;">
+        <button class="btn sm" onclick="copyQrCodeImage()" id="lblBtnCopyQr" style="flex: 1; display: flex; align-items: center; justify-content: center; gap: 4px; font-weight: 600;">📋 <span id="lblBtnCopyQrText">QR-Code kopieren</span></button>
+        <button class="btn sm" onclick="closeQrModal()" id="lblModalClose" style="flex: 1; font-weight: 600;">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast">Link kopiert!</div>
+
+  <script>
+    // Translations
+    const langDict = {
+      de: {
+        backBtn: "← Zurück",
+        title: "🔗 Datei-Freigabe",
+        subtitle: "Teile Dateien und Ordner über dein lokales Netzwerk oder weltweit über das Internet.",
+        tabLocal: "Lokales WLAN",
+        tabTunnel: "Direkt-Tunnel",
+        tabCloud: "Cloud-Upload",
+        descLocal: "Teilt die Datei oder den Ordner in deinem aktuellen WLAN. Empfänger müssen im selben Netzwerk sein. Sehr schnell und privat.",
+        descTunnel: "Teilt die Datei oder den Ordner über das Internet direkt von deiner Festplatte. Dein PC muss eingeschaltet bleiben.",
+        descCloud: "Lädt das Element auf einen temporären Server hoch. Empfänger kann herunterladen, auch wenn dein PC aus ist.",
+        selectFile: "Ausgewählt: ",
+        dropzoneText: "Datei oder Ordner hierher ziehen",
+        dropzoneSubtext: "Keine Auswahl",
+        activeShares: "Aktive Freigaben",
+        noShares: "Keine aktiven Freigaben vorhanden.",
+        btnShare: "Auswahl freigeben",
+        btnCopy: "Kopieren",
+        btnStop: "Beenden",
+        btnQr: "QR-Code",
+        thFile: "Element",
+        thSize: "Größe",
+        thType: "Typ",
+        thLink: "Link / Aktionen",
+        toastShared: "Erfolgreich freigegeben! 🔗",
+        toastCopied: "Link in Zwischenablage kopiert! 📋",
+        toastStopped: "Freigabe beendet. 🛑",
+        modalClose: "Schließen",
+        lblQrTitle: "QR-Code scannen",
+        errNotReady: "System nicht bereit. Läuft die App als Desktop-Anwendung?",
+        btnCopyQr: "QR-Code kopieren",
+        toastQrCopied: "QR-Code als Bild kopiert! 📋"
+      },
+      en: {
+        backBtn: "← Back",
+        title: "🔗 File Sharing",
+        subtitle: "Share files and folders over your local network or worldwide over the internet.",
+        tabLocal: "Local Wi-Fi",
+        tabTunnel: "Direct Tunnel",
+        tabCloud: "Cloud Upload",
+        descLocal: "Shares the file or folder on your local Wi-Fi. Receivers must be in the same network. Very fast and private.",
+        descTunnel: "Shares the file or folder over the internet directly from your hard drive. Your PC must remain turned on.",
+        descCloud: "Uploads the item to a temporary server. Recipient can download it even if your PC is turned off.",
+        selectFile: "Selected: ",
+        dropzoneText: "Drag file or folder here",
+        dropzoneSubtext: "No selection",
+        activeShares: "Active Shares",
+        noShares: "No active shares available.",
+        btnShare: "Share Selection",
+        btnCopy: "Copy",
+        btnStop: "Stop",
+        btnQr: "QR-Code",
+        thFile: "Item",
+        thSize: "Size",
+        thType: "Type",
+        thLink: "Link / Actions",
+        toastShared: "Successfully shared! 🔗",
+        toastCopied: "Link copied to clipboard! 📋",
+        toastStopped: "Sharing stopped. 🛑",
+        modalClose: "Close",
+        lblQrTitle: "Scan QR-Code",
+        errNotReady: "System not ready. Is the app running as a desktop application?",
+        btnCopyQr: "Copy QR-Code",
+        toastQrCopied: "QR-Code image copied! 📋"
+      }
+    };
+
+    let currentLang = 'de';
+    let selectedShareType = 'local'; // 'local', 'tunnel', 'cloud'
+    let selectedFilePath = '';
+
+    // Switch share mode tabs
+    function switchShareType(type) {
+      selectedShareType = type;
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      
+      const activeBtn = document.getElementById(`tab${type.charAt(0).toUpperCase() + type.slice(1)}Btn`);
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const sharingWrapper = document.getElementById('sharingUiWrapper');
+      const adminWrapper = document.getElementById('adminPanelWrapper');
+
+      if (type === 'admin') {
+        sharingWrapper.style.display = 'none';
+        adminWrapper.style.display = 'flex';
+        refreshServerStatus();
+      } else {
+        sharingWrapper.style.display = 'flex';
+        adminWrapper.style.display = 'none';
+
+        const dict = langDict[currentLang] || langDict['de'];
+        const descEl = document.getElementById('lblSharingDesc');
+        if (type === 'local') {
+          descEl.textContent = dict.descLocal;
+        } else if (type === 'tunnel') {
+          descEl.textContent = dict.descTunnel;
+        } else if (type === 'cloud') {
+          descEl.textContent = dict.descCloud;
+        }
+      }
+    }
+
+    // Server & Tunnel management logic
+    let statusInterval = null;
+
+    function refreshServerStatus() {
+      if (typeof pywebview === 'undefined' || !pywebview.api || !pywebview.api.get_share_status) return;
+
+      pywebview.api.get_share_status().then(status => {
+        if (!status || !status.success) return;
+
+        // 1. Update server UI
+        const serverLight = document.getElementById('serverStatusLight');
+        const toggleServerBtn = document.getElementById('btnToggleServer');
+        const portInput = document.getElementById('serverPortInput');
+        
+        if (status.server_active) {
+          serverLight.style.backgroundColor = '#10b981';
+          toggleServerBtn.textContent = currentLang === 'en' ? 'Stop Server' : 'Server stoppen';
+          toggleServerBtn.className = 'btn sm stop';
+        } else {
+          serverLight.style.backgroundColor = '#ef4444';
+          toggleServerBtn.textContent = currentLang === 'en' ? 'Start Server' : 'Server starten';
+          toggleServerBtn.className = 'btn sm';
+        }
+        
+        if (document.activeElement !== portInput) {
+          portInput.value = status.custom_port || 0;
+        }
+
+        // 2. Update tunnel UI
+        const tunnelLight = document.getElementById('tunnelStatusLight');
+        const toggleTunnelBtn = document.getElementById('btnToggleTunnel');
+        const subInput = document.getElementById('tunnelSubdomainInput');
+        const urlText = document.getElementById('tunnelUrlText');
+
+        if (status.tunnel_active) {
+          if (status.tunnel_url === 'connecting') {
+            tunnelLight.style.backgroundColor = '#f59e0b';
+            toggleTunnelBtn.textContent = currentLang === 'en' ? 'Stop Tunnel' : 'Tunnel stoppen';
+            toggleTunnelBtn.className = 'btn sm stop';
+            urlText.innerHTML = currentLang === 'en' ? 'Tunnel state: <strong>Connecting...</strong>' : 'Tunnel-Status: <strong>Verbinde...</strong>';
+          } else {
+            tunnelLight.style.backgroundColor = '#10b981';
+            toggleTunnelBtn.textContent = currentLang === 'en' ? 'Stop Tunnel' : 'Tunnel stoppen';
+            toggleTunnelBtn.className = 'btn sm stop';
+            urlText.innerHTML = `Tunnel active: <a href="${status.tunnel_url}" target="_blank" style="color: var(--accent2); text-decoration: underline; cursor: pointer;">${status.tunnel_url}</a>`;
+          }
+        } else {
+          tunnelLight.style.backgroundColor = '#ef4444';
+          toggleTunnelBtn.textContent = currentLang === 'en' ? 'Start Tunnel' : 'Tunnel starten';
+          toggleTunnelBtn.className = 'btn sm';
+          urlText.textContent = currentLang === 'en' ? 'Tunnel state: Inactive' : 'Tunnel-Status: Inaktiv';
+        }
+
+        if (document.activeElement !== subInput) {
+          subInput.value = status.subdomain || '';
+        }
+
+        // 3. Update Tunnel Autostart
+        const autoStartTunnelChk = document.getElementById('autoStartTunnelCheckbox');
+        if (autoStartTunnelChk) {
+          autoStartTunnelChk.checked = !!status.auto_start_tunnel_active;
+        }
+      });
+    }
+
+    function toggleServer() {
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+      pywebview.api.get_share_status().then(status => {
+        if (!status || !status.success) return;
+        const currentActive = status.server_active;
+        pywebview.api.toggle_server(!currentActive).then(res => {
+          if (res && res.success) {
+            refreshServerStatus();
+          } else {
+            alert("Fehler: " + (res ? res.error : "unbekannt"));
+          }
+        });
+      });
+    }
+
+    function toggleTunnel() {
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+      pywebview.api.get_share_status().then(status => {
+        if (!status || !status.success) return;
+        const currentActive = status.tunnel_active;
+        pywebview.api.toggle_tunnel(!currentActive).then(res => {
+          if (res && res.success) {
+            refreshServerStatus();
+          } else {
+            alert("Fehler: " + (res ? res.error : "unbekannt"));
+          }
+        });
+      });
+    }
+
+    function saveServerPort() {
+      const portVal = parseInt(document.getElementById('serverPortInput').value);
+      if (isNaN(portVal) || portVal < 0 || portVal > 65535) {
+        alert(currentLang === 'en' ? "Please enter a valid port number (0-65535)." : "Bitte gib einen gültigen Port ein (0-65535).");
+        return;
+      }
+      pywebview.api.save_share_port(portVal).then(res => {
+        if (res && res.success) {
+          showToast(currentLang === 'en' ? "Port saved and server restarted! 💾" : "Port gespeichert und Server neu gestartet! 💾");
+          refreshServerStatus();
+        } else {
+          alert("Fehler: " + (res ? res.error : "unbekannt"));
+        }
+      });
+    }
+
+    function saveTunnelSubdomain() {
+      const sub = document.getElementById('tunnelSubdomainInput').value.trim().toLowerCase();
+      if (!sub) {
+        alert(currentLang === 'en' ? "Please enter a subdomain." : "Bitte gib eine Subdomain ein.");
+        return;
+      }
+      pywebview.api.save_share_subdomain(sub).then(res => {
+        if (res && res.success) {
+          showToast(currentLang === 'en' ? "Subdomain saved! 💾" : "Subdomain erfolgreich gespeichert! 💾");
+          refreshServerStatus();
+        } else {
+          alert("Fehler: " + (res ? res.error : "unbekannt"));
+        }
+      });
+    }
+
+
+    function toggleAutoStartTunnel(enabled) {
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.toggle_auto_start_tunnel) {
+        pywebview.api.toggle_auto_start_tunnel(enabled).then(res => {
+          if (res && res.success) {
+            showToast(currentLang === 'en' ? "Auto-start tunnel settings updated!" : "Tunnel-Autostart-Einstellungen aktualisiert!");
+          } else {
+            alert("Fehler: " + (res ? res.error : "unbekannt"));
+          }
+        });
+      }
+    }
+
+    // Dropzone drag-and-drop event listeners
+    const dropzone = document.getElementById('dropzone');
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.add('dragover');
+      }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropzone.addEventListener(eventName, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropzone.classList.remove('dragover');
+      }, false);
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length > 0) {
+        // Since we are running in pywebview, dragging a local file gives us its reference.
+        // Webview2 sometimes doesn't expose absolute paths directly via files list in standard HTML5 Drag/Drop
+        // unless we use native pywebview select_file. But we can retrieve path if exposed, or fallback.
+        // Wait, on windows Webview2 exposes file path in e.dataTransfer.files[0].path!
+        if (files[0].path) {
+          handleFileSelected(files[0].path);
+        } else {
+          // If no path is exposed, we warn or select via pywebview.
+          triggerFileSelect();
+        }
+      }
+    });
+
+    // Helper: check if API is available, then call
+    function withApi(fn) {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        fn();
+      } else {
+        window.addEventListener('pywebviewready', fn, { once: true });
+        const poll = setInterval(() => {
+          if (typeof pywebview !== 'undefined' && pywebview.api) {
+            clearInterval(poll);
+            fn();
+          }
+        }, 100);
+        setTimeout(() => clearInterval(poll), 10000);
+      }
+    }
+
+    function triggerFileSelect(event) {
+      if (event) event.stopPropagation();
+      withApi(() => {
+        const fileTypes = JSON.stringify([
+          ["Alle Dateien", "*.*"]
+        ]);
+        pywebview.api.select_file(fileTypes).then(filePath => {
+          if (filePath) {
+            handleFileSelected(filePath);
+          }
+        });
+      });
+    }
+
+    function triggerFolderSelect(event) {
+      if (event) event.stopPropagation();
+      withApi(() => {
+        pywebview.api.select_folder().then(folderPath => {
+          if (folderPath && !folderPath.error) {
+            handleFileSelected(folderPath);
+          }
+        });
+      });
+    }
+
+    function handleFileSelected(path) {
+      selectedFilePath = path;
+      const filename = path.split('\\').pop().split('/').pop();
+      const dict = langDict[currentLang] || langDict['de'];
+
+      document.getElementById('lblDropzoneText').textContent = dict.selectFile + filename;
+      document.getElementById('lblDropzoneSubtext').textContent = 'Pfad: ' + path;
+      document.getElementById('btnShareAction').removeAttribute('disabled');
+    }
+
+    function shareSelectedFile() {
+      if (!selectedFilePath) return;
+
+      const dict = langDict[currentLang] || langDict['de'];
+      const shareBtn = document.getElementById('btnShareAction');
+      shareBtn.disabled = true;
+
+      withApi(() => {
+        pywebview.api.share_file(selectedFilePath, selectedShareType).then(res => {
+          shareBtn.disabled = false;
+          if (res && res.success) {
+            showToast(dict.toastShared);
+            
+            // Clear current selection
+            selectedFilePath = '';
+            document.getElementById('lblDropzoneText').textContent = dict.dropzoneText;
+            document.getElementById('lblDropzoneSubtext').textContent = dict.dropzoneSubtext;
+            shareBtn.disabled = true;
+
+            // Reload shares table
+            loadActiveShares();
+          } else {
+            alert("Fehler beim Teilen der Datei: " + (res ? res.error : "unbekannt"));
+          }
+        }).catch(err => {
+          shareBtn.disabled = false;
+          alert("Verbindungsfehler: " + err);
+        });
+      });
+    }
+
+    function loadActiveShares() {
+      withApi(() => {
+        pywebview.api.get_active_shares().then(shares => {
+          const tbody = document.getElementById('sharesTableBody');
+          const noSharesMsg = document.getElementById('noSharesMsg');
+          tbody.innerHTML = '';
+          
+          if (!shares || shares.length === 0) {
+            noSharesMsg.style.display = 'block';
+            return;
+          }
+          noSharesMsg.style.display = 'none';
+
+          const dict = langDict[currentLang] || langDict['de'];
+
+          shares.forEach(share => {
+            const tr = document.createElement('tr');
+            
+            // File cell
+            const tdFile = document.createElement('td');
+            tdFile.className = 'file-name-cell';
+            tdFile.textContent = share.name;
+            tdFile.title = share.path;
+            
+            // Size cell
+            const tdSize = document.createElement('td');
+            tdSize.textContent = share.size;
+            
+            // Type cell
+            const tdType = document.createElement('td');
+            const typeBadge = document.createElement('span');
+            typeBadge.className = `badge ${share.type}`;
+            typeBadge.textContent = share.type === 'local' ? 'WLAN' : (share.type === 'tunnel' ? 'TUNNEL' : 'CLOUD');
+            tdType.appendChild(typeBadge);
+            
+            // Actions cell
+            const tdActions = document.createElement('td');
+            tdActions.className = 'actions-cell';
+            
+            // Copy Link button
+            const btnCopy = document.createElement('button');
+            btnCopy.className = 'btn sm';
+            btnCopy.textContent = dict.btnCopy;
+            btnCopy.onclick = () => {
+              navigator.clipboard.writeText(share.url);
+              showToast(dict.toastCopied);
+            };
+            tdActions.appendChild(btnCopy);
+            
+            // QR Code button (Only if url exists)
+            if (share.url) {
+              const btnQr = document.createElement('button');
+              btnQr.className = 'btn sm';
+              btnQr.textContent = dict.btnQr;
+              btnQr.onclick = () => showQrCodeModal(share.url);
+              tdActions.appendChild(btnQr);
+            }
+
+            // Stop sharing button
+            const btnStop = document.createElement('button');
+            btnStop.className = 'btn sm stop';
+            btnStop.textContent = dict.btnStop;
+            btnStop.onclick = () => {
+              pywebview.api.stop_sharing(share.id).then(res => {
+                if (res && res.success) {
+                  showToast(dict.toastStopped);
+                  loadActiveShares();
+                }
+              });
+            };
+            tdActions.appendChild(btnStop);
+            
+            tr.appendChild(tdFile);
+            tr.appendChild(tdSize);
+            tr.appendChild(tdType);
+            tr.appendChild(tdActions);
+            tbody.appendChild(tr);
+          });
+        });
+      });
+    }
+
+    function showQrCodeModal(url) {
+      const modal = document.getElementById('qrModal');
+      const qrImg = document.getElementById('qrModalImage');
+      const linkText = document.getElementById('qrModalLinkText');
+
+      linkText.textContent = url;
+      qrImg.src = ''; // reset first
+
+      withApi(() => {
+        // Call Python to generate high quality QR Code base64
+        pywebview.api.generate_qr_base64(url, '#09090e', '#ffffff', 200).then(res => {
+          if (res && res.success) {
+            qrImg.src = res.base64;
+            modal.classList.add('show');
+          }
+        });
+      });
+    }
+
+    function closeQrModal() {
+      document.getElementById('qrModal').classList.remove('show');
+    }
+
+    function copyQrCodeImage() {
+      const qrImg = document.getElementById('qrModalImage');
+      if (!qrImg || !qrImg.src) return;
+      
+      const dict = langDict[currentLang] || langDict['de'];
+      
+      fetch(qrImg.src)
+        .then(res => res.blob())
+        .then(blob => {
+          navigator.clipboard.write([
+            new ClipboardItem({
+              [blob.type]: blob
+            })
+          ]).then(() => {
+            showToast(dict.toastQrCopied || "QR-Code-Bild kopiert! 📋");
+          }).catch(err => {
+            console.error("Clipboard write failed:", err);
+            alert(currentLang === 'en' ? "Failed to copy image automatically." : "Bild konnte nicht automatisch kopiert werden.");
+          });
+        })
+        .catch(err => console.error("Blob fetch failed:", err));
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Add tabAdmin to translations
+    langDict.de.tabAdmin = "Verwaltung";
+    langDict.en.tabAdmin = "Server Admin";
+    langDict.de.lblWebserver = "Lokaler Webserver";
+    langDict.en.lblWebserver = "Local Webserver";
+    langDict.de.lblServerPort = "Lokaler Port (0 = zufällig)";
+    langDict.en.lblServerPort = "Local Port (0 = random)";
+    langDict.de.lblTunnelName = "Internet Direkt-Tunnel";
+    langDict.en.lblTunnelName = "Internet Direct Tunnel";
+    langDict.de.lblSubdomain = "Wunsch-Subdomain";
+    langDict.en.lblSubdomain = "Custom Subdomain";
+    langDict.de.lblAutoStartTunnelText = "Tunnel automatisch mit ToolForge starten";
+    langDict.en.lblAutoStartTunnelText = "Auto-start tunnel with ToolForge";
+
+    // Localization
+    function applyLanguage(lang) {
+      currentLang = lang;
+      const dict = langDict[lang] || langDict['de'];
+      
+      document.getElementById('btnBack').textContent = dict.backBtn;
+      document.getElementById('txtTitle').textContent = dict.title;
+      document.getElementById('txtSubtitle').textContent = dict.subtitle;
+      document.getElementById('lblTabLocal').textContent = dict.tabLocal;
+      document.getElementById('lblTabTunnel').textContent = dict.tabTunnel;
+      document.getElementById('lblTabCloud').textContent = dict.tabCloud;
+      document.getElementById('lblTabAdmin').textContent = dict.tabAdmin;
+
+      document.getElementById('lblWebserver').textContent = dict.lblWebserver;
+      document.getElementById('lblServerPort').textContent = dict.lblServerPort;
+      document.getElementById('lblTunnelName').textContent = dict.lblTunnelName;
+      document.getElementById('lblSubdomain').textContent = dict.lblSubdomain;
+      document.getElementById('lblAutoStartTunnelText').textContent = dict.lblAutoStartTunnelText;
+      
+      // Update active description
+      switchShareType(selectedShareType);
+      
+      if (!selectedFilePath) {
+        document.getElementById('lblDropzoneText').textContent = dict.dropzoneText;
+        document.getElementById('lblDropzoneSubtext').textContent = dict.dropzoneSubtext;
+      } else {
+        const filename = selectedFilePath.split('\\').pop().split('/').pop();
+        document.getElementById('lblDropzoneText').textContent = dict.selectFile + filename;
+      }
+
+      document.getElementById('lblBtnShare').textContent = dict.btnShare;
+      document.getElementById('lblActiveShares').textContent = dict.activeShares;
+      document.getElementById('thFile').textContent = dict.thFile;
+      document.getElementById('thSize').textContent = dict.thSize;
+      document.getElementById('thType').textContent = dict.thType;
+      document.getElementById('thLink').textContent = dict.thLink;
+      
+      const noSharesMsg = document.getElementById('noSharesMsg');
+      if (noSharesMsg) noSharesMsg.textContent = dict.noShares;
+      document.getElementById('lblQrTitle').textContent = dict.lblQrTitle;
+      document.getElementById('lblModalClose').textContent = dict.modalClose;
+      const btnCopyQr = document.getElementById('lblBtnCopyQrText');
+      if (btnCopyQr) btnCopyQr.textContent = dict.btnCopyQr;
+      
+      // Reload active shares table
+      loadActiveShares();
+      refreshServerStatus();
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      withApi(() => {
+        pywebview.api.get_language().then(lang => {
+          applyLanguage(lang || 'de');
+          
+          // Start status polling
+          refreshServerStatus();
+          statusInterval = setInterval(refreshServerStatus, 2500);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

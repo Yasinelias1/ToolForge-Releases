@@ -15,6 +15,11 @@ import qrcode
 from static_ffmpeg import run
 import numpy as np
 import pypdf
+import hashlib
+import uuid
+import http.server
+import urllib.parse
+import socket
 
 # Path helper for PyInstaller resources
 def get_resource_path(relative_path):
@@ -182,18 +187,118 @@ WMO_CODES = {
     99: {"en": "Thunderstorm with heavy hail", "de": "Gewitter mit schwerem Hagel", "emoji": "⛈️"}
 }
 
-import http.server
-import socket
-import urllib.parse
-import threading
+class SSHReleaseTunnel:
+    def __init__(self, local_port, subdomain):
+        self.local_port = local_port
+        self.subdomain = subdomain
+        self.proc = None
+        self.thread = None
+        self.active = False
+        self.public_url = None
+
+    def start(self):
+        if self.active:
+            return
+        self.active = True
+        self.thread = threading.Thread(target=self._run, daemon=True)
+        self.thread.start()
+
+    def stop(self):
+        self.active = False
+        if self.proc:
+            try:
+                self.proc.terminate()
+            except:
+                pass
+            self.proc = None
+        self.public_url = None
+
+    def _run(self):
+        import time
+        import subprocess
+        import re
+        import os
+
+        # Check if SSH key exists, if not generate it
+        ssh_dir = os.path.expanduser("~/.ssh")
+        key_exists = False
+        if os.path.exists(ssh_dir):
+            try:
+                for f in os.listdir(ssh_dir):
+                    if f.startswith("id_") and not f.endswith(".pub"):
+                        key_exists = True
+                        break
+            except:
+                pass
+        if not key_exists:
+            try:
+                os.makedirs(ssh_dir, exist_ok=True)
+                key_path = os.path.join(ssh_dir, "id_rsa")
+                creationflags = 0x08000000 if os.name == 'nt' else 0
+                subprocess.run(
+                    ["ssh-keygen", "-t", "rsa", "-b", "2048", "-N", "", "-f", key_path],
+                    creationflags=creationflags,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL
+                )
+                print("Auto-generated SSH key successfully.")
+            except Exception as key_err:
+                print("Failed to auto-generate SSH key:", key_err)
+
+        while self.active:
+            cmd = [
+                "ssh",
+                "-o", "StrictHostKeyChecking=no",
+                "-o", "UserKnownHostsFile=NUL",
+                "-R", f"{self.subdomain}:80:127.0.0.1:{self.local_port}",
+                "serveo.net"
+            ]
+            try:
+                creationflags = 0x08000000 if os.name == 'nt' else 0
+                self.proc = subprocess.Popen(
+                    cmd,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.STDOUT,
+                    text=True,
+                    bufsize=1,
+                    creationflags=creationflags
+                )
+                
+                # Monitor output to catch public URL
+                for _ in range(50):
+                    if not self.active or self.proc.poll() is not None:
+                        break
+                    line = self.proc.stdout.readline()
+                    if not line:
+                        break
+                    print("SSH Tunnel Info:", line.strip(), flush=True)
+                    if "Forwarding HTTP traffic" in line:
+                        urls = re.findall(r'https?://[^\s]+', line)
+                        for url in urls:
+                            url = url.rstrip('.,;()[]{}')
+                            if "serveo.net" in url or "serveousercontent.com" in url:
+                                self.public_url = url
+                                print("SSH Tunnel successfully running at:", self.public_url, flush=True)
+                                break
+                        if self.public_url:
+                            break
+                            
+                # Keep running
+                while self.active and self.proc.poll() is None:
+                    time.sleep(1)
+            except Exception as e:
+                print("SSH Tunnel exception:", e, flush=True)
+                
+            if self.active:
+                print("SSH Tunnel disconnected. Reconnecting in 5 seconds...", flush=True)
+                time.sleep(5)
 
 class FileShareServer:
-    def __init__(self):
+    def __init__(self, port=0):
         self.server = None
         self.thread = None
-        self.port = 0
-        self.shared_file_path = None
-        self.shared_filename = None
+        self.port = port
+        self.shared_files = {} # uuid -> {'path': path, 'name': name, 'size': size_str, ...}
 
     def start(self):
         if self.server is not None:
@@ -203,19 +308,28 @@ class FileShareServer:
         
         class ShareHandler(http.server.BaseHTTPRequestHandler):
             def log_message(self, format, *args):
-                pass  # Suppress logs to console
+                pass  # Suppress logs in console
 
             def do_GET(self):
                 parsed_path = urllib.parse.urlparse(self.path)
-                if parsed_path.path == '/download':
-                    file_path = server_instance.shared_file_path
+                path_parts = [p for p in parsed_path.path.split('/') if p]
+                
+                # Check for /download/<uuid>
+                if len(path_parts) >= 2 and path_parts[0] == 'download':
+                    file_uuid = path_parts[1]
+                    file_info = server_instance.shared_files.get(file_uuid)
+                    if not file_info:
+                        self.send_error(404, "Freigabe nicht gefunden oder abgelaufen")
+                        return
+                    
+                    file_path = file_info.get('path')
                     if not file_path or not os.path.exists(file_path):
-                        self.send_error(404, "File not found")
+                        self.send_error(404, "Datei existiert nicht mehr auf dem Host-PC")
                         return
                     
                     try:
                         file_size = os.path.getsize(file_path)
-                        filename = server_instance.shared_filename or os.path.basename(file_path)
+                        filename = file_info.get('name') or os.path.basename(file_path)
                         
                         self.send_response(200)
                         import mimetypes
@@ -238,15 +352,23 @@ class FileShareServer:
                                 self.wfile.write(chunk)
                     except Exception as e:
                         try:
-                            self.send_error(500, f"Internal error: {str(e)}")
+                            self.send_error(500, f"Fehler beim Dateizugriff: {str(e)}")
                         except Exception:
                             pass
-                else:
+                            
+                # Check for /share/<uuid>
+                elif len(path_parts) >= 2 and path_parts[0] == 'share':
+                    file_uuid = path_parts[1]
+                    file_info = server_instance.shared_files.get(file_uuid)
+                    if not file_info:
+                        self.send_error(404, "Freigabe nicht gefunden oder abgelaufen")
+                        return
+                    
                     self.send_response(200)
                     self.send_header('Content-Type', 'text/html; charset=utf-8')
                     self.end_headers()
-                    filename = server_instance.shared_filename or "Datei"
-                    size_str = server_instance.get_formatted_size()
+                    filename = file_info.get('name') or "Datei"
+                    size_str = file_info.get('size') or "Unbekannt"
                     
                     html_content = f"""<!DOCTYPE html>
 <html>
@@ -257,8 +379,8 @@ class FileShareServer:
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: #0d0b1e;
-            color: #f8fafc;
+            background: #09090e;
+            color: #f0f0ff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -267,94 +389,123 @@ class FileShareServer:
             padding: 20px;
             box-sizing: border-box;
         }}
+        body::before {{
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 60% 50% at 80% 10%, rgba(124, 58, 237, 0.1) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 20% 90%, rgba(236, 72, 153, 0.06) 0%, transparent 55%);
+            pointer-events: none;
+            z-index: 0;
+        }}
         .card {{
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 30px;
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 40px 30px;
             text-align: center;
-            max-width: 420px;
+            max-width: 440px;
             width: 100%;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }}
+        .icon {{
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            display: inline-block;
         }}
         h2 {{
-            background: linear-gradient(135deg, #c084fc 0%, #22d3ee 100%);
+            background: linear-gradient(135deg, #fff 0%, #a855f7 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin-top: 0;
-            font-size: 24px;
+            font-size: 26px;
+            font-weight: 800;
         }}
         .file-info {{
             margin: 24px 0;
             font-size: 15px;
-            color: #94a3b8;
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 16px;
+            color: #8888aa;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 20px;
         }}
         .filename {{
             font-weight: 700;
             color: #fff;
             word-break: break-all;
             margin-bottom: 8px;
+            font-size: 16px;
         }}
         .btn {{
-            display: inline-block;
-            background: linear-gradient(135deg, #a855f7 0%, #22d3ee 100%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
             color: white;
             text-decoration: none;
             padding: 14px 28px;
-            border-radius: 10px;
+            border-radius: 12px;
             font-weight: 700;
-            box-shadow: 0 4px 15px rgba(168,85,247,0.4);
-            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.3);
+            transition: all 0.2s ease;
             cursor: pointer;
             border: none;
             width: 100%;
             box-sizing: border-box;
+            font-size: 15px;
         }}
         .btn:hover {{
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(168,85,247,0.6);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.5);
+            filter: brightness(1.1);
+        }}
+        .btn:active {{
+            transform: translateY(-1px);
         }}
     </style>
 </head>
 <body>
     <div class="card">
-        <h2>Datei-Freigabe</h2>
+        <span class="icon">📦</span>
+        <h2>Datei herunterladen</h2>
         <div class="file-info">
             <div class="filename">{filename}</div>
             <div>Gr&ouml;&szlig;e: {size_str}</div>
         </div>
-        <a class="btn" href="/download" download>Herunterladen</a>
+        <a class="btn" href="/download/{file_uuid}" download>⚡ Herunterladen</a>
     </div>
 </body>
 </html>"""
                     self.wfile.write(html_content.encode('utf-8'))
+                else:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.end_headers()
+                    self.wfile.write("ToolForge Sharing Server".encode('utf-8'))
 
-        self.server = http.server.HTTPServer(('0.0.0.0', 0), ShareHandler)
+        self.server = http.server.HTTPServer(('0.0.0.0', self.port), ShareHandler)
         self.port = self.server.server_address[1]
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
-    def get_formatted_size(self):
-        if not self.shared_file_path or not os.path.exists(self.shared_file_path):
-            return "0 B"
-        size = os.path.getsize(self.shared_file_path)
-        for unit in ['B', 'KB', 'MB', 'GB']:
-            if size < 1024.0:
-                return f"{size:.1f} {unit}"
-            size /= 1024.0
-        return f"{size:.1f} TB"
-
-    def set_file(self, file_path):
-        self.shared_file_path = file_path
-        self.shared_filename = os.path.basename(file_path)
+    def stop(self):
+        if self.server:
+            try:
+                self.server.shutdown()
+                self.server.server_close()
+            except Exception as e:
+                print("Error stopping FileShareServer:", e)
+            self.server = None
+            self.thread = None
 
 class ToolForgeAPI:
-    APP_VERSION = "1.1.9"
+    APP_VERSION = "1.2.0"
 
     def __init__(self):
         self._window = None
@@ -379,6 +530,30 @@ class ToolForgeAPI:
         self._model_path = os.path.join(appdata_dir, "models", "lama_fp32.onnx")
         self._lama_session = None
         self._download_thread = None
+        
+        # Initialize file sharing database
+        self._shared_files_db_path = os.path.join(appdata_dir, "shared_files.json")
+        self._shared_files = self._load_shared_files_db()
+        self._ssh_tunnel = None
+        
+        # Check if we have active shares or auto-start tunnel configured at startup
+        config = self._load_config()
+        auto_start = config.get("share_tunnel_auto_start", False)
+        active_local_or_tunnel = auto_start
+        active_tunnel = auto_start
+        for fid, info in self._shared_files.items():
+            if info.get('type') in ('local', 'tunnel'):
+                active_local_or_tunnel = True
+            if info.get('type') == 'tunnel':
+                active_tunnel = True
+                
+        if active_local_or_tunnel:
+            try:
+                self._ensure_server_started()
+                if active_tunnel:
+                    self._ensure_tunnel_started()
+            except Exception as startup_err:
+                print("Error starting sharing services at launch:", startup_err, flush=True)
         
         # Load smart inpaint preference
         config = self._load_config()
@@ -2820,51 +2995,8 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
             return {"success": False, "error": str(e)}
 
     def share_file_local(self, filePath, shareOnInternet=False):
-        try:
-            if isinstance(filePath, (list, tuple)):
-                filePath = filePath[0]
-            if not filePath or not os.path.exists(filePath):
-                return {"success": False, "error": "Datei existiert nicht."}
-
-            filename = os.path.basename(filePath)
-            
-            # Format file size
-            size_bytes = os.path.getsize(filePath)
-            formatted_size = "0 B"
-            s = float(size_bytes)
-            for unit in ['B', 'KB', 'MB', 'GB']:
-                if s < 1024.0:
-                    formatted_size = f"{s:.1f} {unit}"
-                    break
-                s /= 1024.0
-
-            if shareOnInternet:
-                url = self._upload_to_internet_sharing(filePath)
-                return {
-                    "success": True,
-                    "url": url,
-                    "filename": filename,
-                    "size": formatted_size
-                }
-            else:
-                if self._file_share_server is None:
-                    self._file_share_server = FileShareServer()
-                    self._file_share_server.start()
-
-                self._file_share_server.set_file(filePath)
-                
-                local_ip = self.get_local_ip()
-                port = self._file_share_server.port
-                url = f"http://{local_ip}:{port}/"
-                
-                return {
-                    "success": True,
-                    "url": url,
-                    "filename": filename,
-                    "size": formatted_size
-                }
-        except Exception as e:
-            return {"success": False, "error": str(e)}
+        shareType = "cloud" if shareOnInternet else "local"
+        return self.share_file(filePath, shareType)
 
     def _upload_to_internet_sharing(self, file_path):
         import requests
@@ -3496,6 +3628,426 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
             wres["lon"] = geo_data["lon"]
             return wres
             
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    # ── Datei-Freigabe (File Sharing) APIs ──
+    def _load_shared_files_db(self):
+        if os.path.exists(self._shared_files_db_path):
+            try:
+                with open(self._shared_files_db_path, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except:
+                pass
+        return {}
+
+    def _save_shared_files_db(self):
+        try:
+            os.makedirs(os.path.dirname(self._shared_files_db_path), exist_ok=True)
+            with open(self._shared_files_db_path, "w", encoding="utf-8") as f:
+                json.dump(self._shared_files, f, indent=4)
+        except Exception as e:
+            print("Error saving shared files DB:", e)
+
+    def _ensure_server_started(self):
+        if self._file_share_server is None:
+            port = self.get_share_port()
+            self._file_share_server = FileShareServer(port)
+            self._file_share_server.start()
+            
+            # Sync existing shares from DB to server
+            for fid, info in self._shared_files.items():
+                if info.get('type') in ('local', 'tunnel') and os.path.exists(info.get('path', '')):
+                    self._file_share_server.shared_files[fid] = info
+
+    def _ensure_tunnel_started(self):
+        self._ensure_server_started()
+        config = self._load_config()
+        subdomain = config.get("share_subdomain", self.get_default_subdomain())
+        
+        if self._ssh_tunnel is None or self._ssh_tunnel.subdomain != subdomain or not self._ssh_tunnel.active:
+            if self._ssh_tunnel:
+                self._ssh_tunnel.stop()
+            self._ssh_tunnel = SSHReleaseTunnel(self._file_share_server.port, subdomain)
+            self._ssh_tunnel.start()
+
+    def get_default_subdomain(self):
+        try:
+            import hashlib
+            import socket
+            hostname = socket.gethostname()
+            h = hashlib.md5(hostname.encode('utf-8')).hexdigest()[:8]
+            return f"tf-share-{h}"
+        except:
+            return "tf-share-user"
+
+    def get_share_subdomain(self):
+        config = self._load_config()
+        return config.get("share_subdomain", self.get_default_subdomain())
+
+    def save_share_subdomain(self, subdomain):
+        try:
+            subdomain = str(subdomain).strip().lower()
+            if not subdomain:
+                return {"success": False, "error": "Subdomain darf nicht leer sein."}
+            import re
+            if not re.match(r"^[a-z0-9\-]+$", subdomain):
+                return {"success": False, "error": "Ungültiges Format. Nur Kleinbuchstaben, Zahlen und Bindestriche erlaubt."}
+                
+            config = self._load_config()
+            config["share_subdomain"] = subdomain
+            self._save_config(config)
+            
+            # If tunnel is active, restart it with new subdomain
+            if self._ssh_tunnel and self._ssh_tunnel.active:
+                self._ensure_tunnel_started()
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def share_file(self, filePath, shareType):
+        try:
+            if isinstance(filePath, (list, tuple)):
+                filePath = filePath[0]
+            if not filePath or not os.path.exists(filePath):
+                return {"success": False, "error": "Datei existiert nicht."}
+            
+            is_folder = os.path.isdir(filePath)
+            temp_zip_path = None
+            filename = os.path.basename(filePath)
+            
+            if is_folder:
+                import shutil
+                import tempfile
+                temp_dir = tempfile.mkdtemp(prefix="tf_share_")
+                zip_base = os.path.join(temp_dir, filename)
+                zip_path = shutil.make_archive(zip_base, 'zip', filePath)
+                filePath = zip_path
+                temp_zip_path = zip_path
+                filename = filename + ".zip"
+                
+            size_bytes = os.path.getsize(filePath)
+            
+            # Format file size
+            formatted_size = "0 B"
+            s = float(size_bytes)
+            for unit in ['B', 'KB', 'MB', 'GB']:
+                if s < 1024.0:
+                    formatted_size = f"{s:.1f} {unit}"
+                    break
+                s /= 1024.0
+            
+            import uuid
+            import time
+            file_id = str(uuid.uuid4())
+            
+            if shareType == "cloud":
+                url = self._upload_to_internet_sharing(filePath)
+                
+                # If it was a folder, clean up the local temp zip
+                if is_folder and temp_zip_path and os.path.exists(temp_zip_path):
+                    try:
+                        os.remove(temp_zip_path)
+                        os.rmdir(os.path.dirname(temp_zip_path))
+                    except:
+                        pass
+                        
+                self._shared_files[file_id] = {
+                    "id": file_id,
+                    "path": filePath if not is_folder else "",  # No local path for cloud directories since deleted
+                    "name": filename,
+                    "size": formatted_size,
+                    "type": "cloud",
+                    "url": url,
+                    "added": time.time()
+                }
+                self._save_shared_files_db()
+                return {
+                    "success": True,
+                    "url": url,
+                    "id": file_id,
+                    "filename": filename,
+                    "size": formatted_size,
+                    "type": "cloud"
+                }
+            
+            elif shareType == "local":
+                self._ensure_server_started()
+                
+                info = {
+                    "id": file_id,
+                    "path": filePath,
+                    "name": filename,
+                    "size": formatted_size,
+                    "type": "local",
+                    "added": time.time()
+                }
+                if is_folder:
+                    info["is_folder"] = True
+                    info["temp_zip_path"] = temp_zip_path
+                
+                self._shared_files[file_id] = info
+                self._file_share_server.shared_files[file_id] = info
+                
+                local_ip = self.get_local_ip()
+                port = self._file_share_server.port
+                url = f"http://{local_ip}:{port}/share/{file_id}"
+                
+                self._shared_files[file_id]["url"] = url
+                self._save_shared_files_db()
+                
+                return {
+                    "success": True,
+                    "url": url,
+                    "id": file_id,
+                    "filename": filename,
+                    "size": formatted_size,
+                    "type": "local"
+                }
+                
+            elif shareType == "tunnel":
+                self._ensure_tunnel_started()
+                
+                info = {
+                    "id": file_id,
+                    "path": filePath,
+                    "name": filename,
+                    "size": formatted_size,
+                    "type": "tunnel",
+                    "added": time.time()
+                }
+                if is_folder:
+                    info["is_folder"] = True
+                    info["temp_zip_path"] = temp_zip_path
+                
+                self._shared_files[file_id] = info
+                self._file_share_server.shared_files[file_id] = info
+                
+                # Get tunnel public URL (wait up to 3 seconds if connecting)
+                public_base = None
+                for _ in range(6):
+                    if self._ssh_tunnel and self._ssh_tunnel.public_url:
+                        public_base = self._ssh_tunnel.public_url
+                        break
+                    time.sleep(0.5)
+                
+                if not public_base:
+                    subdomain = self.get_share_subdomain()
+                    public_base = f"https://{subdomain}.serveo.net"
+                    
+                url = f"{public_base}/share/{file_id}"
+                
+                self._shared_files[file_id]["url"] = url
+                self._save_shared_files_db()
+                
+                return {
+                    "success": True,
+                    "url": url,
+                    "id": file_id,
+                    "filename": filename,
+                    "size": formatted_size,
+                    "type": "tunnel"
+                }
+            else:
+                return {"success": False, "error": f"Ungültiger Freigabetyp: {shareType}"}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_active_shares(self):
+        modified = False
+        to_delete = []
+        for fid, info in self._shared_files.items():
+            if info.get("type") != "cloud":
+                path = info.get("path", "")
+                if not path or not os.path.exists(path):
+                    to_delete.append(fid)
+                    
+        for fid in to_delete:
+            self._shared_files.pop(fid, None)
+            if self._file_share_server:
+                self._file_share_server.shared_files.pop(fid, None)
+            modified = True
+            
+        if modified:
+            self._save_shared_files_db()
+            
+        shares_list = list(self._shared_files.values())
+        shares_list.sort(key=lambda x: x.get("added", 0), reverse=True)
+        return shares_list
+
+    def stop_sharing(self, uuid):
+        try:
+            if uuid in self._shared_files:
+                info = self._shared_files[uuid]
+                # Cleanup temp zip file if directory sharing was used
+                temp_zip_path = info.get("temp_zip_path")
+                if temp_zip_path and os.path.exists(temp_zip_path):
+                    try:
+                        os.remove(temp_zip_path)
+                        # Also remove the parent directory if it was created inside a temp directory
+                        temp_dir = os.path.dirname(temp_zip_path)
+                        if os.path.basename(temp_dir).startswith("tf_share_"):
+                            os.rmdir(temp_dir)
+                    except Exception as clean_err:
+                        print("Error cleaning directory share temp files:", clean_err, flush=True)
+
+                self._shared_files.pop(uuid, None)
+                if self._file_share_server:
+                    self._file_share_server.shared_files.pop(uuid, None)
+                self._save_shared_files_db()
+                
+                active_local_or_tunnel = False
+                active_tunnel = False
+                for fid, info in self._shared_files.items():
+                    if info.get('type') in ('local', 'tunnel'):
+                        active_local_or_tunnel = True
+                    if info.get('type') == 'tunnel':
+                        active_tunnel = True
+                        
+                if not active_tunnel and self._ssh_tunnel:
+                    self._ssh_tunnel.stop()
+                    self._ssh_tunnel = None
+                return {"success": True}
+            return {"success": False, "error": "Freigabe nicht gefunden."}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _get_startup_path(self):
+        startup_dir = os.path.join(os.environ.get("APPDATA", ""), "Microsoft", "Windows", "Start Menu", "Programs", "Startup")
+        return os.path.join(startup_dir, "ToolForge.lnk")
+
+    def get_autostart_enabled(self):
+        lnk_path = self._get_startup_path()
+        return os.path.exists(lnk_path)
+
+    def toggle_autostart(self, enabled):
+        try:
+            lnk_path = self._get_startup_path()
+            enabled = bool(enabled)
+            
+            if enabled:
+                if hasattr(sys, 'frozen'):
+                    exe_path = sys.executable
+                    working_dir = os.path.dirname(exe_path)
+                else:
+                    exe_path = os.path.abspath(sys.argv[0])
+                    working_dir = os.path.dirname(exe_path)
+                
+                ps_script = f"""
+                $WshShell = New-Object -ComObject WScript.Shell
+                $Shortcut = $WshShell.CreateShortcut("{lnk_path}")
+                $Shortcut.TargetPath = "{exe_path}"
+                $Shortcut.WorkingDirectory = "{working_dir}"
+                $Shortcut.Save()
+                """
+                startupinfo = subprocess.STARTUPINFO()
+                startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], startupinfo=startupinfo, check=True)
+            else:
+                if os.path.exists(lnk_path):
+                    os.remove(lnk_path)
+            return {"success": True, "enabled": enabled}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def toggle_auto_start_tunnel(self, enabled):
+        try:
+            enabled = bool(enabled)
+            config = self._load_config()
+            config["share_tunnel_auto_start"] = enabled
+            self._save_config(config)
+            return {"success": True, "enabled": enabled}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_share_status(self):
+        try:
+            server_active = self._file_share_server is not None and self._file_share_server.server is not None
+            server_port = self._file_share_server.port if server_active else self.get_share_port()
+            
+            tunnel_active = self._ssh_tunnel is not None and self._ssh_tunnel.active
+            tunnel_url = self._ssh_tunnel.public_url if tunnel_active else None
+            if tunnel_active and not tunnel_url:
+                tunnel_url = 'connecting'
+                
+            config = self._load_config()
+            auto_start_tunnel_active = config.get("share_tunnel_auto_start", False)
+                
+            return {
+                "success": True,
+                "server_active": server_active,
+                "server_port": server_port,
+                "tunnel_active": tunnel_active,
+                "tunnel_url": tunnel_url,
+                "autostart_active": self.get_autostart_enabled(),
+                "auto_start_tunnel_active": auto_start_tunnel_active,
+                "subdomain": self.get_share_subdomain(),
+                "custom_port": self.get_share_port()
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def toggle_server(self, active):
+        try:
+            active = bool(active)
+            if active:
+                self._ensure_server_started()
+            else:
+                if self._ssh_tunnel:
+                    self._ssh_tunnel.stop()
+                    self._ssh_tunnel = None
+                if self._file_share_server:
+                    self._file_share_server.stop()
+                    self._file_share_server = None
+            return {"success": True, "server_active": active}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def toggle_tunnel(self, active):
+        try:
+            active = bool(active)
+            if active:
+                self._ensure_tunnel_started()
+            else:
+                if self._ssh_tunnel:
+                    self._ssh_tunnel.stop()
+                    self._ssh_tunnel = None
+            return {"success": True, "tunnel_active": active}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_share_port(self):
+        config = self._load_config()
+        return int(config.get("share_port", 0))
+
+    def save_share_port(self, port):
+        try:
+            port = int(port)
+            if port < 0 or port > 65535:
+                return {"success": False, "error": "Ungültiger Port (muss zwischen 0 und 65535 liegen)."}
+                
+            config = self._load_config()
+            config["share_port"] = port
+            self._save_config(config)
+            
+            if self._file_share_server and self._file_share_server.server:
+                shares = self._file_share_server.shared_files
+                
+                was_tunnel_active = self._ssh_tunnel is not None and self._ssh_tunnel.active
+                if self._ssh_tunnel:
+                    self._ssh_tunnel.stop()
+                    self._ssh_tunnel = None
+                if self._file_share_server:
+                    self._file_share_server.stop()
+                    self._file_share_server = None
+                    
+                self._ensure_server_started()
+                self._file_share_server.shared_files = shares
+                
+                if was_tunnel_active:
+                    self._ensure_tunnel_started()
+                    
+            return {"success": True, "port": port}
         except Exception as e:
             return {"success": False, "error": str(e)}
 

@@ -12,14 +12,14 @@
 
     :root {
       color-scheme: dark;
-      --bg: #080810;
-      --surface: #0f0f1a;
-      --surface2: #161624;
-      --border: rgba(255,255,255,0.07);
-      --accent: #7c3aed;
-      --accent2: #a855f7;
-      --accent3: #06b6d4;
-      --accent4: #f59e0b;
+      --bg: #0d0606;
+      --surface: #160c0c;
+      --surface2: #241414;
+      --accent: #dc2626;
+      --accent2: #ef4444;
+      --accent3: #f59e0b;
+      --accent4: #ec4899;
+      --border: rgba(220,38,38,0.15);
       --text: #f0efff;
       --muted: #6b6a8a;
     }
@@ -766,7 +766,7 @@
           <div class="hub-title">Dokumenten-Hub</div>
           <div class="hub-subtitle">PDFs, Dateien &amp; Codes</div>
         </div>
-        <div class="hub-count">3 Tools</div>
+        <div class="hub-count">4 Tools</div>
       </div>
       <div class="grid">
 
@@ -783,6 +783,14 @@
           <div class="card-title">Dateikompressor</div>
           <div class="card-desc">Verkleinere die Dateigröße von Bildern und Audio-Dateien offline mit anpassbarer Qualität und Abmessung.</div>
           <div class="card-tag">🗜️ Utility · Kompression</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/file-share.html" style="--card-color1:#6366f1;--card-color2:#a855f7" data-tags="share datei link versenden download freigabe upload transfer peer local internet">
+          <span class="card-icon">🔗</span>
+          <div class="card-title">Datei-Freigabe</div>
+          <div class="card-desc">Gib Dateien im lokalen Netzwerk oder über das Internet frei. Generiert einen Download-Link und QR-Code zum Teilen.</div>
+          <div class="card-tag">🔗 Utility · Sharing</div>
           <span class="card-arrow">→</span>
         </a>
 
@@ -963,25 +971,20 @@
     </div> <!-- Ende 2. TAB: DASHBOARD -->
 
     <!-- 3. TAB: EINSTELLUNGEN & UPDATES -->
-    <div id="tabContentSettings" class="tab-content" style="max-width: 600px; margin: 0 auto;">
-      <div class="db-header">
+    <div id="tabContentSettings" class="tab-content" style="max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+      <div class="db-header" style="margin-bottom: 1rem;">
         <h2>⚙️ Einstellungen &amp; Updates</h2>
         <p>Verwalte deine ToolForge-Konfiguration und halte sie aktuell</p>
       </div>
 
+      <!-- 1. Allgemeine Einstellungen -->
       <div class="db-card" style="align-items: stretch; gap: 1.5rem; text-align: left;">
-        <!-- GitHub Repo Configuration -->
-        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
-          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);">GitHub Repository (Benutzername/Projekt)</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="text" id="githubRepoInput" placeholder="z. B. Benutzername/Projekt" style="flex: 1; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'" />
-            <button onclick="saveSettings()" style="background: var(--accent); border: none; color: white; padding: 0 1.2rem; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; font-family: inherit;" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'">Speichern</button>
-          </div>
-          <span style="font-size: 0.75rem; color: var(--muted);">Deine Kollegen rufen Updates aus diesem Repository ab.</span>
-        </div>
-        
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem; margin-top: 0;" id="lblGeneralSettingsTitle">
+          ⚙️ Allgemeine Einstellungen
+        </h3>
+
         <!-- Language Selection -->
-        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
           <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblLanguage">Sprache / Language</label>
           <select id="languageSelect" onchange="changeLanguage(this.value)" style="width:100%; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
             <option value="de">Deutsch (German)</option>
@@ -990,7 +993,7 @@
         </div>
         
         <!-- Theme Selection -->
-        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.2rem;">
           <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblTheme">Design / Theme</label>
           <select id="themeSelect" onchange="changeTheme(this.value)" style="width:100%; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
             <option value="sunset">Sunset / Neon-Lila (Standard)</option>
@@ -1004,8 +1007,25 @@
           </select>
         </div>
 
+        <!-- Autostart-Einstellungen -->
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border);">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblAutostartTitle">🚀 Autostart-Einstellungen</label>
+          
+          <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; user-select: none; font-size: 0.85rem; color: var(--text); padding: 0.3rem 0;">
+            <input type="checkbox" id="autostartCheckbox" onchange="toggleAutostart(this.checked)" style="accent-color: var(--accent2); width: 18px; height: 18px; cursor: pointer;" />
+            <span id="lblAutostartCheckbox">ToolForge mit Windows starten (Autostart)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- 2. KI-Integrationen & Modelle -->
+      <div class="db-card" style="align-items: stretch; gap: 1.5rem; text-align: left;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem; margin-top: 0;" id="lblAiModelsTitle">
+          🧠 KI-Integrationen &amp; Modelle
+        </h3>
+
         <!-- Gemini API Key -->
-        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; padding-top: 1.2rem; border-top: 1px solid var(--border);">
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
           <label style="font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px;" id="lblGeminiApiKey">
             🧠 Gemini API-Key
             <span style="font-size: 0.7rem; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 2px 8px; border-radius: 20px; font-weight: 500;">Kostenlos</span>
@@ -1026,41 +1046,16 @@
           </span>
         </div>
 
-        <!-- Danger Zone / Reset Settings -->
-        <div style="margin-top: 0.5rem; padding-top: 1.2rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.6rem;">
-          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblResetSettings">Gefahrenbereich / Danger Zone</label>
-          <button onclick="resetSettings()" style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: #f87171; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.background='rgba(220, 38, 38, 0.2)'; this.style.borderColor='rgba(220, 38, 38, 0.5)'" onmouseout="this.style.background='rgba(220, 38, 38, 0.1)'; this.style.borderColor='rgba(220, 38, 38, 0.3)'" id="btnResetSettings">
-            🗑️ Einstellungen zurücksetzen
-          </button>
-        </div>
-        
-        <hr style="border: 0; border-top: 1px solid var(--border);" />
-        
-        <!-- Update Check Status Area -->
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.9rem; color: var(--text);">Aktuelle Version: <strong style="color: var(--accent3);" id="currentVersionText">v1.1.2</strong></span>
-            <button id="modalCheckUpdateBtn" onclick="checkUpdatesFromModal()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; font-family: inherit;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-              🔄 Jetzt prüfen
-            </button>
-          </div>
-          
-          <div id="updateStatusContainer" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center;">
-            <span style="color: var(--muted); font-size: 0.85rem;">Klicke auf "Jetzt prüfen", um nach Updates auf GitHub zu suchen.</span>
-          </div>
-        </div>
-      </div>
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;" />
 
-      <!-- Smart-KI Modell-Verwaltung (Model Management) -->
-      <div class="db-card" id="smartAiModelCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
-        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;" id="lblSmartAiTitle">
-          🧠 Smart-KI Modell-Verwaltung (Retusche)
-        </h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.9rem; color: var(--text);" id="lblSmartAiStatus">Status: <strong style="color: #f87171;" id="smartAiStatusText">Nicht installiert</strong></span>
-            <span style="font-size: 0.85rem; color: var(--muted);" id="smartAiSizeText">Größe: ~208 MB</span>
+        <!-- Smart-KI Modell-Verwaltung (Model Management) -->
+        <div id="smartAiModelCard" style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; margin: 0;" id="lblSmartAiTitle">
+            🧠 Smart-KI Modell-Verwaltung (Retusche)
+          </h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem;">
+            <span style="font-size: 0.85rem; color: var(--text);" id="lblSmartAiStatus">Status: <strong style="color: #f87171;" id="smartAiStatusText">Nicht installiert</strong></span>
+            <span style="font-size: 0.8rem; color: var(--muted);" id="smartAiSizeText">Größe: ~208 MB</span>
           </div>
 
           <!-- Download Progress Container -->
@@ -1075,7 +1070,7 @@
             <span id="smartAiDownloadBytesText" style="font-size: 0.75rem; color: var(--muted); text-align: right;">0 MB / 208 MB</span>
           </div>
 
-          <div style="display: flex; gap: 0.75rem; width: 100%;">
+          <div style="display: flex; gap: 0.75rem; width: 100%; margin-top: 0.2rem;">
             <button id="btnSmartAiDownload" onclick="downloadSmartAiModel()" style="flex: 1; background: var(--gradient); border: none; color: white; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, opacity 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
               📥 Modell herunterladen
             </button>
@@ -1084,18 +1079,17 @@
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Face-Swap Modell-Verwaltung (Premium Face-Swap Model Management) -->
-      <div class="db-card" id="faceSwapModelCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
-        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;" id="lblFaceSwapModelTitle">
-          👤 Premium Face-Swap Modell-Verwaltung
-        </h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.9rem; color: var(--text);" id="lblFaceSwapModelStatus">Status: <strong style="color: #f87171;" id="faceSwapModelStatusText">Nicht installiert</strong></span>
-            <span style="font-size: 0.85rem; color: var(--muted);" id="faceSwapModelSizeText">Größe: ~804 MB</span>
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.5rem 0;" />
+
+        <!-- Face-Swap Modell-Verwaltung (Premium Face-Swap Model Management) -->
+        <div id="faceSwapModelCard" style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; margin: 0;" id="lblFaceSwapModelTitle">
+            👤 Premium Face-Swap Modell-Verwaltung
+          </h4>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.2rem;">
+            <span style="font-size: 0.85rem; color: var(--text);" id="lblFaceSwapModelStatus">Status: <strong style="color: #f87171;" id="faceSwapModelStatusText">Nicht installiert</strong></span>
+            <span style="font-size: 0.8rem; color: var(--muted);" id="faceSwapModelSizeText">Größe: ~804 MB</span>
           </div>
 
           <!-- Download Progress Container -->
@@ -1110,7 +1104,7 @@
             <span id="faceSwapModelDownloadBytesText" style="font-size: 0.75rem; color: var(--muted); text-align: right;">0 MB / 804 MB</span>
           </div>
 
-          <div style="display: flex; gap: 0.75rem; width: 100%;">
+          <div style="display: flex; gap: 0.75rem; width: 100%; margin-top: 0.2rem;">
             <button id="btnFaceSwapModelDownload" onclick="downloadFaceSwapModels()" style="flex: 1; background: var(--gradient); border: none; color: white; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, opacity 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
               📥 Premium-Modelle herunterladen
             </button>
@@ -1121,19 +1115,69 @@
         </div>
       </div>
 
-      <!-- Collapsible Versionsverlauf (Changelog) -->
-      <div class="db-card" id="changelogCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
+      <!-- 3. Updates & Entwickler -->
+      <div class="db-card" style="align-items: stretch; gap: 1.5rem; text-align: left;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem; margin-top: 0;" id="lblUpdatesDevTitle">
+          🔄 Updates &amp; Entwickler
+        </h3>
+
+        <!-- GitHub Repo Configuration -->
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblGithubRepo">GitHub Repository (Benutzername/Projekt)</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="text" id="githubRepoInput" placeholder="z. B. Benutzername/Projekt" style="flex: 1; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'" />
+            <button onclick="saveSettings()" style="background: var(--accent); border: none; color: white; padding: 0 1.2rem; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; font-family: inherit;" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'" id="btnSaveSettings">Speichern</button>
+          </div>
+          <span style="font-size: 0.75rem; color: var(--muted);" id="lblGithubHelp">Deine Kollegen rufen Updates aus diesem Repository ab.</span>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid var(--border); margin: 0.2rem 0;" />
+        
+        <!-- Update Check Status Area -->
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.9rem; color: var(--text);"><span id="lblCurrentVersion">Aktuelle Version:</span> <strong style="color: var(--accent3);" id="currentVersionText">v1.1.2</strong></span>
+            <button id="modalCheckUpdateBtn" onclick="checkUpdatesFromModal()" style="background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text); padding: 0.5rem 1.2rem; border-radius: 10px; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s; font-family: inherit;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+              🔄 Jetzt prüfen
+            </button>
+          </div>
+          
+          <div id="updateStatusContainer" style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 1rem; min-height: 80px; display: flex; align-items: center; justify-content: center; text-align: center;">
+            <span style="color: var(--muted); font-size: 0.85rem;">Klicke auf "Jetzt prüfen", um nach Updates auf GitHub zu suchen.</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Collapsible Versionsverlauf (Changelog) -->
+      <div class="db-card" id="changelogCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin: 0;">
         <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;">
           📜 Versionsverlauf &amp; Changelog
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-          <!-- v1.1.9 details -->
+          <!-- v1.2.0 details -->
           <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'" open>
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
-                🚀 Version 1.1.9
+                🚀 Version 1.2.0
                 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🔗 <strong style="color: var(--text);">Permanente Dateifreigabe</strong>: Neues All-in-One-Sharing-Tool mit QR-Codes, Port- &amp; Subdomain-Konfiguration.</li>
+                <li>⚙️ <strong style="color: var(--text);">Strukturierte Einstellungen</strong>: Komplette Reorganisation der Einstellungsseite in 5 saubere Abschnitte.</li>
+                <li>🚀 <strong style="color: var(--text);">Autostart-Optimierung</strong>: Dedizierte Optionen für Windows-Autostart und automatischen Tunnel-Launch.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.1.9 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.1.9
               </span>
               <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
             </summary>
@@ -1291,6 +1335,20 @@
               </ul>
             </div>
           </details>
+        </div>
+      </div>
+
+      <!-- 5. Gefahrenbereich / Danger Zone -->
+      <div class="db-card" style="align-items: stretch; gap: 1.5rem; text-align: left; border: 1px solid rgba(220, 38, 38, 0.3); background: rgba(220, 38, 38, 0.02); margin: 0;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: #f87171; border-bottom: 1px solid rgba(220, 38, 38, 0.2); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem; margin-top: 0;" id="lblDangerZoneTitle">
+          ⚠️ Gefahrenbereich / Danger Zone
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 0.6rem;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblResetSettings">Gefahrenbereich</label>
+          <button onclick="resetSettings()" style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: #f87171; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.background='rgba(220, 38, 38, 0.2)'; this.style.borderColor='rgba(220, 38, 38, 0.5)'" onmouseout="this.style.background='rgba(220, 38, 38, 0.1)'; this.style.borderColor='rgba(220, 38, 38, 0.3)'" id="btnResetSettings">
+            🗑️ Einstellungen zurücksetzen
+          </button>
         </div>
       </div>
 
@@ -2185,6 +2243,10 @@
         cardFileCompressorDesc: "Verkleinere die Dateigröße von Bildern und Audio-Dateien offline mit anpassbarer Qualität und Abmessung.",
         cardFileCompressorTag: "🗜️ Utility · Kompression",
         
+        cardFileShareTitle: "Datei-Freigabe",
+        cardFileShareDesc: "Gib Dateien im lokalen Netzwerk oder über das Internet frei. Generiert einen Download-Link und QR-Code zum Teilen.",
+        cardFileShareTag: "🔗 Utility · Sharing",
+        
         cardQrGeneratorTitle: "QR-Code-Generator",
         cardQrGeneratorDesc: "Erstelle QR-Codes für URLs, Text oder Kontakte. Farbe wählen, Größe anpassen, als PNG herunterladen.",
         cardQrGeneratorTag: "📡 Utility · Sharing",
@@ -2222,6 +2284,12 @@
         
         settingsTitle: "⚙️ Einstellungen & Updates",
         settingsSub: "Verwalte deine ToolForge-Konfiguration und halte sie aktuell",
+        lblGeneralSettingsTitle: "⚙️ Allgemeine Einstellungen",
+        lblAutostartTitle: "🚀 Autostart-Einstellungen",
+        lblAutostartCheckbox: "ToolForge mit Windows starten (Autostart)",
+        lblAiModelsTitle: "🧠 KI-Integrationen & Modelle",
+        lblUpdatesDevTitle: "🔄 Updates & Entwickler",
+        lblDangerZoneTitle: "⚠️ Gefahrenbereich / Danger Zone",
         lblGithubRepo: "GitHub Repository (Benutzername/Projekt)",
         btnSave: "Speichern",
         lblTheme: "Design / Theme",
@@ -2265,6 +2333,9 @@
         faceSwapModelDownloadSuccess: "Premium Face-Swap Modelle erfolgreich heruntergeladen! 🎉",
         faceSwapModelDeleteSuccess: "Premium Face-Swap Modelle gelöscht.",
         
+        changelog_v120_list: `<li>🔗 <strong style="color: var(--text);">Permanente Dateifreigabe</strong>: Neues All-in-One-Sharing-Tool mit QR-Codes, Port- &amp; Subdomain-Konfiguration.</li>
+                <li>⚙️ <strong style="color: var(--text);">Strukturierte Einstellungen</strong>: Komplette Reorganisation der Einstellungsseite in 5 saubere Abschnitte.</li>
+                <li>🚀 <strong style="color: var(--text);">Autostart-Optimierung</strong>: Dedizierte Optionen für Windows-Autostart und automatischen Tunnel-Launch.</li>`,
         changelog_v119_list: `<li>👤 <strong style="color: var(--text);">Dedicated Face Swap</strong>: Standalone-Tab für Gesichtstausch mit Klassisch- und Premium-Modus.</li>
                 <li>⚙️ <strong style="color: var(--text);">Modell-Manager</strong>: Optionaler Download (804MB) und Ein-Klick-Löschung direkt in den Einstellungen.</li>`,
         changelog_v118_list: `<li>🎞️ <strong style="color: var(--text);">Mehrfach-Zensur-Kästchen</strong>: Zeichnen und Tracken mehrerer Zensurbereiche synchron.</li>
@@ -2335,6 +2406,10 @@
         cardFileCompressorDesc: "Reduce the file size of images and audio files offline with adjustable quality and dimensions.",
         cardFileCompressorTag: "🗜️ Utility · Compression",
         
+        cardFileShareTitle: "File Sharing",
+        cardFileShareDesc: "Share files over the local network or the internet. Generates a download link and a QR code for sharing.",
+        cardFileShareTag: "🔗 Utility · Sharing",
+        
         cardQrGeneratorTitle: "QR Code Generator",
         cardQrGeneratorDesc: "Create QR codes for URLs, text, or contacts. Select color, adjust size, download as PNG.",
         cardQrGeneratorTag: "📡 Utility · Sharing",
@@ -2372,6 +2447,12 @@
         
         settingsTitle: "⚙️ Settings & Updates",
         settingsSub: "Manage your ToolForge configuration and keep it up to date",
+        lblGeneralSettingsTitle: "⚙️ General Settings",
+        lblAutostartTitle: "🚀 Autostart Settings",
+        lblAutostartCheckbox: "Start ToolForge with Windows (Autostart)",
+        lblAiModelsTitle: "🧠 AI Integrations & Models",
+        lblUpdatesDevTitle: "🔄 Updates & Developer",
+        lblDangerZoneTitle: "⚠️ Danger Zone",
         lblGithubRepo: "GitHub Repository (Username/Project)",
         btnSave: "Save",
         lblTheme: "Theme / Design",
@@ -2415,6 +2496,9 @@
         faceSwapModelDownloadSuccess: "Premium Face-Swap models downloaded successfully! 🎉",
         faceSwapModelDeleteSuccess: "Premium Face-Swap models deleted.",
         
+        changelog_v120_list: `<li>🔗 <strong style="color: var(--text);">Permanent File Sharing</strong>: Brand new sharing panel with QR codes, port, and custom subdomain settings.</li>
+                <li>⚙️ <strong style="color: var(--text);">Clean Settings UX</strong>: Grouped all settings logically into 5 clean panels with the Danger Zone at the bottom.</li>
+                <li>🚀 <strong style="color: var(--text);">Autostart Configuration</strong>: Independent toggles for Windows startup and automatic tunnel activation.</li>`,
         changelog_v119_list: `<li>👤 <strong style="color: var(--text);">Dedicated Face Swap</strong>: Standalone face swap tab featuring Classical and Premium AI modes.</li>
                 <li>⚙️ <strong style="color: var(--text);">Model Manager</strong>: Optional download (804MB) and one-click deletion directly in settings.</li>`,
         changelog_v118_list: `<li>🎞️ <strong style="color: var(--text);">Multiple Censorship Boxes</strong>: Draw and track multiple manual censorship markings simultaneously.</li>
@@ -2480,52 +2564,40 @@
         
         hubs[1].querySelector('.hub-title').textContent = dict.hubDocsTitle;
         hubs[1].querySelector('.hub-subtitle').textContent = dict.hubDocsSub;
-        hubs[1].querySelector('.hub-count').textContent = lang === 'en' ? '3 Tools' : '3 Tools';
+        hubs[1].querySelector('.hub-count').textContent = lang === 'en' ? '4 Tools' : '4 Tools';
         
         hubs[2].querySelector('.hub-title').textContent = dict.hubSystemTitle;
         hubs[2].querySelector('.hub-subtitle').textContent = dict.hubSystemSub;
         hubs[2].querySelector('.hub-count').textContent = lang === 'en' ? '3 Tools' : '3 Tools';
       }
 
-      // Tool Cards
+      // Tool Cards (Translated dynamically by href mapping)
       const cards = document.querySelectorAll('.tool-card');
-      if (cards.length >= 9) {
-        cards[0].querySelector('.card-title').textContent = dict.cardMediaStudioTitle;
-        cards[0].querySelector('.card-desc').textContent = dict.cardMediaStudioDesc;
-        cards[0].querySelector('.card-tag').textContent = dict.cardMediaStudioTag;
-        
-        cards[1].querySelector('.card-title').textContent = dict.cardVideoDownloaderTitle;
-        cards[1].querySelector('.card-desc').textContent = dict.cardVideoDownloaderDesc;
-        cards[1].querySelector('.card-tag').textContent = dict.cardVideoDownloaderTag;
-        
-        cards[2].querySelector('.card-title').textContent = dict.cardAudioRecorderTitle;
-        cards[2].querySelector('.card-desc').textContent = dict.cardAudioRecorderDesc;
-        cards[2].querySelector('.card-tag').textContent = dict.cardAudioRecorderTag;
-        
-        cards[3].querySelector('.card-title').textContent = dict.cardPdfStudioTitle;
-        cards[3].querySelector('.card-desc').textContent = dict.cardPdfStudioDesc;
-        cards[3].querySelector('.card-tag').textContent = dict.cardPdfStudioTag;
-        
-        cards[4].querySelector('.card-title').textContent = dict.cardFileCompressorTitle;
-        cards[4].querySelector('.card-desc').textContent = dict.cardFileCompressorDesc;
-        cards[4].querySelector('.card-tag').textContent = dict.cardFileCompressorTag;
-        
-        cards[5].querySelector('.card-title').textContent = dict.cardQrGeneratorTitle;
-        cards[5].querySelector('.card-desc').textContent = dict.cardQrGeneratorDesc;
-        cards[5].querySelector('.card-tag').textContent = dict.cardQrGeneratorTag;
-        
-        cards[6].querySelector('.card-title').textContent = dict.cardCurrencyConverterTitle;
-        cards[6].querySelector('.card-desc').textContent = dict.cardCurrencyConverterDesc;
-        cards[6].querySelector('.card-tag').textContent = dict.cardCurrencyConverterTag;
-        
-        cards[7].querySelector('.card-title').textContent = dict.cardNetworkInfoTitle;
-        cards[7].querySelector('.card-desc').textContent = dict.cardNetworkInfoDesc;
-        cards[7].querySelector('.card-tag').textContent = dict.cardNetworkInfoTag;
-        
-        cards[8].querySelector('.card-title').textContent = dict.cardSpeedtestTitle;
-        cards[8].querySelector('.card-desc').textContent = dict.cardSpeedtestDesc;
-        cards[8].querySelector('.card-tag').textContent = dict.cardSpeedtestTag;
-      }
+      const cardMapping = {
+        'tools/media-studio.html': 'cardMediaStudio',
+        'tools/video-downloader.html': 'cardVideoDownloader',
+        'tools/audio-recorder.html': 'cardAudioRecorder',
+        'tools/pdf-studio.html': 'cardPdfStudio',
+        'tools/file-compressor.html': 'cardFileCompressor',
+        'tools/file-share.html': 'cardFileShare',
+        'tools/qr-generator.html': 'cardQrGenerator',
+        'tools/currency-converter.html': 'cardCurrencyConverter',
+        'tools/network-info.html': 'cardNetworkInfo',
+        'tools/speedtest.html': 'cardSpeedtest'
+      };
+
+      cards.forEach(card => {
+        const href = card.getAttribute('href');
+        const keyBase = cardMapping[href];
+        if (keyBase) {
+          const title = dict[keyBase + 'Title'];
+          const desc = dict[keyBase + 'Desc'];
+          const tag = dict[keyBase + 'Tag'];
+          if (title) card.querySelector('.card-title').textContent = title;
+          if (desc) card.querySelector('.card-desc').textContent = desc;
+          if (tag) card.querySelector('.card-tag').textContent = tag;
+        }
+      });
 
       // Dashboard
       document.querySelector('#tabContentDashboard .db-header h2').textContent = dict.dbTitle;
@@ -2559,10 +2631,25 @@
       document.querySelector('#tabContentSettings .db-header h2').textContent = dict.settingsTitle;
       document.querySelector('#tabContentSettings .db-header p').textContent = dict.settingsSub;
       
-      const settingsCard = document.querySelector('#tabContentSettings .db-card');
-      settingsCard.querySelector('label').textContent = dict.lblGithubRepo;
-      settingsCard.querySelector('button').textContent = dict.btnSave;
-      settingsCard.querySelector('span').textContent = dict.settingsHelp;
+      const lblGeneralSettingsTitle = document.getElementById('lblGeneralSettingsTitle');
+      if (lblGeneralSettingsTitle) lblGeneralSettingsTitle.textContent = dict.lblGeneralSettingsTitle;
+      const lblAutostartTitle = document.getElementById('lblAutostartTitle');
+      if (lblAutostartTitle) lblAutostartTitle.textContent = dict.lblAutostartTitle;
+      const lblAutostartCheckbox = document.getElementById('lblAutostartCheckbox');
+      if (lblAutostartCheckbox) lblAutostartCheckbox.textContent = dict.lblAutostartCheckbox;
+      const lblAiModelsTitle = document.getElementById('lblAiModelsTitle');
+      if (lblAiModelsTitle) lblAiModelsTitle.textContent = dict.lblAiModelsTitle;
+      const lblUpdatesDevTitle = document.getElementById('lblUpdatesDevTitle');
+      if (lblUpdatesDevTitle) lblUpdatesDevTitle.textContent = dict.lblUpdatesDevTitle;
+      const lblDangerZoneTitle = document.getElementById('lblDangerZoneTitle');
+      if (lblDangerZoneTitle) lblDangerZoneTitle.textContent = dict.lblDangerZoneTitle;
+
+      const lblGithubRepo = document.getElementById('lblGithubRepo');
+      if (lblGithubRepo) lblGithubRepo.textContent = dict.lblGithubRepo;
+      const btnSaveSettings = document.getElementById('btnSaveSettings');
+      if (btnSaveSettings) btnSaveSettings.textContent = dict.btnSave;
+      const lblGithubHelp = document.getElementById('lblGithubHelp');
+      if (lblGithubHelp) lblGithubHelp.textContent = dict.settingsHelp;
       
       const currentVerTextNode = document.getElementById('currentVersionText').previousSibling;
       currentVerTextNode.textContent = dict.lblCurrentVersion + ' ';
@@ -2580,46 +2667,50 @@
       if (changelogCard) {
         changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
         const detailsElements = changelogCard.querySelectorAll('details');
-        if (detailsElements.length >= 10) {
-          const sum119 = detailsElements[0].querySelector('summary');
-          sum119.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.9 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
-          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v119_list;
+        if (detailsElements.length >= 11) {
+          const sum120 = detailsElements[0].querySelector('summary');
+          sum120.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.0 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v120_list;
 
-          const sum118 = detailsElements[1].querySelector('summary');
+          const sum119 = detailsElements[1].querySelector('summary');
+          sum119.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.9`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v119_list;
+
+          const sum118 = detailsElements[2].querySelector('summary');
           sum118.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.8`;
-          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v118_list;
+          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v118_list;
 
-          const sum116 = detailsElements[2].querySelector('summary');
+          const sum116 = detailsElements[3].querySelector('summary');
           sum116.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.6`;
-          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v116_list;
+          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v116_list;
 
-          const sum115 = detailsElements[3].querySelector('summary');
+          const sum115 = detailsElements[4].querySelector('summary');
           sum115.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.5`;
-          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v115_list;
+          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v115_list;
 
-          const sum114 = detailsElements[4].querySelector('summary');
+          const sum114 = detailsElements[5].querySelector('summary');
           sum114.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.4`;
-          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v114_list;
+          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v114_list;
 
-          const sum113 = detailsElements[5].querySelector('summary');
+          const sum113 = detailsElements[6].querySelector('summary');
           sum113.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.3`;
-          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v113_list;
+          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v113_list;
           
-          const sum112 = detailsElements[6].querySelector('summary');
+          const sum112 = detailsElements[7].querySelector('summary');
           sum112.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.2`;
-          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v112_list;
+          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v112_list;
           
-          const sum111 = detailsElements[7].querySelector('summary');
+          const sum111 = detailsElements[8].querySelector('summary');
           sum111.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.1`;
-          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v111_list;
+          detailsElements[8].querySelector('ul').innerHTML = dict.changelog_v111_list;
 
-          const sum110 = detailsElements[8].querySelector('summary');
+          const sum110 = detailsElements[9].querySelector('summary');
           sum110.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0`;
-          detailsElements[8].querySelector('ul').innerHTML = dict.changelog_v110_list;
+          detailsElements[9].querySelector('ul').innerHTML = dict.changelog_v110_list;
 
-          const sum100 = detailsElements[9].querySelector('summary');
+          const sum100 = detailsElements[10].querySelector('summary');
           sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
-          detailsElements[9].querySelector('ul').innerHTML = dict.changelog_v100_list;
+          detailsElements[10].querySelector('ul').innerHTML = dict.changelog_v100_list;
         }
       }
 
@@ -2689,6 +2780,19 @@
         });
       }
     }
+
+    function toggleAutostart(enabled) {
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.toggle_autostart) {
+        pywebview.api.toggle_autostart(enabled).then(res => {
+          if (res && res.success) {
+            console.log("Autostart toggled:", res.enabled);
+          } else {
+            alert("Fehler beim Ändern des Autostarts: " + (res ? res.error : "unbekannt"));
+          }
+        });
+      }
+    }
+
 
     function updateToolCountText() {
       const cards = document.querySelectorAll('.tool-card:not(.coming-soon)');
@@ -2892,15 +2996,14 @@
             });
           }
           
-          // 5. Load dashboard options from python API (overrides localStorage)
-          if (pywebview.api.get_dashboard_options) {
-            pywebview.api.get_dashboard_options().then(opts => {
-              if (opts) {
-                applyDashboardOptions(opts);
-                localStorage.setItem('dashboard_options', JSON.stringify(opts));
-              }
+          // 6. Load autostart and share subdomain
+          if (pywebview.api.get_autostart_enabled) {
+            pywebview.api.get_autostart_enabled().then(enabled => {
+              const chk = document.getElementById('autostartCheckbox');
+              if (chk) chk.checked = !!enabled;
             });
           }
+
         }
       }, 500);
     });
