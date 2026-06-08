@@ -1599,25 +1599,63 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
             if total_frames <= 0: total_frames = 1
 
             # Setup detection or tracking parameters
-            rx, ry, rw, rh = 0, 0, 0, 0
+            rects = []
             if not auto_face:
-                # Parse bounding box if we are in manual mode
-                rect = json.loads(rect_json)
-                rx = int(rect['x'])
-                ry = int(rect['y'])
-                rw = int(rect['w'])
-                rh = int(rect['h'])
-                # Constrain crop coords to valid bounds
-                rx = max(0, min(orig_w - 1, rx))
-                ry = max(0, min(orig_h - 1, ry))
-                rw = max(1, min(orig_w - rx, rw))
-                rh = max(1, min(orig_h - ry, rh))
+                # Parse bounding boxes (can be a single dict or a list of dicts)
+                try:
+                    parsed = json.loads(rect_json)
+                    if isinstance(parsed, list):
+                        rects = parsed
+                    elif isinstance(parsed, dict):
+                        rects = [parsed]
+                except Exception as parse_err:
+                    print("Error parsing rect_json:", parse_err)
+                    rects = []
+                
+                # Constrain and convert coords
+                rects_clean = []
+                for r_item in rects:
+                    try:
+                        rx = int(r_item['x'])
+                        ry = int(r_item['y'])
+                        rw = int(r_item['w'])
+                        rh = int(r_item['h'])
+                        rx = max(0, min(orig_w - 1, rx))
+                        ry = max(0, min(orig_h - 1, ry))
+                        rw = max(1, min(orig_w - rx, rw))
+                        rh = max(1, min(orig_h - ry, rh))
+                        rects_clean.append({"x": rx, "y": ry, "w": rw, "h": rh})
+                    except:
+                        pass
+                rects = rects_clean
             else:
-                # Initialize Haar Cascade face detector
+                # Initialize Haar Cascade face detector (as fallback)
                 cascade_path = get_resource_path('haarcascade_frontalface_alt2.xml')
                 face_cascade = cv2.CascadeClassifier(cascade_path)
                 tracked_faces = []
                 lost_limit = 15  # Keep face box for up to 15 frames if lost
+
+                # Initialize YuNet face detector model
+                appdata_dir = os.path.join(os.environ.get('APPDATA', ''), 'ToolForge')
+                model_dir = os.path.join(appdata_dir, "models")
+                os.makedirs(model_dir, exist_ok=True)
+                model_path = os.path.join(model_dir, "face_detection_yunet_2023mar.onnx")
+                
+                if not os.path.exists(model_path):
+                    print("Downloading YuNet model dynamically...")
+                    url = "https://github.com/opencv/opencv_zoo/raw/main/models/face_detection_yunet/face_detection_yunet_2023mar.onnx"
+                    try:
+                        r = requests.get(url, timeout=15)
+                        if r.status_code == 200:
+                            with open(model_path, "wb") as f:
+                                f.write(r.content)
+                            print("YuNet model downloaded successfully!")
+                        else:
+                            print(f"Failed to download YuNet model: {r.status_code}")
+                            model_path = None
+                    except Exception as e:
+                        print("Failed to download YuNet:", e)
+                        model_path = None
 
             # Create a temp output video path (AVI format using standard MJPG or MP4V)
             fd, temp_avi = tempfile.mkstemp(suffix='.avi')
@@ -1636,11 +1674,11 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 cap.release()
                 return {"success": False, "error": "Konnte VideoWriter nicht initialisieren."}
 
-            tracker = None
+            trackers = []
             frame_idx = 0
             
             # Autodetect template variables
-            template_gray = None
+            templates_gray = []
             
             while True:
                 success, frame = cap.read()
@@ -1667,42 +1705,69 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 is_visible = True
 
                 if auto_face:
-                    # Convert to grayscale for Haar Cascade
-                    gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                    gray = cv2.equalizeHist(gray)
-                    
-                    # Optimize performance: Downscale frame for faster face detection
-                    detect_w = 640
-                    h, w = frame.shape[:2]
-                    scale = w / detect_w
-                    if scale > 1.0:
-                        detect_h = int(h / scale)
-                        small_gray = cv2.resize(gray, (detect_w, detect_h), interpolation=cv2.INTER_AREA)
-                    else:
-                        small_gray = gray
-                        scale = 1.0
-
-                    detected_faces_small = face_cascade.detectMultiScale(
-                        small_gray, 
-                        scaleFactor=1.1, 
-                        minNeighbors=4, 
-                        minSize=(int(30 / scale), int(30 / scale)),
-                        flags=cv2.CASCADE_SCALE_IMAGE
-                    )
-                    
-                    # Map coordinates back to original frame size
                     detected_faces = []
-                    for (fx, fy, fw, fh) in detected_faces_small:
-                        fx_orig = int(fx * scale)
-                        fy_orig = int(fy * scale)
-                        fw_orig = int(fw * scale)
-                        fh_orig = int(fh * scale)
+                    h_frame, w_frame = frame.shape[:2]
+                    
+                    # Try YuNet face detection first (much more accurate, detects profiles and rotated faces)
+                    if 'model_path' in locals() and model_path and os.path.exists(model_path):
+                        try:
+                            if not hasattr(self, "_yunet_detector") or self._yunet_detector_size != (w_frame, h_frame):
+                                self._yunet_detector = cv2.FaceDetectorYN.create(
+                                    model_path, "", (w_frame, h_frame), 0.5, 0.3, 5000
+                                )
+                                self._yunet_detector_size = (w_frame, h_frame)
+                            
+                            ok, detected_faces_yn = self._yunet_detector.detect(frame)
+                            if ok and detected_faces_yn is not None:
+                                for face in detected_faces_yn:
+                                    fx = int(face[0])
+                                    fy = int(face[1])
+                                    fw = int(face[2])
+                                    fh = int(face[3])
+                                    fx = max(0, min(orig_w - 1, fx))
+                                    fy = max(0, min(orig_h - 1, fy))
+                                    fw = max(1, min(orig_w - fx, fw))
+                                    fh = max(1, min(orig_h - fy, fh))
+                                    detected_faces.append((fx, fy, fw, fh))
+                        except Exception as yn_err:
+                            print("YuNet face detection error, falling back to Haar Cascade:", yn_err)
+                    
+                    # Fallback to Haar Cascade if YuNet is not available or failed
+                    if not detected_faces:
+                        # Convert to grayscale for Haar Cascade
+                        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+                        gray = cv2.equalizeHist(gray)
                         
-                        fx_orig = max(0, min(orig_w - 1, fx_orig))
-                        fy_orig = max(0, min(orig_h - 1, fy_orig))
-                        fw_orig = max(1, min(orig_w - fx_orig, fw_orig))
-                        fh_orig = max(1, min(orig_h - fy_orig, fh_orig))
-                        detected_faces.append((fx_orig, fy_orig, fw_orig, fh_orig))
+                        # Optimize performance: Downscale frame for faster face detection
+                        detect_w = 640
+                        scale = w_frame / detect_w
+                        if scale > 1.0:
+                            detect_h = int(h_frame / scale)
+                            small_gray = cv2.resize(gray, (detect_w, detect_h), interpolation=cv2.INTER_AREA)
+                        else:
+                            small_gray = gray
+                            scale = 1.0
+
+                        detected_faces_small = face_cascade.detectMultiScale(
+                            small_gray, 
+                            scaleFactor=1.1, 
+                            minNeighbors=4, 
+                            minSize=(int(30 / scale), int(30 / scale)),
+                            flags=cv2.CASCADE_SCALE_IMAGE
+                        )
+                        
+                        # Map coordinates back to original frame size
+                        for (fx, fy, fw, fh) in detected_faces_small:
+                            fx_orig = int(fx * scale)
+                            fy_orig = int(fy * scale)
+                            fw_orig = int(fw * scale)
+                            fh_orig = int(fh * scale)
+                            
+                            fx_orig = max(0, min(orig_w - 1, fx_orig))
+                            fy_orig = max(0, min(orig_h - 1, fy_orig))
+                            fw_orig = max(1, min(orig_w - fx_orig, fw_orig))
+                            fh_orig = max(1, min(orig_h - fy_orig, fh_orig))
+                            detected_faces.append((fx_orig, fy_orig, fw_orig, fh_orig))
                     
                     new_tracked_faces = []
                     matched_detected_indices = set()
@@ -1761,38 +1826,63 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                         fh = max(1, min(orig_h - fy, fh))
                         faces_list.append((fx, fy, fw, fh))
                 else:
-                    # Update tracker if manual tracking is enabled
-                    if tracking:
-                        if frame_idx == 0 or (tracker is None and in_time_range):
-                            tracker = cv2.TrackerMIL_create()
-                            tracker.init(frame, (rx, ry, rw, rh))
+                    if in_time_range:
+                        # Update trackers if manual tracking is enabled
+                        if tracking:
+                            if frame_idx == 0 or not trackers:
+                                trackers = []
+                                for r_item in rects:
+                                    try:
+                                        tr = cv2.TrackerMIL_create()
+                                        tr.init(frame, (r_item['x'], r_item['y'], r_item['w'], r_item['h']))
+                                        trackers.append((tr, r_item))
+                                    except Exception as tr_err:
+                                        print("Failed to init tracker for box:", tr_err)
+                            else:
+                                new_trackers = []
+                                for tr, orig_rect in trackers:
+                                    ok, bbox = tr.update(frame)
+                                    if ok:
+                                        tx, ty, tw, th = [int(v) for v in bbox]
+                                        tx = max(0, min(orig_w - 1, tx))
+                                        ty = max(0, min(orig_h - 1, ty))
+                                        tw = max(1, min(orig_w - tx, tw))
+                                        th = max(1, min(orig_h - ty, th))
+                                        faces_list.append((tx, ty, tw, th))
+                                        new_trackers.append((tr, {"x": tx, "y": ty, "w": tw, "h": th}))
+                                trackers = new_trackers
                         else:
-                            ok, bbox = tracker.update(frame)
-                            if ok:
-                                rx, ry, rw, rh = [int(v) for v in bbox]
-                                rx = max(0, min(orig_w - 1, rx))
-                                ry = max(0, min(orig_h - 1, ry))
-                                rw = max(1, min(orig_w - rx, rw))
-                                rh = max(1, min(orig_h - ry, rh))
-                    
-                    # Autodetect Template Matching
-                    if autodetect:
-                        roi = frame[ry:ry+rh, rx:rx+rw]
-                        roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
-                        
-                        if template_gray is None:
-                            template_gray = roi_gray.copy()
-                        
-                        if roi_gray.shape == template_gray.shape:
-                            match_res = cv2.matchTemplate(roi_gray, template_gray, cv2.TM_CCOEFF_NORMED)
-                            _, max_val, _, _ = cv2.minMaxLoc(match_res)
-                            if max_val < 0.65:
-                                is_visible = False
-                        else:
-                            is_visible = False
-                    
-                    if is_visible:
-                        faces_list.append((rx, ry, rw, rh))
+                            # Static rectangles (no tracking)
+                            for r_item in rects:
+                                tx, ty, tw, th = r_item['x'], r_item['y'], r_item['w'], r_item['h']
+                                faces_list.append((tx, ty, tw, th))
+                                
+                        # Autodetect Template Matching (if enabled, we perform matching for all active boxes)
+                        if autodetect:
+                            if frame_idx == 0 or not templates_gray:
+                                templates_gray = []
+                                for r_item in (rects if not tracking else [t[1] for t in trackers]):
+                                    tx, ty, tw, th = r_item['x'], r_item['y'], r_item['w'], r_item['h']
+                                    roi = frame[ty:ty+th, tx:tx+tw]
+                                    roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                                    templates_gray.append(roi_gray.copy())
+                            
+                            active_faces = []
+                            for idx, f_box in enumerate(faces_list):
+                                tx, ty, tw, th = f_box
+                                roi = frame[ty:ty+th, tx:tx+tw]
+                                if roi.size == 0:
+                                    continue
+                                roi_gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)
+                                
+                                if idx < len(templates_gray) and roi_gray.shape == templates_gray[idx].shape:
+                                    match_res = cv2.matchTemplate(roi_gray, templates_gray[idx], cv2.TM_CCOEFF_NORMED)
+                                    _, max_val, _, _ = cv2.minMaxLoc(match_res)
+                                    if max_val >= 0.65:
+                                        active_faces.append(f_box)
+                                else:
+                                    active_faces.append(f_box)
+                            faces_list = active_faces
 
                 # Apply zensur action to all boxes in faces_list
                 if is_visible and faces_list:
