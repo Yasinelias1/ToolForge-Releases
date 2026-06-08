@@ -686,9 +686,15 @@
     // Immediate theme restoration to prevent Flash of Unstyled Content (FOUC)
     (function() {
       try {
-        const savedTheme = localStorage.getItem('selected_theme');
-        if (savedTheme) {
-          const themes = {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlTheme = urlParams.get('theme');
+        const urlLang = urlParams.get('lang');
+        
+        const savedTheme = urlTheme || localStorage.getItem('selected_theme') || 'sunset';
+        window.__initialTheme = savedTheme;
+        if (urlLang) window.__initialLang = urlLang;
+        
+        const themes = {
             sunset: {
               '--bg': '#080810',
               '--surface': '#0f0f1a',
@@ -1554,7 +1560,7 @@
     }
 
     function loadSavedTheme() {
-      const savedTheme = localStorage.getItem('selected_theme');
+      const savedTheme = window.__initialTheme || localStorage.getItem('selected_theme');
       if (savedTheme) {
         changeTheme(savedTheme);
       }
@@ -2670,8 +2676,14 @@
 
     // Initialize version info on page load
     window.addEventListener('DOMContentLoaded', () => {
-      // Immediate load from localStorage for instant display
+      // Immediate load from localStorage or query parameter for instant display
       loadSavedTheme();
+      if (window.__initialLang) {
+        currentLang = window.__initialLang;
+        const select = document.getElementById('languageSelect');
+        if (select) select.value = currentLang;
+        applyLanguage(currentLang);
+      }
       updateToolCountText();
       const hash = window.location.hash.replace('#', '');
       if (hash === 'tools' || hash === 'dashboard' || hash === 'settings') {
