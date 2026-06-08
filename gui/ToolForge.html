@@ -32,6 +32,94 @@
       overflow-x: hidden;
     }
 
+    /* ── custom confirm modal ── */
+    .custom-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .custom-modal-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .custom-modal-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 450px;
+      padding: 1.8rem;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.6);
+      transform: scale(0.92);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .custom-modal-overlay.active .custom-modal-box {
+      transform: scale(1);
+    }
+    .custom-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .custom-modal-icon {
+      font-size: 1.6rem;
+      color: var(--accent2);
+    }
+    .custom-modal-header h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .custom-modal-body {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text);
+      opacity: 0.85;
+      margin-bottom: 1.8rem;
+    }
+    .custom-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .modal-btn {
+      padding: 0.65rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .modal-btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .modal-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .modal-btn-primary {
+      background: var(--accent);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .modal-btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+    }
+
     /* ── animated background ── */
     .bg-orbs {
       position: fixed;
@@ -903,6 +991,29 @@
           </select>
         </div>
         
+        <!-- Theme Selection -->
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblTheme">Design / Theme</label>
+          <select id="themeSelect" onchange="changeTheme(this.value)" style="width:100%; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'">
+            <option value="sunset">Sunset / Neon-Lila (Standard)</option>
+            <option value="cyberpunk">Cyberpunk / Neon-Grün</option>
+            <option value="frost">Nordisches Eis / Blau</option>
+            <option value="crimson">Roter Schatten / Dunkelrot</option>
+            <option value="monochrome">Modern Schiefer / Charcoal</option>
+            <option value="forest">Smaragdwald / Gold</option>
+            <option value="synthwave">Retro-Synthwave / Neon-Pink</option>
+            <option value="dracula">Vampir-Klassiker / Lila-Cyan</option>
+          </select>
+        </div>
+
+        <!-- Danger Zone / Reset Settings -->
+        <div style="margin-top: 0.5rem; padding-top: 1.2rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.6rem;">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblResetSettings">Gefahrenbereich / Danger Zone</label>
+          <button onclick="resetSettings()" style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: #f87171; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.background='rgba(220, 38, 38, 0.2)'; this.style.borderColor='rgba(220, 38, 38, 0.5)'" onmouseout="this.style.background='rgba(220, 38, 38, 0.1)'; this.style.borderColor='rgba(220, 38, 38, 0.3)'" id="btnResetSettings">
+            🗑️ Einstellungen zurücksetzen
+          </button>
+        </div>
+        
         <hr style="border: 0; border-top: 1px solid var(--border);" />
         
         <!-- Update Check Status Area -->
@@ -1007,6 +1118,23 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   </style>
 
+  <!-- Custom Confirm Modal -->
+  <div id="customConfirmModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+      <div class="custom-modal-header">
+        <span class="custom-modal-icon">⚠️</span>
+        <h3 id="customConfirmTitle">Bestätigung</h3>
+      </div>
+      <div class="custom-modal-body" id="customConfirmMessage">
+        Möchtest du fortfahren?
+      </div>
+      <div class="custom-modal-footer">
+        <button id="customConfirmCancelBtn" class="modal-btn modal-btn-secondary">Abbrechen</button>
+        <button id="customConfirmOkBtn" class="modal-btn modal-btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Count active tools
     const cards = document.querySelectorAll('.tool-card:not(.coming-soon)');
@@ -1061,11 +1189,173 @@
       }
     }
 
-    // Toggle options visibility
+    // Toggle options visibility (with localStorage persistence)
     function toggleOpt(cardId, isChecked) {
       const card = document.getElementById(cardId);
       if (card) {
         card.style.display = isChecked ? 'flex' : 'none';
+      }
+      
+      const opts = {
+        optCpu: document.getElementById('optCpu').checked,
+        optRam: document.getElementById('optRam').checked,
+        optGpu: document.getElementById('optGpu').checked,
+        optChart: document.getElementById('optChart').checked,
+        optWeather: document.getElementById('optWeather').checked
+      };
+      localStorage.setItem('dashboard_options', JSON.stringify(opts));
+
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.save_dashboard_options) {
+        pywebview.api.save_dashboard_options(opts);
+      }
+    }
+
+    function applyDashboardOptions(opts) {
+      if (!opts) return;
+      if (opts.hasOwnProperty('optCpu')) {
+        document.getElementById('optCpu').checked = opts.optCpu;
+        const card = document.getElementById('dbCardCpu');
+        if (card) card.style.display = opts.optCpu ? 'flex' : 'none';
+      }
+      if (opts.hasOwnProperty('optRam')) {
+        document.getElementById('optRam').checked = opts.optRam;
+        const card = document.getElementById('dbCardRam');
+        if (card) card.style.display = opts.optRam ? 'flex' : 'none';
+      }
+      if (opts.hasOwnProperty('optGpu')) {
+        document.getElementById('optGpu').checked = opts.optGpu;
+        const card = document.getElementById('dbCardGpu');
+        if (card) card.style.display = opts.optGpu ? 'flex' : 'none';
+      }
+      if (opts.hasOwnProperty('optChart')) {
+        document.getElementById('optChart').checked = opts.optChart;
+        const card = document.getElementById('dbCardChart');
+        if (card) card.style.display = opts.optChart ? 'flex' : 'none';
+      }
+      if (opts.hasOwnProperty('optWeather')) {
+        document.getElementById('optWeather').checked = opts.optWeather;
+        const card = document.getElementById('dbCardWeather');
+        if (card) card.style.display = opts.optWeather ? 'flex' : 'none';
+      }
+    }
+
+    function loadSavedOptions() {
+      const saved = localStorage.getItem('dashboard_options');
+      if (saved) {
+        try {
+          const opts = JSON.parse(saved);
+          applyDashboardOptions(opts);
+        } catch (e) {
+          console.error('Error loading saved options:', e);
+        }
+      }
+    }
+
+    // Theme selector
+    const themes = {
+      sunset: {
+        '--bg': '#080810',
+        '--surface': '#0f0f1a',
+        '--surface2': '#161624',
+        '--accent': '#7c3aed',
+        '--accent2': '#a855f7',
+        '--accent3': '#06b6d4',
+        '--accent4': '#f59e0b',
+        '--border': 'rgba(124,58,237,0.15)'
+      },
+      cyberpunk: {
+        '--bg': '#020604',
+        '--surface': '#061209',
+        '--surface2': '#0b2212',
+        '--accent': '#10b981',
+        '--accent2': '#059669',
+        '--accent3': '#00ffcc',
+        '--accent4': '#0ea5e9',
+        '--border': 'rgba(16,185,129,0.15)'
+      },
+      frost: {
+        '--bg': '#0b0f19',
+        '--surface': '#121824',
+        '--surface2': '#1b2234',
+        '--accent': '#3b82f6',
+        '--accent2': '#60a5fa',
+        '--accent3': '#38bdf8',
+        '--accent4': '#818cf8',
+        '--border': 'rgba(59,130,246,0.15)'
+      },
+      crimson: {
+        '--bg': '#0d0606',
+        '--surface': '#160c0c',
+        '--surface2': '#241414',
+        '--accent': '#dc2626',
+        '--accent2': '#ef4444',
+        '--accent3': '#f59e0b',
+        '--accent4': '#ec4899',
+        '--border': 'rgba(220,38,38,0.15)'
+      },
+      monochrome: {
+        '--bg': '#090d16',
+        '--surface': '#111827',
+        '--surface2': '#1f2937',
+        '--accent': '#4b5563',
+        '--accent2': '#9ca3af',
+        '--accent3': '#d1d5db',
+        '--accent4': '#f3f4f6',
+        '--border': 'rgba(255,255,255,0.06)'
+      },
+      forest: {
+        '--bg': '#040b07',
+        '--surface': '#08170f',
+        '--surface2': '#0f2b1c',
+        '--accent': '#10b981',
+        '--accent2': '#f59e0b',
+        '--accent3': '#14b8a6',
+        '--accent4': '#fbbf24',
+        '--border': 'rgba(16,185,129,0.15)'
+      },
+      synthwave: {
+        '--bg': '#0e051a',
+        '--surface': '#170b2b',
+        '--surface2': '#241142',
+        '--accent': '#ec4899',
+        '--accent2': '#f43f5e',
+        '--accent3': '#8b5cf6',
+        '--accent4': '#06b6d4',
+        '--border': 'rgba(236,72,153,0.15)'
+      },
+      dracula: {
+        '--bg': '#1e1f29',
+        '--surface': '#282a36',
+        '--surface2': '#343746',
+        '--accent': '#ff79c6',
+        '--accent2': '#bd93f9',
+        '--accent3': '#8be9fd',
+        '--accent4': '#50fa7b',
+        '--border': 'rgba(189,147,249,0.2)'
+      }
+    };
+
+    function changeTheme(themeName) {
+      const theme = themes[themeName] || themes.sunset;
+      const root = document.documentElement;
+      for (const [key, value] of Object.entries(theme)) {
+        root.style.setProperty(key, value);
+      }
+      localStorage.setItem('selected_theme', themeName);
+      
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect) themeSelect.value = themeName;
+
+      // Save to Python config
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.save_theme) {
+        pywebview.api.save_theme(themeName);
+      }
+    }
+
+    function loadSavedTheme() {
+      const savedTheme = localStorage.getItem('selected_theme');
+      if (savedTheme) {
+        changeTheme(savedTheme);
       }
     }
 
@@ -1214,7 +1504,7 @@
     window.addEventListener('resize', resizeCanvas);
 
     // Keep history arrays
-    const maxHistoryPoints = 30;
+    const maxHistoryPoints = 60;
     const cpuHistory = new Array(maxHistoryPoints).fill(0);
     const ramHistory = new Array(maxHistoryPoints).fill(0);
     const gpuHistory = new Array(maxHistoryPoints).fill(0);
@@ -1433,7 +1723,7 @@
       }
 
       poll();
-      dbInterval = setInterval(poll, 2000);
+      dbInterval = setInterval(poll, 500);
     }
 
     function stopDashboardPolling() {
@@ -1520,6 +1810,19 @@
         settingsSub: "Verwalte deine ToolForge-Konfiguration und halte sie aktuell",
         lblGithubRepo: "GitHub Repository (Benutzername/Projekt)",
         btnSave: "Speichern",
+        lblTheme: "Design / Theme",
+        lblResetSettings: "Gefahrenbereich",
+        btnResetSettings: "🗑️ Einstellungen zurücksetzen",
+        resetSuccess: "Einstellungen erfolgreich zurückgesetzt!",
+        resetConfirm: "Möchtest du wirklich alle Einstellungen (Sprache, Theme, Optionen) auf die Standardwerte zurücksetzen? Die App wird danach neu geladen.",
+        themeSunset: "Sunset / Neon-Lila (Standard)",
+        themeCyberpunk: "Cyberpunk / Neon-Grün",
+        themeFrost: "Nordisches Eis / Blau",
+        themeCrimson: "Roter Schatten / Dunkelrot",
+        themeMonochrome: "Modern Schiefer / Charcoal",
+        themeForest: "Smaragdwald / Gold",
+        themeSynthwave: "Retro-Synthwave / Neon-Pink",
+        themeDracula: "Vampir-Klassiker / Lila-Cyan",
         settingsHelp: "Deine Kollegen rufen Updates aus diesem Repository ab.",
         lblCurrentVersion: "Aktuelle Version:",
         btnCheckUpdate: "🔄 Jetzt prüfen",
@@ -1617,6 +1920,19 @@
         settingsSub: "Manage your ToolForge configuration and keep it up to date",
         lblGithubRepo: "GitHub Repository (Username/Project)",
         btnSave: "Save",
+        lblTheme: "Theme / Design",
+        lblResetSettings: "Danger Zone",
+        btnResetSettings: "🗑️ Reset Settings",
+        resetSuccess: "Settings reset successfully!",
+        resetConfirm: "Are you sure you want to reset all settings (language, theme, options) to defaults? The app will reload afterwards.",
+        themeSunset: "Sunset / Neon Purple (Default)",
+        themeCyberpunk: "Cyberpunk / Neon Green",
+        themeFrost: "Nordic Frost / Blue",
+        themeCrimson: "Crimson Shadow / Dark Red",
+        themeMonochrome: "Modern Slate / Charcoal",
+        themeForest: "Emerald Forest / Gold",
+        themeSynthwave: "Retro Synthwave / Neon Pink",
+        themeDracula: "Vampire Classic / Purple-Cyan",
         settingsHelp: "Your colleagues retrieve updates from this repository.",
         lblCurrentVersion: "Current Version:",
         btnCheckUpdate: "🔄 Check Now",
@@ -1791,6 +2107,26 @@
       
       // Language picker label
       document.getElementById('lblLanguage').textContent = lang === 'en' ? 'Language / Sprache' : 'Sprache / Language';
+      document.getElementById('lblTheme').textContent = dict.lblTheme;
+      
+      // Theme select dropdown options translations
+      const themeSelect = document.getElementById('themeSelect');
+      if (themeSelect && themeSelect.options.length >= 8) {
+        themeSelect.options[0].textContent = dict.themeSunset;
+        themeSelect.options[1].textContent = dict.themeCyberpunk;
+        themeSelect.options[2].textContent = dict.themeFrost;
+        themeSelect.options[3].textContent = dict.themeCrimson;
+        themeSelect.options[4].textContent = dict.themeMonochrome;
+        themeSelect.options[5].textContent = dict.themeForest;
+        themeSelect.options[6].textContent = dict.themeSynthwave;
+        themeSelect.options[7].textContent = dict.themeDracula;
+      }
+      
+      // Reset settings area
+      const lblResetSettings = document.getElementById('lblResetSettings');
+      if (lblResetSettings) lblResetSettings.textContent = dict.lblResetSettings;
+      const btnResetSettings = document.getElementById('btnResetSettings');
+      if (btnResetSettings) btnResetSettings.textContent = dict.btnResetSettings;
       
       // Footer
       document.querySelector('footer').innerHTML = dict.footerText + '<span id="toolCount"></span>' + dict.footerToolsSuffix;
@@ -1873,8 +2209,69 @@
       }
     }
 
+    function showCustomConfirm(title, message) {
+      return new Promise((resolve) => {
+        const modal = document.getElementById('customConfirmModal');
+        const titleEl = document.getElementById('customConfirmTitle');
+        const msgEl = document.getElementById('customConfirmMessage');
+        const cancelBtn = document.getElementById('customConfirmCancelBtn');
+        const okBtn = document.getElementById('customConfirmOkBtn');
+        
+        titleEl.textContent = title || (currentLang === 'en' ? 'Confirmation' : 'Bestätigung');
+        msgEl.textContent = message;
+        cancelBtn.textContent = currentLang === 'en' ? 'Cancel' : 'Abbrechen';
+        okBtn.textContent = 'OK';
+        
+        modal.classList.add('active');
+        
+        function handleCancel() {
+          cleanup();
+          resolve(false);
+        }
+        
+        function handleOk() {
+          cleanup();
+          resolve(true);
+        }
+        
+        function cleanup() {
+          modal.classList.remove('active');
+          cancelBtn.removeEventListener('click', handleCancel);
+          okBtn.removeEventListener('click', handleOk);
+        }
+        
+        // Add single-use event listeners
+        cancelBtn.addEventListener('click', handleCancel);
+        okBtn.addEventListener('click', handleOk);
+      });
+    }
+
+    function resetSettings() {
+      const dict = langDict[currentLang] || langDict['de'];
+      const title = currentLang === 'en' ? 'Reset Settings' : 'Einstellungen zurücksetzen';
+      showCustomConfirm(title, dict.resetConfirm).then(confirmed => {
+        if (confirmed) {
+          if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.reset_all_settings) {
+            pywebview.api.reset_all_settings().then(res => {
+              if (res && res.success) {
+                localStorage.clear();
+                window.location.reload();
+              } else {
+                alert('Error: ' + (res ? res.error : 'unknown'));
+              }
+            });
+          } else {
+            localStorage.clear();
+            window.location.reload();
+          }
+        }
+      });
+    }
+
     // Initialize version info on page load
     window.addEventListener('DOMContentLoaded', () => {
+      // Immediate load from localStorage for instant display
+      loadSavedTheme();
       updateToolCountText();
       const hash = window.location.hash.replace('#', '');
       if (hash === 'tools' || hash === 'dashboard' || hash === 'settings') {
@@ -1882,12 +2279,24 @@
       } else {
         switchTab('dashboard');
       }
+      loadSavedOptions();
       
       setTimeout(() => {
         if (typeof pywebview !== 'undefined' && pywebview.api) {
+          // 1. Get and update version info
           pywebview.api.get_app_version().then(version => {
             document.getElementById('versionBadge').textContent = 'v' + version;
+            const curVerEl = document.getElementById('currentVersionText');
+            if (curVerEl) curVerEl.textContent = 'v' + version;
           });
+          
+          // 2. Get and update GitHub Repository input
+          pywebview.api.get_github_repo().then(repo => {
+            const input = document.getElementById('githubRepoInput');
+            if (input && repo) input.value = repo;
+          });
+          
+          // 3. Load language from python API
           pywebview.api.get_language().then(lang => {
             currentLang = lang || 'de';
             const select = document.getElementById('languageSelect');
@@ -1895,6 +2304,23 @@
             applyLanguage(currentLang);
             fetchLocalWeather();
           });
+          
+          // 4. Load theme from python API (overrides localStorage)
+          if (pywebview.api.get_theme) {
+            pywebview.api.get_theme().then(themeName => {
+              if (themeName) changeTheme(themeName);
+            });
+          }
+          
+          // 5. Load dashboard options from python API (overrides localStorage)
+          if (pywebview.api.get_dashboard_options) {
+            pywebview.api.get_dashboard_options().then(opts => {
+              if (opts) {
+                applyDashboardOptions(opts);
+                localStorage.setItem('dashboard_options', JSON.stringify(opts));
+              }
+            });
+          }
         }
       }, 500);
     });

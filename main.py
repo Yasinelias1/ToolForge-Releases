@@ -99,8 +99,9 @@ class ToolForgeAPI:
     def _background_hw_polling(self):
         import shutil
         import time
+        counter = 0
         while True:
-            # 1. Query GPU stats
+            # 1. Query GPU stats (runs every 0.5 seconds, fast)
             gpu_pct = 0.0
             gpu_temp = None
             gpu_detected = False
@@ -109,7 +110,7 @@ class ToolForgeAPI:
                     cmd = ["nvidia-smi", "--query-gpu=utilization.gpu,temperature.gpu", "--format=csv,noheader,nounits"]
                     startupinfo = subprocess.STARTUPINFO()
                     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-                    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=1.5)
+                    res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=1.0)
                     if res.returncode == 0 and res.stdout.strip():
                         parts = res.stdout.strip().split(",")
                         if len(parts) >= 2:
@@ -119,8 +120,12 @@ class ToolForgeAPI:
             except:
                 pass
                 
-            # 2. Query CPU stats
-            cpu_temp = self._query_cpu_temp()
+            # 2. Query CPU stats (runs every 2.0 seconds, slow due to PowerShell overhead)
+            # 0.5s * 4 = 2.0s
+            if counter % 4 == 0 or self._cached_cpu_temp is None:
+                cpu_temp = self._query_cpu_temp()
+            else:
+                cpu_temp = self._cached_cpu_temp
             
             # 3. Update cache
             self._cached_gpu_pct = gpu_pct
@@ -128,8 +133,10 @@ class ToolForgeAPI:
             self._cached_gpu_detected = gpu_detected
             self._cached_cpu_temp = cpu_temp
             
-            # Sleep 2 seconds between updates (reduces CPU overhead to virtually zero)
-            time.sleep(2.0)
+            counter = (counter + 1) % 1000
+            
+            # Sleep 0.5 seconds
+            time.sleep(0.5)
 
     def _detect_gpu_name_once(self):
         try:
@@ -436,6 +443,76 @@ class ToolForgeAPI:
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def get_theme(self):
+        try:
+            config = self._load_config()
+            return config.get("theme", "sunset")
+        except:
+            return "sunset"
+
+    def save_theme(self, theme):
+        try:
+            config = self._load_config()
+            config["theme"] = theme.strip().lower()
+            self._save_config(config)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_dashboard_options(self):
+        try:
+            config = self._load_config()
+            return config.get("dashboard_options", {
+                "optCpu": True,
+                "optRam": True,
+                "optGpu": True,
+                "optChart": True,
+                "optWeather": True
+            })
+        except:
+            return {
+                "optCpu": True,
+                "optRam": True,
+                "optGpu": True,
+                "optChart": True,
+                "optWeather": True
+            }
+
+    def save_dashboard_options(self, options):
+        try:
+            config = self._load_config()
+            if isinstance(options, str):
+                import json
+                opts = json.loads(options)
+            else:
+                opts = options
+            config["dashboard_options"] = opts
+            self._save_config(config)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def reset_all_settings(self):
+        try:
+            config = {
+                "github_repo": "Yasinelias1/ToolForge-Releases",
+                "current_version": self.APP_VERSION,
+                "language": "de",
+                "theme": "sunset",
+                "dashboard_options": {
+                    "optCpu": True,
+                    "optRam": True,
+                    "optGpu": True,
+                    "optChart": True,
+                    "optWeather": True
+                }
+            }
+            self._save_config(config)
+            return {"success": True, "defaults": config}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
 
 
     def check_for_updates(self):
@@ -1943,6 +2020,13 @@ if __name__ == '__main__':
         api._set_window(window)
     window.events.loaded += on_loaded
     
+    # Save settings on close handler
+    def on_closing():
+        print("ToolForge window is closing. Ensuring settings are saved...")
+        
+    window.events.closing += on_closing
+    
     # Start app
     webview.start(debug=False, private_mode=True)
+
 
