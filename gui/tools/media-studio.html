@@ -621,6 +621,7 @@
       <button class="tab-btn" data-tab="video-editor" onclick="switchTab('video-editor')">✂️ Video-Editor</button>
       <button class="tab-btn" data-tab="image-editor" onclick="switchTab('image-editor')">🎨 Bild-Editor</button>
       <button class="tab-btn" data-tab="gif-creator" onclick="switchTab('gif-creator')">🎬 GIF Creator</button>
+      <button class="tab-btn" data-tab="face-swap" onclick="switchTab('face-swap')">👤 Face Swap</button>
     </div>
 
     <!-- ─────────────────────────────────────────────────────────────────
@@ -1116,6 +1117,122 @@
           <img id="gifResultImg" src="" alt="GIF Result" style="max-width:100%; border-radius:12px; border:1px solid var(--border); box-shadow:0 0 30px rgba(124,58,237,0.2);" />
           <div id="gifResultSize" style="margin-top:10px; font-size:14px; font-weight:700; color:#10b981;">Tatsächliche Größe: 0.0 MB</div>
           <button class="action-btn secondary" onclick="window.gifCreator.resetAll()" style="margin-top:12px; max-width:200px; margin-left:auto; margin-right:auto;">↩ Neues Video laden</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─────────────────────────────────────────────────────────────────
+         TAB 5: FACE SWAP (GESICHTSTAUSCH)
+         ───────────────────────────────────────────────────────────────── -->
+    <div id="tab-face-swap" class="tab-content">
+      <div class="grid-layout">
+        <!-- Left: Workspace -->
+        <div class="card">
+          <!-- Dropzone -->
+          <div class="file-selector-card" id="fsTargetDrop" onclick="window.faceSwap.openTarget()">
+            <span class="upload-icon">🎬</span>
+            <div class="upload-title">Zielbild oder -video auswählen</div>
+            <div class="upload-desc">Klicke, um das Bild oder Video auszuwählen, auf dem Gesichter getauscht werden sollen.</div>
+          </div>
+          <!-- Workspace -->
+          <div id="fsWorkspace" style="display:none; flex-direction:column; gap:16px;">
+            <div class="group-title" style="margin-bottom: 6px;">Vorschau &amp; Bereichsauswahl</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom: 4px;">
+              Auto-Detect tauscht automatisch alle erkannten Gesichter. Um nur ein bestimmtes Gesicht zu tauschen, deaktiviere Auto-Detect und ziehe eine Box über das zu tauschende Gesicht.
+            </div>
+            <div style="position:relative; border:1px solid var(--border); border-radius:var(--radius-sm); overflow:hidden; background:repeating-conic-gradient(#111 0% 25%, #18181e 0% 50%) 50% / 20px 20px; display:flex; align-items:center; justify-content:center; width:100%; min-height:300px;">
+              <canvas id="fsCanvas" style="max-width:100%; max-height:60vh; display:block; cursor:crosshair;"></canvas>
+              <video id="fsPlayer" controls style="display:none; max-width:100%; max-height:60vh; border-radius:10px;"></video>
+            </div>
+            <div class="file-info-box" id="fsCoords" style="display:none;">
+              <div>Markierter Gesichtsbereich: <strong id="fsBoxCount">0</strong></div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">
+                Box: X: <strong id="fsValX">0</strong>, Y: <strong id="fsValY">0</strong>, Breite: <strong id="fsValW">0</strong>px, Höhe: <strong id="fsValH">0</strong>px
+              </div>
+              <button class="tool-btn-style" id="fsResetBtn" style="margin-top: 8px; padding: 4px 8px; font-size: 11px; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #f87171; width: 100%;" onclick="window.faceSwap.clearBoxes()">❌ Markierung zurücksetzen</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Settings -->
+        <div class="sidebar-controls">
+          <div class="card">
+            <div class="group-title">Aktive Zieldatei</div>
+            <div class="file-info-box" id="fsFileInfo">Keine Zieldatei geladen</div>
+          </div>
+          
+          <div class="card">
+            <div class="group-title">Quellgesicht (Source Face)</div>
+            <div class="file-selector-card" id="fsSourceDrop" onclick="window.faceSwap.openSourceFace()" style="padding: 1rem 0.5rem; min-height: 80px; border-style: dashed;">
+              <span id="fsSourceIcon" style="font-size: 1.5rem; margin-bottom: 4px;">👤</span>
+              <div class="upload-title" id="fsSourceTitle" style="font-size: 0.9rem;">Gesicht auswählen</div>
+              <div class="upload-desc" id="fsSourceDesc" style="font-size: 0.75rem;">Foto des neuen Gesichts hochladen</div>
+              <img id="fsSourcePreview" style="display:none; max-width:120px; max-height:120px; border-radius:8px; border:1px solid var(--border); margin-top:8px;" />
+            </div>
+          </div>
+
+          <div class="card" id="fsSettings" style="opacity: 0.4; pointer-events: none;">
+            <div class="group-title">Einstellungen</div>
+            <div class="control-item">
+              <span class="control-label">Tausch-Methode</span>
+              <div class="btn-group">
+                <button class="tool-btn-style active" id="fsMethodClassic" onclick="window.faceSwap.setMethod(false)">✂️ Klassisches Warping (Schnell)</button>
+                <button class="tool-btn-style" id="fsMethodPremium" onclick="window.faceSwap.setMethod(true)">🧠 Premium KI (Bessere Qualität)</button>
+              </div>
+              <div id="fsPremiumStatusNote" style="font-size: 11px; color: var(--text-muted); margin-top: 6px; display: none;">
+                Note: Premium KI benötigt den Modell-Download in den Einstellungen (~662 MB). Wenn nicht installiert, wird automatisch auf Klassisch zurückgegriffen.
+              </div>
+            </div>
+
+            <div class="control-item" style="margin-top: 18px; border-top:1px solid var(--border); padding-top:16px; display:flex; flex-direction:column; gap:12px;">
+              <label class="control-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin-bottom:0;">
+                <input type="checkbox" id="fsAutoFaceCheck" checked style="accent-color:var(--accent); width:18px; height:18px;" /> Gesichter automatisch erkennen (Auto-Detect)
+              </label>
+              <label class="control-label" style="display:flex; align-items:center; gap:8px; cursor:pointer; user-select:none; margin-bottom:0; opacity: 0.5;" id="fsTrackingCheckContainer">
+                <input type="checkbox" id="fsTrackingCheck" disabled style="accent-color:var(--accent); width:18px; height:18px;" /> Bewegung verfolgen (Tracking bei Boxen)
+              </label>
+            </div>
+
+            <div class="control-item" id="fsTimeRangeContainer" style="margin-top: 18px; border-top:1px solid var(--border); padding-top:16px; display:none;">
+              <span class="control-label">Zeitbereich</span>
+              <select id="fsTimeRangeSelect" onchange="window.faceSwap.toggleTimeRange()" style="width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); margin-bottom:10px;">
+                <option value="all">Ganzes Video</option>
+                <option value="custom">Benutzerdefinierter Bereich</option>
+              </select>
+              <div id="fsTimeRangeInputs" style="display:none; gap:12px; align-items:center;">
+                <div style="flex:1;">
+                  <span style="font-size:11px; color:var(--text-muted);">Start (Sekunden)</span>
+                  <input type="number" id="fsTimeStart" value="0" min="0" step="0.1" style="width:100%; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+                </div>
+                <div style="flex:1;">
+                  <span style="font-size:11px; color:var(--text-muted);">Ende (Sekunden)</span>
+                  <input type="number" id="fsTimeEnd" value="10" min="0" step="0.1" style="width:100%; padding:8px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card" id="fsActions" style="opacity: 0.4; pointer-events: none;">
+            <div class="group-title">Aktionen</div>
+            <div class="control-item" style="margin-bottom: 10px;">
+              <span class="control-label" style="font-size:12px;">Dateiname (ohne Endung)</span>
+              <input type="text" id="fsFilename" placeholder="z.B. face-swap-ergebnis" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
+            </div>
+            <div class="btn-group">
+              <button class="action-btn primary" id="fsRunBtn" onclick="window.faceSwap.runProcessing()" disabled>⚙️ Gesicht tauschen</button>
+              <button class="action-btn secondary" id="fsEditBtn" style="display:none;" onclick="window.faceSwap.backToEdit()">🔄 Tausch ändern / Neu verarbeiten</button>
+              <button class="action-btn secondary" onclick="window.faceSwap.resetAll()">❌ Andere Zieldatei laden</button>
+            </div>
+            <div class="progress-card" id="fsProgress">
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="fsFill"></div>
+              </div>
+              <div class="progress-text-row">
+                <span id="fsStatus">Verarbeite Frames...</span>
+                <span class="progress-val" id="fsPct">0%</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -3053,6 +3170,522 @@
       }
 
       window.gifCreator = { openVideo, startConvert, resetAll };
+    })();
+
+    // ==========================================
+    // TAB 5: FACE SWAP SCOPE
+    // ==========================================
+    (function() {
+      const dropzone = document.getElementById('fsTargetDrop');
+      const workspace = document.getElementById('fsWorkspace');
+      const canvas = document.getElementById('fsCanvas');
+      const ctx = canvas.getContext('2d');
+      const player = document.getElementById('fsPlayer');
+      const coordsInfo = document.getElementById('fsCoords');
+      const fileInfo = document.getElementById('fsFileInfo');
+      const valX = document.getElementById('fsValX');
+      const valY = document.getElementById('fsValY');
+      const valW = document.getElementById('fsValW');
+      const valH = document.getElementById('fsValH');
+      const settings = document.getElementById('fsSettings');
+      const actions = document.getElementById('fsActions');
+      const runBtn = document.getElementById('fsRunBtn');
+      const progressCard = document.getElementById('fsProgress');
+      const fill = document.getElementById('fsFill');
+      const pctVal = document.getElementById('fsPct');
+      const statusText = document.getElementById('fsStatus');
+      const trackingCheckbox = document.getElementById('fsTrackingCheck');
+      const autoFaceCheckbox = document.getElementById('fsAutoFaceCheck');
+      const timeRangeSelect = document.getElementById('fsTimeRangeSelect');
+      const timeRangeInputs = document.getElementById('fsTimeRangeInputs');
+      const timeStartInput = document.getElementById('fsTimeStart');
+      const timeEndInput = document.getElementById('fsTimeEnd');
+
+      let targetPath = null;
+      let isTargetImage = false;
+      let targetWidth = 0;
+      let targetHeight = 0;
+      let targetDuration = 0;
+      let sourceFaceBase64 = null;
+      
+      let frameImg = new Image();
+      let isDrawing = false;
+      let startX = 0, startY = 0, endX = 0, endY = 0;
+      let selectedBoxes = [];
+      let usePremium = false;
+
+      function openTarget() {
+        if (typeof pywebview === 'undefined') {
+          showToast('System nicht bereit. Läuft die Desktop-App?');
+          return;
+        }
+        const fileTypes = JSON.stringify([
+          ["Medien-Dateien", "*.mp4;*.avi;*.mov;*.mkv;*.webm;*.png;*.jpg;*.jpeg;*.webp;*.bmp"],
+          ["Videodateien", "*.mp4;*.avi;*.mov;*.mkv;*.webm"],
+          ["Bilddateien", "*.png;*.jpg;*.jpeg;*.webp;*.bmp"],
+          ["Alle Dateien", "*.*"]
+        ]);
+        pywebview.api.select_file(fileTypes).then(path => {
+          if (path) {
+            let actualPath = Array.isArray(path) ? path[0] : path;
+            loadTarget(actualPath);
+          }
+        });
+      }
+
+      function loadTarget(path) {
+        targetPath = path;
+        const filename = path.split('\\').pop().split('/').pop();
+        const ext = path.split('.').pop().toLowerCase();
+        isTargetImage = ['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(ext);
+        
+        fileInfo.innerHTML = `<strong>Pfad:</strong> ${filename}<br><div class="progress-card" style="display:flex; margin-top:8px;"><span>Lade Frame-Vorschau...</span></div>`;
+        
+        dropzone.style.display = 'none';
+        workspace.style.display = 'flex';
+        settings.style.opacity = '1';
+        settings.style.pointerEvents = 'auto';
+        actions.style.opacity = '1';
+        actions.style.pointerEvents = 'auto';
+        
+        selectedBoxes = [];
+        coordsInfo.style.display = 'none';
+        document.getElementById('fsBoxCount').textContent = '0';
+        
+        const timeRangeContainer = document.getElementById('fsTimeRangeContainer');
+        if (isTargetImage) {
+          timeRangeContainer.style.display = 'none';
+          document.getElementById('fsTrackingCheckContainer').style.opacity = '0.5';
+          trackingCheckbox.disabled = true;
+          trackingCheckbox.checked = false;
+        } else {
+          timeRangeContainer.style.display = 'block';
+          if (!autoFaceCheckbox.checked) {
+            document.getElementById('fsTrackingCheckContainer').style.opacity = '1';
+            trackingCheckbox.disabled = false;
+          } else {
+            document.getElementById('fsTrackingCheckContainer').style.opacity = '0.5';
+            trackingCheckbox.disabled = true;
+            trackingCheckbox.checked = false;
+          }
+        }
+        
+        const dotIdx = filename.lastIndexOf('.');
+        const baseName = dotIdx !== -1 ? filename.substring(0, dotIdx) : filename;
+        document.getElementById('fsFilename').value = baseName + '_swapped';
+        
+        if (isTargetImage) {
+          pywebview.api.get_image_base64(path).then(res => {
+            if (res && res.success) {
+              frameImg.onload = () => {
+                targetWidth = frameImg.naturalWidth;
+                targetHeight = frameImg.naturalHeight;
+                fileInfo.innerHTML = `<strong>Pfad:</strong> ${filename}<br><strong>Auflösung:</strong> ${targetWidth} x ${targetHeight} px<br><strong>Typ:</strong> Bild`;
+                
+                canvas.width = frameImg.naturalWidth;
+                canvas.height = frameImg.naturalHeight;
+                drawFrame();
+                checkReadyToRun();
+              };
+              frameImg.src = res.base64;
+            } else {
+              fileInfo.innerHTML = `<span style="color:red">Fehler: ${res.error || 'Laden fehlgeschlagen.'}</span>`;
+            }
+          });
+        } else {
+          pywebview.api.get_video_frame(path).then(res => {
+            if (res && res.success) {
+              targetWidth = res.original_width;
+              targetHeight = res.original_height;
+              targetDuration = res.duration || 0;
+              
+              fileInfo.innerHTML = `<strong>Pfad:</strong> ${filename}<br><strong>Auflösung:</strong> ${targetWidth} x ${targetHeight} px<br><strong>Dauer:</strong> ${targetDuration.toFixed(1)}s`;
+              
+              timeStartInput.value = "0";
+              timeStartInput.max = targetDuration.toString();
+              timeEndInput.value = targetDuration.toFixed(1);
+              timeEndInput.max = targetDuration.toString();
+              
+              frameImg.onload = () => {
+                canvas.width = frameImg.naturalWidth;
+                canvas.height = frameImg.naturalHeight;
+                drawFrame();
+                checkReadyToRun();
+              };
+              frameImg.src = res.frame;
+            } else {
+              fileInfo.innerHTML = `<span style="color:red">Fehler: ${res.error || 'Vorschau-Generierung fehlgeschlagen.'}</span>`;
+            }
+          });
+        }
+
+        // Auto-check premium models and switch to Premium KI if available
+        if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.check_faceswap_models) {
+          pywebview.api.check_faceswap_models().then(res => {
+            if (res && res.success && res.downloaded) {
+              setMethod(true);
+            } else {
+              setMethod(false);
+            }
+          });
+        }
+      }
+
+      function openSourceFace() {
+        if (typeof pywebview === 'undefined') {
+          showToast('System nicht bereit. Läuft die Desktop-App?');
+          return;
+        }
+        const fileTypes = JSON.stringify([
+          ["Bilddateien", "*.png;*.jpg;*.jpeg;*.webp;*.bmp"],
+          ["Alle Dateien", "*.*"]
+        ]);
+        pywebview.api.select_file(fileTypes).then(path => {
+          if (path) {
+            let actualPath = Array.isArray(path) ? path[0] : path;
+            pywebview.api.get_image_base64(actualPath).then(res => {
+              if (res && res.success) {
+                sourceFaceBase64 = res.base64;
+                
+                const preview = document.getElementById('fsSourcePreview');
+                const icon = document.getElementById('fsSourceIcon');
+                const title = document.getElementById('fsSourceTitle');
+                const desc = document.getElementById('fsSourceDesc');
+                
+                preview.src = res.base64;
+                preview.style.display = 'block';
+                icon.style.display = 'none';
+                title.textContent = 'Gesicht geladen';
+                desc.textContent = actualPath.split('\\').pop().split('/').pop();
+                
+                checkReadyToRun();
+              } else {
+                showToast('Fehler beim Laden des Quellgesichts: ' + (res ? res.error : ''), 'error');
+              }
+            });
+          }
+        });
+      }
+
+      function drawFrame() {
+        if (!frameImg.src) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(frameImg, 0, 0);
+        
+        ctx.strokeStyle = '#ec4899';
+        ctx.lineWidth = 2;
+        selectedBoxes.forEach(box => {
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.15)';
+          ctx.fillRect(box.x, box.y, box.w, box.h);
+          ctx.strokeRect(box.x, box.y, box.w, box.h);
+        });
+
+        if (isDrawing) {
+          ctx.strokeStyle = '#ec4899';
+          ctx.lineWidth = 2;
+          ctx.setLineDash([6, 4]);
+          
+          const x = Math.min(startX, endX);
+          const y = Math.min(startY, endY);
+          const w = Math.abs(startX - endX);
+          const h = Math.abs(startY - endY);
+          
+          ctx.fillStyle = 'rgba(236, 72, 153, 0.15)';
+          ctx.fillRect(x, y, w, h);
+          ctx.strokeRect(x, y, w, h);
+          ctx.setLineDash([]);
+        }
+      }
+
+      canvas.addEventListener('mousedown', e => {
+        if (!targetPath) return;
+        if (autoFaceCheckbox.checked) return;
+        
+        const coords = getCanvasCoords(e);
+        startX = coords.x; startY = coords.y;
+        endX = coords.x; endY = coords.y;
+        isDrawing = true;
+        drawFrame();
+      });
+
+      canvas.addEventListener('mousemove', e => {
+        if (!isDrawing) return;
+        const coords = getCanvasCoords(e);
+        endX = coords.x; endY = coords.y;
+        drawFrame();
+        updateBoxInfo(true);
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!isDrawing) return;
+        isDrawing = false;
+        const w = Math.abs(startX - endX);
+        const h = Math.abs(startY - endY);
+        
+        if (w > 5 && h > 5) {
+          const x = Math.min(startX, endX);
+          const y = Math.min(startY, endY);
+          selectedBoxes = [{ x, y, w, h }];
+        }
+        drawFrame();
+        updateBoxInfo(false);
+        checkReadyToRun();
+      });
+
+      function getCanvasCoords(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.floor((e.clientX - rect.left) * (canvas.width / rect.width));
+        const y = Math.floor((e.clientY - rect.top) * (canvas.height / rect.height));
+        return { x, y };
+      }
+
+      function updateBoxInfo(isDraggingActive = false) {
+        if (selectedBoxes.length === 0 && !isDraggingActive) {
+          coordsInfo.style.display = 'none';
+          document.getElementById('fsBoxCount').textContent = '0';
+          return;
+        }
+        coordsInfo.style.display = 'block';
+        document.getElementById('fsBoxCount').textContent = selectedBoxes.length.toString();
+        
+        let displayX = 0, displayY = 0, displayW = 0, displayH = 0;
+        if (isDraggingActive) {
+          displayX = Math.min(startX, endX);
+          displayY = Math.min(startY, endY);
+          displayW = Math.abs(startX - endX);
+          displayH = Math.abs(startY - endY);
+        } else if (selectedBoxes.length > 0) {
+          const box = selectedBoxes[0];
+          displayX = box.x;
+          displayY = box.y;
+          displayW = box.w;
+          displayH = box.h;
+        }
+        
+        valX.textContent = displayX;
+        valY.textContent = displayY;
+        valW.textContent = displayW;
+        valH.textContent = displayH;
+      }
+
+      function clearBoxes() {
+        selectedBoxes = [];
+        drawFrame();
+        updateBoxInfo(false);
+        checkReadyToRun();
+      }
+
+      autoFaceCheckbox.addEventListener('change', (e) => {
+        const auto = e.target.checked;
+        const trackingCheck = document.getElementById('fsTrackingCheck');
+        const trackingContainer = document.getElementById('fsTrackingCheckContainer');
+        
+        if (auto) {
+          selectedBoxes = [];
+          drawFrame();
+          updateBoxInfo(false);
+          
+          trackingContainer.style.opacity = '0.5';
+          trackingCheck.disabled = true;
+          trackingCheck.checked = false;
+        } else {
+          if (!isTargetImage && targetPath) {
+            trackingContainer.style.opacity = '1';
+            trackingCheck.disabled = false;
+          }
+        }
+        checkReadyToRun();
+      });
+
+      function setMethod(premium) {
+        usePremium = !!premium;
+        const btnClassic = document.getElementById('fsMethodClassic');
+        const btnPremium = document.getElementById('fsMethodPremium');
+        const note = document.getElementById('fsPremiumStatusNote');
+        
+        if (usePremium) {
+          btnClassic.classList.remove('active');
+          btnPremium.classList.add('active');
+          note.style.display = 'block';
+          
+          if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.check_faceswap_models) {
+            pywebview.api.check_faceswap_models().then(res => {
+              if (res && res.success && res.downloaded) {
+                note.innerHTML = `Premium KI ist bereit und wird verwendet. (Größe: ${(res.size / (1024 * 1024)).toFixed(1)} MB)`;
+                note.style.color = '#10b981';
+              } else {
+                note.innerHTML = `⚠️ Premium-Modelle nicht installiert. Lade sie in den Einstellungen herunter (~662 MB). Fallback auf Klassisch aktiv!`;
+                note.style.color = '#f87171';
+              }
+            });
+          }
+        } else {
+          btnClassic.classList.add('active');
+          btnPremium.classList.remove('active');
+          note.style.display = 'none';
+        }
+      }
+
+      function toggleTimeRange() {
+        if (timeRangeSelect.value === 'custom') {
+          timeRangeInputs.style.display = 'flex';
+        } else {
+          timeRangeInputs.style.display = 'none';
+        }
+      }
+
+      function checkReadyToRun() {
+        const autoFace = autoFaceCheckbox.checked;
+        const hasSource = !!sourceFaceBase64;
+        const hasTarget = !!targetPath;
+        const hasBox = selectedBoxes.length > 0;
+        
+        if (hasSource && hasTarget && (autoFace || hasBox)) {
+          runBtn.disabled = false;
+        } else {
+          runBtn.disabled = true;
+        }
+      }
+
+      function runProcessing() {
+        if (!targetPath || !sourceFaceBase64) return;
+        
+        runBtn.disabled = true;
+        progressCard.style.display = 'block';
+        fill.style.width = '0%';
+        pctVal.textContent = '0%';
+        statusText.textContent = isTargetImage ? 'Verarbeite Bild...' : 'Verarbeite Video-Frames...';
+        
+        const autoFace = autoFaceCheckbox.checked;
+        const tracking = trackingCheckbox.checked;
+        
+        let startT = -1.0;
+        let endT = -1.0;
+        if (!isTargetImage && timeRangeSelect.value === 'custom') {
+          startT = parseFloat(timeStartInput.value) || 0.0;
+          endT = parseFloat(timeEndInput.value) || 0.0;
+        }
+        
+        const rectJson = JSON.stringify(selectedBoxes);
+        
+        pywebview.api.process_face_swap(
+          targetPath,
+          sourceFaceBase64,
+          usePremium,
+          rectJson,
+          tracking,
+          autoFace,
+          startT,
+          endT
+        ).then(res => {
+          progressCard.style.display = 'none';
+          runBtn.disabled = false;
+          
+          if (res && res.success) {
+            showToast('Face Swap erfolgreich abgeschlossen! 🎉');
+            
+            if (res.is_image) {
+              const resultImg = new Image();
+              resultImg.onload = () => {
+                canvas.width = resultImg.naturalWidth;
+                canvas.height = resultImg.naturalHeight;
+                ctx.drawImage(resultImg, 0, 0);
+                
+                settings.style.opacity = '0.4';
+                settings.style.pointerEvents = 'none';
+                document.getElementById('fsEditBtn').style.display = 'flex';
+                runBtn.style.display = 'none';
+              };
+              const tempName = res.temp_path.split('\\').pop().split('/').pop();
+              resultImg.src = tempName;
+            } else {
+              const tempName = res.temp_path.split('\\').pop().split('/').pop();
+              
+              canvas.style.display = 'none';
+              player.style.display = 'block';
+              player.src = tempName;
+              player.load();
+              player.play();
+              
+              settings.style.opacity = '0.4';
+              settings.style.pointerEvents = 'none';
+              document.getElementById('fsEditBtn').style.display = 'flex';
+              runBtn.style.display = 'none';
+            }
+          } else {
+            showToast('Fehler bei Face Swap: ' + (res ? res.error : 'Unbekannter Fehler'), 'error');
+          }
+        });
+      }
+
+      function backToEdit() {
+        player.style.display = 'none';
+        player.src = '';
+        
+        canvas.style.display = 'block';
+        drawFrame();
+        
+        settings.style.opacity = '1';
+        settings.style.pointerEvents = 'auto';
+        document.getElementById('fsEditBtn').style.display = 'none';
+        runBtn.style.display = 'flex';
+        checkReadyToRun();
+      }
+
+      function resetAll() {
+        targetPath = null;
+        sourceFaceBase64 = null;
+        selectedBoxes = [];
+        
+        player.style.display = 'none';
+        player.src = '';
+        
+        canvas.style.display = 'block';
+        
+        const preview = document.getElementById('fsSourcePreview');
+        const icon = document.getElementById('fsSourceIcon');
+        const title = document.getElementById('fsSourceTitle');
+        const desc = document.getElementById('fsSourceDesc');
+        preview.src = '';
+        preview.style.display = 'none';
+        icon.style.display = 'block';
+        title.textContent = 'Gesicht auswählen';
+        desc.textContent = 'Foto des neuen Gesichts hochladen';
+        
+        dropzone.style.display = 'flex';
+        workspace.style.display = 'none';
+        settings.style.opacity = '0.4';
+        settings.style.pointerEvents = 'none';
+        actions.style.opacity = '0.4';
+        actions.style.pointerEvents = 'none';
+        
+        document.getElementById('fsEditBtn').style.display = 'none';
+        runBtn.style.display = 'flex';
+        runBtn.disabled = true;
+        document.getElementById('fsFilename').value = '';
+        fileInfo.innerHTML = `Keine Zieldatei geladen`;
+      }
+
+      window.updateFaceSwapProgress = function(pct) {
+        fill.style.width = pct + '%';
+        pctVal.textContent = pct + '%';
+        if (pct >= 95) {
+          statusText.textContent = 'Muxe Audio und finalisiere Video...';
+        } else {
+          statusText.textContent = 'Verarbeite Frames...';
+        }
+      };
+
+      window.faceSwap = {
+        openTarget,
+        openSourceFace,
+        clearBoxes,
+        setMethod,
+        toggleTimeRange,
+        runProcessing,
+        backToEdit,
+        resetAll
+      };
     })();
   </script>
 </body>

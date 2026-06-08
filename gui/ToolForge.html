@@ -1086,6 +1086,41 @@
         </div>
       </div>
 
+      <!-- Face-Swap Modell-Verwaltung (Premium Face-Swap Model Management) -->
+      <div class="db-card" id="faceSwapModelCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
+        <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;" id="lblFaceSwapModelTitle">
+          👤 Premium Face-Swap Modell-Verwaltung
+        </h3>
+        
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.9rem; color: var(--text);" id="lblFaceSwapModelStatus">Status: <strong style="color: #f87171;" id="faceSwapModelStatusText">Nicht installiert</strong></span>
+            <span style="font-size: 0.85rem; color: var(--muted);" id="faceSwapModelSizeText">Größe: ~804 MB</span>
+          </div>
+
+          <!-- Download Progress Container -->
+          <div id="faceSwapModelDownloadProgressContainer" style="display: none; flex-direction: column; gap: 6px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text);">
+              <span id="lblFaceSwapModelDownloading">Herunterladen & Entpacken...</span>
+              <span id="faceSwapModelDownloadPercentText" style="font-weight: 600;">0%</span>
+            </div>
+            <div style="width: 100%; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; border: 1px solid var(--border);">
+              <div id="faceSwapModelDownloadProgressBar" style="width: 0%; height: 100%; background: var(--gradient); transition: width 0.1s;"></div>
+            </div>
+            <span id="faceSwapModelDownloadBytesText" style="font-size: 0.75rem; color: var(--muted); text-align: right;">0 MB / 804 MB</span>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; width: 100%;">
+            <button id="btnFaceSwapModelDownload" onclick="downloadFaceSwapModels()" style="flex: 1; background: var(--gradient); border: none; color: white; padding: 0.75rem 1rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: transform 0.2s, opacity 0.2s; font-family: inherit; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+              📥 Premium-Modelle herunterladen
+            </button>
+            <button id="btnFaceSwapModelDelete" onclick="deleteFaceSwapModels()" style="background: rgba(220, 38, 38, 0.1); border: 1px solid rgba(220, 38, 38, 0.3); color: #f87171; padding: 0.75rem 1.2rem; border-radius: 10px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; font-family: inherit; display: none; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.background='rgba(220, 38, 38, 0.2)'; this.style.borderColor='rgba(220, 38, 38, 0.5)'" onmouseout="this.style.background='rgba(220, 38, 38, 0.1)'; this.style.borderColor='rgba(220, 38, 38, 0.3)'">
+              🗑️ Modelle löschen
+            </button>
+          </div>
+        </div>
+      </div>
+
       <!-- Collapsible Versionsverlauf (Changelog) -->
       <div class="db-card" id="changelogCard" style="align-items: stretch; gap: 1.2rem; text-align: left; margin-top: 1.5rem;">
         <h3 style="font-size: 1.1rem; font-weight: 800; color: var(--text); border-bottom: 1px solid var(--border); padding-bottom: 0.6rem; display: flex; align-items: center; gap: 8px; margin-bottom: 0.4rem;">
@@ -1093,8 +1128,42 @@
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-          <!-- v1.1.6 details -->
+          <!-- v1.1.9 details -->
           <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'" open>
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.1.9
+                <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>👤 <strong style="color: var(--text);">Dedicated Face Swap</strong>: Standalone-Tab für Gesichtstausch mit Klassisch- und Premium-Modus.</li>
+                <li>⚙️ <strong style="color: var(--text);">Modell-Manager</strong>: Optionaler Download (804MB) und Ein-Klick-Löschung direkt in den Einstellungen.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.1.8 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                📦 Version 1.1.8
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🎞️ <strong style="color: var(--text);">Mehrfach-Zensur-Kästchen</strong>: Zeichnen und Tracken mehrerer Zensurbereiche synchron.</li>
+                <li>🔄 <strong style="color: var(--text);">Bearbeitungs-Modus</strong>: Zensur nachträglich ändern/neu rendern, ohne Boxen zu verlieren.</li>
+                <li>🧠 <strong style="color: var(--text);">YuNet Gesichtstracking</strong>: Neues, hochpräzises ONNX Gesichtstracking Modell.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.1.6 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
                 🚀 Version 1.1.6
@@ -1493,6 +1562,7 @@
           document.getElementById('versionBadge').textContent = installedAppVersion;
         });
         updateSmartAiUIStatus();
+        updateFaceSwapUIStatus();
         loadGeminiApiKeyStatus();
       }
     }
@@ -1625,6 +1695,94 @@
               updateSmartAiUIStatus();
             } else {
               showCustomAlert("Smart-KI", 'Fehler beim Löschen des Modells: ' + (res ? res.error : ''), '❌');
+            }
+          });
+        }
+      });
+    }
+
+    function updateFaceSwapUIStatus() {
+      if (typeof pywebview === 'undefined' || !pywebview.api || !pywebview.api.check_faceswap_models) return;
+      pywebview.api.check_faceswap_models().then(res => {
+        const statusText = document.getElementById('faceSwapModelStatusText');
+        const dlBtn = document.getElementById('btnFaceSwapModelDownload');
+        const delBtn = document.getElementById('btnFaceSwapModelDelete');
+        const sizeText = document.getElementById('faceSwapModelSizeText');
+        const dict = langDict[currentLang] || langDict['de'];
+
+        if (res && res.success && res.downloaded) {
+          statusText.textContent = dict.faceSwapModelStatusReady || "Installiert (Bereit)";
+          statusText.style.color = '#10b981'; // Green
+          dlBtn.style.display = 'none';
+          delBtn.style.display = 'flex';
+          const sizeMB = (res.size / (1024 * 1024)).toFixed(1);
+          sizeText.textContent = (currentLang === 'en' ? 'Size: ' : 'Größe: ') + sizeMB + ' MB';
+        } else {
+          statusText.textContent = dict.faceSwapModelStatusNotInstalled || "Nicht installiert";
+          statusText.style.color = '#f87171'; // Red
+          dlBtn.style.display = 'flex';
+          delBtn.style.display = 'none';
+          sizeText.textContent = currentLang === 'en' ? 'Size: ~804 MB' : 'Größe: ~804 MB';
+        }
+      });
+    }
+
+    function downloadFaceSwapModels() {
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+      
+      const dlBtn = document.getElementById('btnFaceSwapModelDownload');
+      const progressContainer = document.getElementById('faceSwapModelDownloadProgressContainer');
+      const progressBar = document.getElementById('faceSwapModelDownloadProgressBar');
+      const percentText = document.getElementById('faceSwapModelDownloadPercentText');
+      const bytesText = document.getElementById('faceSwapModelDownloadBytesText');
+      
+      dlBtn.disabled = true;
+      dlBtn.style.opacity = '0.5';
+      progressContainer.style.display = 'flex';
+      
+      window.onFaceSwapDownloadProgress = function(percent, downloaded, total) {
+        progressBar.style.width = percent + '%';
+        percentText.textContent = percent + '%';
+        const dlMB = (downloaded / (1024 * 1024)).toFixed(1);
+        const totalMB = (total / (1024 * 1024)).toFixed(1);
+        bytesText.textContent = `${dlMB} MB / ${totalMB} MB`;
+      };
+      
+      window.onFaceSwapDownloadComplete = function(success, errorMsg) {
+        dlBtn.disabled = false;
+        dlBtn.style.opacity = '1';
+        progressContainer.style.display = 'none';
+        
+        if (success) {
+          const dict = langDict[currentLang] || langDict['de'];
+          showCustomAlert("Face-Swap KI", dict.faceSwapModelDownloadSuccess || "Premium Face-Swap Modelle erfolgreich heruntergeladen! 🎉", '👤');
+          updateFaceSwapUIStatus();
+        } else {
+          showCustomAlert("Face-Swap KI", 'Fehler beim Download / Error downloading model: ' + errorMsg, '❌');
+          updateFaceSwapUIStatus();
+        }
+      };
+      
+      pywebview.api.download_faceswap_models().then(res => {
+        if (!res || !res.success) {
+          showCustomAlert("Face-Swap KI", 'Fehler beim Starten des Downloads: ' + (res ? res.error : ''), '❌');
+          dlBtn.disabled = false;
+          dlBtn.style.opacity = '1';
+          progressContainer.style.display = 'none';
+        }
+      });
+    }
+
+    function deleteFaceSwapModels() {
+      const dict = langDict[currentLang] || langDict['de'];
+      showCustomConfirm("Face-Swap KI", dict.faceSwapModelDeleteConfirm || "Möchtest du die Premium Face-Swap Modelle wirklich von deiner Festplatte löschen? (Belegt ca. 662 MB)", '🗑️').then(confirmed => {
+        if (confirmed) {
+          pywebview.api.delete_faceswap_models().then(res => {
+            if (res && res.success) {
+              showCustomAlert("Face-Swap KI", dict.faceSwapModelDeleteSuccess || "Premium Face-Swap Modelle gelöscht.", '🗑️');
+              updateFaceSwapUIStatus();
+            } else {
+              showCustomAlert("Face-Swap KI", 'Fehler beim Löschen der Modelle: ' + (res ? res.error : ''), '❌');
             }
           });
         }
@@ -2095,6 +2253,24 @@
         smartAiDownloadSuccess: "Smart-KI-Modell erfolgreich heruntergeladen! 🎉",
         smartAiDeleteSuccess: "Smart-KI-Modell gelöscht.",
         
+        lblFaceSwapModelTitle: "👤 Premium Face-Swap Modell-Verwaltung",
+        lblFaceSwapModelStatus: "Status: ",
+        faceSwapModelStatusNotInstalled: "Nicht installiert",
+        faceSwapModelStatusReady: "Installiert (Bereit)",
+        faceSwapModelSizeText: "Größe: ~804 MB",
+        lblFaceSwapModelDownloading: "Herunterladen & Entpacken...",
+        btnFaceSwapModelDownload: "📥 Premium-Modelle herunterladen",
+        btnFaceSwapModelDelete: "🗑️ Modelle löschen",
+        faceSwapModelDeleteConfirm: "Möchtest du die Premium Face-Swap Modelle wirklich von deiner Festplatte löschen? (Belegt ca. 804 MB)",
+        faceSwapModelDownloadSuccess: "Premium Face-Swap Modelle erfolgreich heruntergeladen! 🎉",
+        faceSwapModelDeleteSuccess: "Premium Face-Swap Modelle gelöscht.",
+        
+        changelog_v119_list: `<li>👤 <strong style="color: var(--text);">Dedicated Face Swap</strong>: Standalone-Tab für Gesichtstausch mit Klassisch- und Premium-Modus.</li>
+                <li>⚙️ <strong style="color: var(--text);">Modell-Manager</strong>: Optionaler Download (804MB) und Ein-Klick-Löschung direkt in den Einstellungen.</li>`,
+        changelog_v118_list: `<li>🎞️ <strong style="color: var(--text);">Mehrfach-Zensur-Kästchen</strong>: Zeichnen und Tracken mehrerer Zensurbereiche synchron.</li>
+                <li>🔄 <strong style="color: var(--text);">Bearbeitungs-Modus</strong>: Zensur nachträglich ändern/neu rendern, ohne Boxen zu verlieren.</li>
+                <li>🧠 <strong style="color: var(--text);">YuNet Gesichtstracking</strong>: Neues, hochpräzises ONNX Gesichtstracking Modell.</li>`,
+        
         changelogTitle: "📜 Versionsverlauf & Changelog",
         badgeCurrent: "Aktuell",
         footerText: "Deine persönliche Toolbox · Made with <span>♥</span> · ",
@@ -2226,6 +2402,24 @@
         smartAiDeleteConfirm: "Are you sure you want to delete the Smart AI model from your disk? (Frees up approx. 208 MB)",
         smartAiDownloadSuccess: "Smart AI model downloaded successfully! 🎉",
         smartAiDeleteSuccess: "Smart AI model deleted.",
+        
+        lblFaceSwapModelTitle: "👤 Premium Face-Swap Model Management",
+        lblFaceSwapModelStatus: "Status: ",
+        faceSwapModelStatusNotInstalled: "Not installed",
+        faceSwapModelStatusReady: "Installed (Ready)",
+        faceSwapModelSizeText: "Size: ~804 MB",
+        lblFaceSwapModelDownloading: "Downloading & Extracting...",
+        btnFaceSwapModelDownload: "📥 Download Premium Models",
+        btnFaceSwapModelDelete: "🗑️ Delete Models",
+        faceSwapModelDeleteConfirm: "Are you sure you want to delete the Premium Face-Swap models from your disk? (Frees up approx. 804 MB)",
+        faceSwapModelDownloadSuccess: "Premium Face-Swap models downloaded successfully! 🎉",
+        faceSwapModelDeleteSuccess: "Premium Face-Swap models deleted.",
+        
+        changelog_v119_list: `<li>👤 <strong style="color: var(--text);">Dedicated Face Swap</strong>: Standalone face swap tab featuring Classical and Premium AI modes.</li>
+                <li>⚙️ <strong style="color: var(--text);">Model Manager</strong>: Optional download (804MB) and one-click deletion directly in settings.</li>`,
+        changelog_v118_list: `<li>🎞️ <strong style="color: var(--text);">Multiple Censorship Boxes</strong>: Draw and track multiple manual censorship markings simultaneously.</li>
+                <li>🔄 <strong style="color: var(--text);">Edit Mode Retention</strong>: Re-process or change censorship method without losing your drawn boxes.</li>
+                <li>🧠 <strong style="color: var(--text);">YuNet Face Tracking</strong>: New high-accuracy ONNX face tracking framework.</li>`,
         
         changelogTitle: "📜 Version History & Changelog",
         badgeCurrent: "Current",
@@ -2386,38 +2580,46 @@
       if (changelogCard) {
         changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
         const detailsElements = changelogCard.querySelectorAll('details');
-        if (detailsElements.length >= 8) {
-          const sum116 = detailsElements[0].querySelector('summary');
-          sum116.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.6 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
-          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v116_list;
+        if (detailsElements.length >= 10) {
+          const sum119 = detailsElements[0].querySelector('summary');
+          sum119.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.9 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v119_list;
 
-          const sum115 = detailsElements[1].querySelector('summary');
+          const sum118 = detailsElements[1].querySelector('summary');
+          sum118.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.8`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v118_list;
+
+          const sum116 = detailsElements[2].querySelector('summary');
+          sum116.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.6`;
+          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v116_list;
+
+          const sum115 = detailsElements[3].querySelector('summary');
           sum115.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.5`;
-          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v115_list;
+          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v115_list;
 
-          const sum114 = detailsElements[1].querySelector('summary');
+          const sum114 = detailsElements[4].querySelector('summary');
           sum114.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.4`;
-          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v114_list;
+          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v114_list;
 
-          const sum113 = detailsElements[2].querySelector('summary');
+          const sum113 = detailsElements[5].querySelector('summary');
           sum113.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.3`;
-          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v113_list;
+          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v113_list;
           
-          const sum112 = detailsElements[3].querySelector('summary');
+          const sum112 = detailsElements[6].querySelector('summary');
           sum112.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.2`;
-          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v112_list;
+          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v112_list;
           
-          const sum111 = detailsElements[4].querySelector('summary');
+          const sum111 = detailsElements[7].querySelector('summary');
           sum111.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.1`;
-          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v111_list;
+          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v111_list;
 
-          const sum110 = detailsElements[5].querySelector('summary');
+          const sum110 = detailsElements[8].querySelector('summary');
           sum110.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0`;
-          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v110_list;
+          detailsElements[8].querySelector('ul').innerHTML = dict.changelog_v110_list;
 
-          const sum100 = detailsElements[7].querySelector('summary');
+          const sum100 = detailsElements[9].querySelector('summary');
           sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
-          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v100_list;
+          detailsElements[9].querySelector('ul').innerHTML = dict.changelog_v100_list;
         }
       }
 
@@ -2432,6 +2634,18 @@
       if (lblSmartAiDownloading) lblSmartAiDownloading.textContent = dict.lblSmartAiDownloading;
       
       updateSmartAiUIStatus();
+      
+      // Face-Swap Model translation
+      const lblFaceSwapModelTitle = document.getElementById('lblFaceSwapModelTitle');
+      if (lblFaceSwapModelTitle) lblFaceSwapModelTitle.textContent = dict.lblFaceSwapModelTitle;
+      const btnFaceSwapModelDownload = document.getElementById('btnFaceSwapModelDownload');
+      if (btnFaceSwapModelDownload) btnFaceSwapModelDownload.innerHTML = dict.btnFaceSwapModelDownload;
+      const btnFaceSwapModelDelete = document.getElementById('btnFaceSwapModelDelete');
+      if (btnFaceSwapModelDelete) btnFaceSwapModelDelete.innerHTML = dict.btnFaceSwapModelDelete;
+      const lblFaceSwapModelDownloading = document.getElementById('lblFaceSwapModelDownloading');
+      if (lblFaceSwapModelDownloading) lblFaceSwapModelDownloading.textContent = dict.lblFaceSwapModelDownloading;
+      
+      updateFaceSwapUIStatus();
       
       // Language picker label
       document.getElementById('lblLanguage').textContent = lang === 'en' ? 'Language / Sprache' : 'Sprache / Language';

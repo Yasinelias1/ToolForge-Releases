@@ -354,7 +354,7 @@ class FileShareServer:
         self.shared_filename = os.path.basename(file_path)
 
 class ToolForgeAPI:
-    APP_VERSION = "1.1.8"
+    APP_VERSION = "1.1.9"
 
     def __init__(self):
         self._window = None
@@ -922,6 +922,132 @@ class ToolForgeAPI:
             return {"success": True, "deleted": False}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def check_faceswap_models(self):
+        try:
+            appdata_dir = os.path.join(os.environ.get('APPDATA', ''), 'ToolForge')
+            model_dir = os.path.join(appdata_dir, "models")
+            
+            inswapper_path = os.path.join(model_dir, "models", "inswapper_128.onnx")
+            det_path = os.path.join(model_dir, "models", "buffalo_l", "det_10g.onnx")
+            rec_path = os.path.join(model_dir, "models", "buffalo_l", "w600k_r50.onnx")
+            
+            downloaded = (os.path.exists(inswapper_path) and os.path.getsize(inswapper_path) > 500000000 and
+                          os.path.exists(det_path) and os.path.getsize(det_path) > 15000000 and
+                          os.path.exists(rec_path) and os.path.getsize(rec_path) > 40000000)
+                          
+            total_size = 0
+            if downloaded:
+                total_size += os.path.getsize(inswapper_path)
+                total_size += os.path.getsize(det_path)
+                total_size += os.path.getsize(rec_path)
+                
+            return {"success": True, "downloaded": downloaded, "size": total_size}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def delete_faceswap_models(self):
+        try:
+            appdata_dir = os.path.join(os.environ.get('APPDATA', ''), 'ToolForge')
+            model_dir = os.path.join(appdata_dir, "models")
+            
+            inswapper_path = os.path.join(model_dir, "models", "inswapper_128.onnx")
+            buffalo_dir = os.path.join(model_dir, "models", "buffalo_l")
+            
+            if os.path.exists(inswapper_path):
+                os.remove(inswapper_path)
+            if os.path.exists(buffalo_dir):
+                import shutil
+                shutil.rmtree(buffalo_dir)
+                
+            if hasattr(self, "_insightface_app"):
+                self._insightface_app = None
+            if hasattr(self, "_inswapper_model"):
+                self._inswapper_model = None
+                
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def download_faceswap_models(self):
+        try:
+            if hasattr(self, "_fs_download_thread") and self._fs_download_thread and self._fs_download_thread.is_alive():
+                return {"success": False, "error": "Face-Swap Download bereits aktiv."}
+            
+            self._fs_download_thread = threading.Thread(target=self._background_download_faceswap_models, daemon=True)
+            self._fs_download_thread.start()
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _background_download_faceswap_models(self):
+        import requests
+        import zipfile
+        import shutil
+        try:
+            appdata_dir = os.path.join(os.environ.get('APPDATA', ''), 'ToolForge')
+            model_dir = os.path.join(appdata_dir, "models")
+            os.makedirs(model_dir, exist_ok=True)
+            
+            inswapper_url = "https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx"
+            buffalo_url = "https://github.com/deepinsight/insightface/releases/download/v0.7/buffalo_l.zip"
+            
+            temp_inswapper = os.path.join(model_dir, "inswapper_128.onnx")
+            temp_buffalo_zip = os.path.join(model_dir, "buffalo_l.zip")
+            dest_models_dir = os.path.join(model_dir, "models")
+            dest_inswapper = os.path.join(dest_models_dir, "inswapper_128.onnx")
+            dest_buffalo_dir = os.path.join(dest_models_dir, "buffalo_l")
+            
+            os.makedirs(dest_models_dir, exist_ok=True)
+            
+            total_expected_size = 554253681 + 288621354
+            
+            # 1. Download Inswapper ONNX
+            response = requests.get(inswapper_url, stream=True)
+            downloaded = 0
+            with open(temp_inswapper, "wb") as f:
+                for chunk in response.iter_content(chunk_size=1024 * 512):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded += len(chunk)
+                        percent = int((downloaded / total_expected_size) * 100)
+                        percent = min(84, max(0, percent))
+                        js_cmd = f"if (window.onFaceSwapDownloadProgress) window.onFaceSwapDownloadProgress({percent}, {downloaded}, {total_expected_size});"
+                        self._window.evaluate_js(js_cmd)
+            
+            shutil.copy2(temp_inswapper, dest_inswapper)
+            try:
+                os.remove(temp_inswapper)
+            except:
+                pass
+                
+            # 2. Download Buffalo Zip
+            response = requests.get(buffalo_url, stream=True)
+            downloaded_buffalo = 0
+            with open(temp_buffalo_zip, "wb") as f:
+                for chunk in response.iter_content(chunk_size=1024 * 256):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded_buffalo += len(chunk)
+                        total_dl = downloaded + downloaded_buffalo
+                        percent = int((total_dl / total_expected_size) * 100)
+                        percent = min(99, max(85, percent))
+                        js_cmd = f"if (window.onFaceSwapDownloadProgress) window.onFaceSwapDownloadProgress({percent}, {total_dl}, {total_expected_size});"
+                        self._window.evaluate_js(js_cmd)
+            
+            os.makedirs(dest_buffalo_dir, exist_ok=True)
+            with zipfile.ZipFile(temp_buffalo_zip, 'r') as zip_ref:
+                zip_ref.extractall(dest_buffalo_dir)
+                
+            try:
+                os.remove(temp_buffalo_zip)
+            except:
+                pass
+                
+            self._window.evaluate_js("if (window.onFaceSwapDownloadComplete) window.onFaceSwapDownloadComplete(true);")
+        except Exception as e:
+            error_msg = str(e).replace("'", "\\'")
+            self._window.evaluate_js(f"if (window.onFaceSwapDownloadComplete) window.onFaceSwapDownloadComplete(false, '{error_msg}');")
 
     def get_smart_inpaint_setting(self):
         config = self._load_config()
@@ -1970,6 +2096,461 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def _apply_classic_face_swap(self, target_img, target_landmarks, source_img, source_landmarks, source_box):
+        try:
+            h_tgt, w_tgt = target_img.shape[:2]
+            sh, sw = source_img.shape[:2]
+            
+            # Estimate affine transform from source landmarks to target landmarks
+            M, inliers = cv2.estimateAffine2D(source_landmarks, target_landmarks)
+            if M is None:
+                return target_img
+                
+            # Warp source face to target frame size
+            warped_source = cv2.warpAffine(source_img, M, (w_tgt, h_tgt))
+            
+            # Bounding box of source face
+            sx, sy, sw_box, sh_box = source_box
+            
+            # Create an oval mask on source size
+            src_mask = np.zeros((sh, sw), dtype=np.uint8)
+            center_s = (sx + sw_box // 2, sy + sh_box // 2)
+            axes_s = (int(sw_box * 0.45), int(sh_box * 0.55))
+            cv2.ellipse(src_mask, center_s, axes_s, 0, 0, 360, 255, -1)
+            
+            # Warp the mask to target size
+            warped_mask = cv2.warpAffine(src_mask, M, (w_tgt, h_tgt), flags=cv2.INTER_NEAREST)
+            
+            # Find bounding rect of warped mask
+            contours, _ = cv2.findContours(warped_mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            if not contours:
+                return target_img
+                
+            x, y, w, h = cv2.boundingRect(contours[0])
+            center_tgt = (x + w // 2, y + h // 2)
+            
+            # Blend the warped source face into target_img
+            try:
+                cloned = cv2.seamlessClone(warped_source, target_img, warped_mask, center_tgt, cv2.NORMAL_CLONE)
+                return cloned
+            except Exception as clone_err:
+                # Fallback simple overlay if seamlessClone fails (e.g. at boundaries)
+                mask_3ch = cv2.cvtColor(warped_mask, cv2.COLOR_GRAY2BGR) / 255.0
+                blended = (warped_source * mask_3ch + target_img * (1.0 - mask_3ch)).astype(np.uint8)
+                return blended
+        except Exception as e:
+            print("Error in classic face swap:", e)
+            return target_img
+
+    def process_face_swap(self, file_path, face_swap_img_base64, use_premium_face_swap=False, rect_json="[]", tracking=False, auto_detect=True, start_time=-1.0, end_time=-1.0):
+        if isinstance(file_path, (list, tuple)):
+            file_path = file_path[0]
+            
+        use_premium = bool(use_premium_face_swap)
+        auto_detect = bool(auto_detect)
+        tracking = bool(tracking)
+        
+        # Check if the file is an image or a video
+        ext = os.path.splitext(file_path.lower())[1]
+        is_image = ext in ['.png', '.jpg', '.jpeg', '.bmp', '.webp', '.tiff']
+        
+        # Decode the source face image
+        source_img = None
+        if face_swap_img_base64:
+            try:
+                if "," in face_swap_img_base64:
+                    encoded = face_swap_img_base64.split(",", 1)[1]
+                else:
+                    encoded = face_swap_img_base64
+                source_data = base64.b64decode(encoded)
+                nparr_src = np.frombuffer(source_data, np.uint8)
+                source_img = cv2.imdecode(nparr_src, cv2.IMREAD_COLOR)
+            except Exception as src_err:
+                return {"success": False, "error": f"Fehler beim Dekodieren des Quellgesichts: {str(src_err)}"}
+                
+        if source_img is None:
+            return {"success": False, "error": "Kein gültiges Quellgesicht-Bild geladen."}
+            
+        # Get path for YuNet face detector model
+        appdata_dir = os.path.join(os.environ.get('APPDATA', ''), 'ToolForge')
+        model_dir = os.path.join(appdata_dir, "models")
+        yn_model_path = os.path.join(model_dir, "face_detection_yunet_2023mar.onnx")
+        if not os.path.exists(yn_model_path):
+            yn_model_path = get_resource_path("face_detection_yunet_2023mar.onnx")
+            
+        # Verify premium models if checked
+        if use_premium:
+            models_installed = self.check_faceswap_models().get("downloaded", False)
+            if not models_installed:
+                print("Face-Swap Premium models not installed. Falling back to classical mode.")
+                use_premium = False
+                
+        # Load premium models if needed
+        app = None
+        swapper = None
+        source_face = None
+        if use_premium:
+            try:
+                if not hasattr(self, "_insightface_app") or self._insightface_app is None:
+                    import insightface
+                    from insightface.app import FaceAnalysis
+                    dest_models_inswapper = os.path.join(model_dir, "models", "inswapper_128.onnx")
+                    
+                    app = FaceAnalysis(name='buffalo_l', root=model_dir)
+                    app.prepare(ctx_id=-1, det_size=(640, 640))
+                    swapper = insightface.model_zoo.get_model(dest_models_inswapper, download=False)
+                    
+                    self._insightface_app = app
+                    self._inswapper_model = swapper
+                else:
+                    app = self._insightface_app
+                    swapper = self._inswapper_model
+                    
+                # Extract source embedding once
+                src_faces = app.get(source_img)
+                if src_faces:
+                    source_face = src_faces[0]
+                else:
+                    print("Kein Gesicht im Quellbild per KI erkannt. Wechsle zu klassischem Warping.")
+                    use_premium = False
+            except Exception as load_err:
+                print("Error loading Premium KI swapper, falling back to classical:", load_err)
+                use_premium = False
+
+        # If classical, detect source landmarks once
+        src_landmarks = None
+        src_box = None
+        if not use_premium:
+            try:
+                if os.path.exists(yn_model_path):
+                    sh, sw = source_img.shape[:2]
+                    src_detector = cv2.FaceDetectorYN.create(
+                        yn_model_path, "", (sw, sh), 0.5, 0.3, 5000
+                    )
+                    ok_src, src_faces = src_detector.detect(source_img)
+                    if ok_src and src_faces is not None and len(src_faces) > 0:
+                        src_landmarks = src_faces[0][4:14].reshape((5, 2)).astype(np.float32)
+                        src_box = [int(v) for v in src_faces[0][0:4]]
+            except Exception as src_lms_err:
+                print("Error detecting source landmarks:", src_lms_err)
+                
+            if src_landmarks is None:
+                # If YuNet landmark detection failed on source, use center oval fallback helper
+                sh, sw = source_img.shape[:2]
+                src_box = [0, 0, sw, sh]
+                src_landmarks = np.array([
+                    [sw * 0.3, sh * 0.45],
+                    [sw * 0.7, sh * 0.45],
+                    [sw * 0.5, sh * 0.6],
+                    [sw * 0.35, sh * 0.75],
+                    [sw * 0.65, sh * 0.75]
+                ], dtype=np.float32)
+
+        # Parse manual rectangles if any
+        rects = []
+        try:
+            parsed = json.loads(rect_json)
+            if isinstance(parsed, list):
+                rects = parsed
+            elif isinstance(parsed, dict):
+                rects = [parsed]
+        except:
+            pass
+
+        # ----------------------------------------------------
+        # IMAGE MODE
+        # ----------------------------------------------------
+        if is_image:
+            try:
+                img = cv2.imread(file_path)
+                if img is None:
+                    return {"success": False, "error": "Konnte Bild nicht laden."}
+                
+                h_img, w_img = img.shape[:2]
+                
+                # Gather target faces coordinates (x, y, w, h)
+                target_boxes = []
+                if auto_detect or not rects:
+                    # Detect all faces using YuNet
+                    if os.path.exists(yn_model_path):
+                        detector = cv2.FaceDetectorYN.create(
+                            yn_model_path, "", (w_img, h_img), 0.5, 0.3, 5000
+                        )
+                        ok, yn_faces = detector.detect(img)
+                        if ok and yn_faces is not None:
+                            for f in yn_faces:
+                                fx, fy, fw, fh = [int(v) for v in f[0:4]]
+                                lms = f[4:14].reshape((5, 2)).astype(np.float32)
+                                target_boxes.append((fx, fy, fw, fh, lms))
+                else:
+                    # Run YuNet to match landmarks inside manual boxes
+                    if os.path.exists(yn_model_path):
+                        detector = cv2.FaceDetectorYN.create(
+                            yn_model_path, "", (w_img, h_img), 0.5, 0.3, 5000
+                        )
+                        _, yn_faces = detector.detect(img)
+                    else:
+                        yn_faces = None
+                        
+                    for r_item in rects:
+                        bx = max(0, min(w_img - 1, int(r_item['x'])))
+                        by = max(0, min(h_img - 1, int(r_item['y'])))
+                        bw = max(1, min(w_img - bx, int(r_item['w'])))
+                        bh = max(1, min(h_img - by, int(r_item['h'])))
+                        
+                        best_iou = 0
+                        best_face = None
+                        for f in (yn_faces if yn_faces is not None else []):
+                            fx, fy, fw, fh = [int(v) for v in f[0:4]]
+                            iou = get_iou((bx, by, bw, bh), (fx, fy, fw, fh))
+                            if iou > best_iou:
+                                best_iou = iou
+                                best_face = f
+                                
+                        if best_face is not None and best_iou >= 0.15:
+                            lms = best_face[4:14].reshape((5, 2)).astype(np.float32)
+                            target_boxes.append((bx, by, bw, bh, lms))
+                        else:
+                            mock_lms = np.array([
+                                [bx + bw * 0.3, by + bh * 0.45],
+                                [bx + bw * 0.7, by + bh * 0.45],
+                                [bx + bw * 0.5, by + bh * 0.6],
+                                [bx + bw * 0.35, by + bh * 0.75],
+                                [bx + bw * 0.65, by + bh * 0.75]
+                            ], dtype=np.float32)
+                            target_boxes.append((bx, by, bw, bh, mock_lms))
+
+                # Apply Face Swap
+                if use_premium and source_face is not None:
+                    for bx, by, bw, bh, landmarks in target_boxes:
+                        try:
+                            class DummyFace:
+                                def __init__(self, kps):
+                                    self.kps = kps
+                            target_dummy = DummyFace(landmarks)
+                            img = swapper.get(img, target_dummy, source_face, paste_back=True)
+                        except Exception as swap_err:
+                            print("Premium face swap failed on image face:", swap_err)
+                else:
+                    for bx, by, bw, bh, landmarks in target_boxes:
+                        img = self._apply_classic_face_swap(img, landmarks, source_img, src_landmarks, src_box)
+
+                # Save output to a temp file inside gui/tools/
+                gui_tools_dir = get_resource_path('gui/tools')
+                import time
+                temp_name = f'temp_faceswap_{int(time.time())}.png'
+                temp_img_path = os.path.join(gui_tools_dir, temp_name)
+                
+                success = cv2.imwrite(temp_img_path, img)
+                if not success:
+                    return {"success": False, "error": "Konnte Ergebnisbild nicht speichern."}
+                    
+                return {"success": True, "temp_path": temp_img_path, "is_image": True}
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+
+        # ----------------------------------------------------
+        # VIDEO MODE
+        # ----------------------------------------------------
+        else:
+            temp_avi = None
+            temp_mp4 = None
+            try:
+                cap = cv2.VideoCapture(file_path)
+                if not cap.isOpened():
+                    return {"success": False, "error": "Konnte Video nicht öffnen."}
+                
+                orig_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+                orig_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+                fps = cap.get(cv2.CAP_PROP_FPS)
+                total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+                
+                if fps <= 0: fps = 25.0
+                if total_frames <= 0: total_frames = 1
+                
+                fd, temp_avi = tempfile.mkstemp(suffix='.avi')
+                os.close(fd)
+                
+                import time
+                gui_tools_dir = get_resource_path('gui/tools')
+                temp_name = f'temp_faceswap_{int(time.time())}.mp4'
+                temp_mp4 = os.path.join(gui_tools_dir, temp_name)
+                
+                fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+                writer = cv2.VideoWriter(temp_avi, fourcc, fps, (orig_w, orig_h))
+                
+                if not writer.isOpened():
+                    cap.release()
+                    return {"success": False, "error": "Konnte VideoWriter nicht initialisieren."}
+                    
+                trackers = []
+                frame_idx = 0
+                
+                while True:
+                    success, frame = cap.read()
+                    if not success:
+                        break
+                        
+                    current_time = frame_idx / fps
+                    in_time_range = True
+                    if start_time >= 0.0 and end_time >= 0.0:
+                        in_time_range = (current_time >= start_time and current_time <= end_time)
+                        
+                    if not in_time_range:
+                        writer.write(frame)
+                        frame_idx += 1
+                        if frame_idx % 10 == 0 or frame_idx == total_frames:
+                            pct = int((frame_idx / total_frames) * 100)
+                            self._window.evaluate_js(f"if (typeof updateFaceSwapProgress === 'function') updateFaceSwapProgress({pct});")
+                        continue
+                        
+                    # Gather faces in this frame
+                    faces_list = []
+                    
+                    if auto_detect:
+                        if os.path.exists(yn_model_path):
+                            try:
+                                if not hasattr(self, "_yunet_detector") or self._yunet_detector_size != (orig_w, orig_h):
+                                    self._yunet_detector = cv2.FaceDetectorYN.create(
+                                        yn_model_path, "", (orig_w, orig_h), 0.5, 0.3, 5000
+                                    )
+                                    self._yunet_detector_size = (orig_w, orig_h)
+                                ok_yn, yn_faces = self._yunet_detector.detect(frame)
+                                if ok_yn and yn_faces is not None:
+                                    for f in yn_faces:
+                                        fx, fy, fw, fh = [int(v) for v in f[0:4]]
+                                        fx = max(0, min(orig_w - 1, fx))
+                                        fy = max(0, min(orig_h - 1, fy))
+                                        fw = max(1, min(orig_w - fx, fw))
+                                        fh = max(1, min(orig_h - fy, fh))
+                                        faces_list.append((fx, fy, fw, fh))
+                            except Exception as yn_err:
+                                print("YuNet face detection error in frame loop:", yn_err)
+                    else:
+                        if tracking:
+                            if frame_idx == 0 or not trackers:
+                                trackers = []
+                                for r_item in rects:
+                                    try:
+                                        tr = cv2.TrackerMIL_create()
+                                        tr.init(frame, (r_item['x'], r_item['y'], r_item['w'], r_item['h']))
+                                        trackers.append((tr, r_item))
+                                    except Exception as tr_err:
+                                        print("Failed to init tracker for box:", tr_err)
+                            else:
+                                new_trackers = []
+                                for tr, orig_rect in trackers:
+                                    ok, bbox = tr.update(frame)
+                                    if ok:
+                                        tx, ty, tw, th = [int(v) for v in bbox]
+                                        tx = max(0, min(orig_w - 1, tx))
+                                        ty = max(0, min(orig_h - 1, ty))
+                                        tw = max(1, min(orig_w - tx, tw))
+                                        th = max(1, min(orig_h - ty, th))
+                                        faces_list.append((tx, ty, tw, th))
+                                        new_trackers.append((tr, {"x": tx, "y": ty, "w": tw, "h": th}))
+                                trackers = new_trackers
+                        else:
+                            for r_item in rects:
+                                tx, ty, tw, th = r_item['x'], r_item['y'], r_item['w'], r_item['h']
+                                faces_list.append((tx, ty, tw, th))
+                                
+                    # If we have faces to swap, extract their landmarks using YuNet
+                    faces_with_landmarks = []
+                    if faces_list:
+                        if os.path.exists(yn_model_path):
+                            try:
+                                if not hasattr(self, "_yunet_detector") or self._yunet_detector_size != (orig_w, orig_h):
+                                    self._yunet_detector = cv2.FaceDetectorYN.create(
+                                        yn_model_path, "", (orig_w, orig_h), 0.5, 0.3, 5000
+                                    )
+                                    self._yunet_detector_size = (orig_w, orig_h)
+                                ok_yn, yn_faces = self._yunet_detector.detect(frame)
+                            except Exception as yn_err:
+                                print("YuNet face detection error in landmarks swap loop:", yn_err)
+                                yn_faces = None
+                        else:
+                            yn_faces = None
+                            
+                        for box in faces_list:
+                            bx, by, bw, bh = box
+                            best_iou = 0
+                            best_face = None
+                            for f in (yn_faces if yn_faces is not None else []):
+                                fx, fy, fw, fh = [int(v) for v in f[0:4]]
+                                iou = get_iou((bx, by, bw, bh), (fx, fy, fw, fh))
+                                if iou > best_iou:
+                                    best_iou = iou
+                                    best_face = f
+                                    
+                            if best_face is not None and best_iou >= 0.15:
+                                landmarks = best_face[4:14].reshape((5, 2)).astype(np.float32)
+                                faces_with_landmarks.append((bx, by, bw, bh, landmarks))
+                            else:
+                                mock_lms = np.array([
+                                    [bx + bw * 0.3, by + bh * 0.45],
+                                    [bx + bw * 0.7, by + bh * 0.45],
+                                    [bx + bw * 0.5, by + bh * 0.6],
+                                    [bx + bw * 0.35, by + bh * 0.75],
+                                    [bx + bw * 0.65, by + bh * 0.75]
+                                ], dtype=np.float32)
+                                faces_with_landmarks.append((bx, by, bw, bh, mock_lms))
+                                
+                    # Apply Swap
+                    if use_premium and source_face is not None:
+                        for bx, by, bw, bh, landmarks in faces_with_landmarks:
+                            try:
+                                class DummyFace:
+                                    def __init__(self, kps):
+                                        self.kps = kps
+                                target_dummy = DummyFace(landmarks)
+                                frame = swapper.get(frame, target_dummy, source_face, paste_back=True)
+                            except Exception as swap_err:
+                                print("Premium face swap failed on video face:", swap_err)
+                    else:
+                        if source_img is not None and src_landmarks is not None:
+                            for bx, by, bw, bh, landmarks in faces_with_landmarks:
+                                frame = self._apply_classic_face_swap(frame, landmarks, source_img, src_landmarks, src_box)
+                                
+                    writer.write(frame)
+                    frame_idx += 1
+                    
+                    if frame_idx % 10 == 0 or frame_idx == total_frames:
+                        pct = int((frame_idx / total_frames) * 100)
+                        self._window.evaluate_js(f"if (typeof updateFaceSwapProgress === 'function') updateFaceSwapProgress({pct});")
+                        
+                cap.release()
+                writer.release()
+                
+                # Mux audio
+                if self._ffmpeg_path and os.path.exists(self._ffmpeg_path):
+                    cmd = [
+                        self._ffmpeg_path,
+                        '-i', file_path,
+                        '-i', temp_avi,
+                        '-map', '1:v',
+                        '-map', '0:a?',
+                        '-c:v', 'libx264',
+                        '-pix_fmt', 'yuv420p',
+                        '-preset', 'ultrafast',
+                        '-c:a', 'aac',
+                        temp_mp4,
+                        '-y'
+                    ]
+                    startupinfo = subprocess.STARTUPINFO()
+                    startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+                    subprocess.run(cmd, startupinfo=startupinfo, check=True)
+                else:
+                    os.replace(temp_avi, temp_mp4)
+                    
+                return {"success": True, "temp_path": temp_mp4, "is_image": False}
+            except Exception as e:
+                return {"success": False, "error": str(e)}
+            finally:
+                if temp_avi and os.path.exists(temp_avi):
+                    try: os.remove(temp_avi)
+                    except: pass
 
     def rename_file(self, src_path, dest_path):
         try:
