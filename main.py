@@ -1272,20 +1272,6 @@ del "%~f0"
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def open_online_inpaint_window(self):
-        try:
-            webview.create_window(
-                title='Kostenlose KI-Retusche (Online)',
-                url='https://cleanup.pictures/',
-                width=1100,
-                height=800,
-                resizable=True,
-                background_color='#ffffff'
-            )
-            return {"success": True}
-        except Exception as e:
-            return {"success": False, "error": str(e)}
-
     def inpaint_image(self, img_base64, mask_base64, prompt=""):
         try:
             prompt_clean = prompt.strip()

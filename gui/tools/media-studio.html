@@ -986,9 +986,6 @@
                 <span id="imgSmartAiWarning" style="font-size:9px; color:#f87171; font-weight:normal;">(Bitte in Einstellungen herunterladen)</span>
               </label>
             </div>
-            <div id="imgOnlineAiContainer" style="display:none; margin-top:12px;">
-              <button class="action-btn secondary" id="imgCensorOnlineInpaintBtn" onclick="window.imgCensor.openOnlineInpaint()" style="width:100%; margin:0; display:flex; align-items:center; justify-content:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); font-size:12px;">🌐 Kostenlose Online-KI (Externes Fenster)</button>
-            </div>
             <div id="imgCensorSidebarInpaintContainer" style="display:none; margin-top:12px; flex-direction:column; gap:8px;">
               <div id="imgInpaintPromptContainer" style="display:none; flex-direction:column; gap:6px;">
                 <label style="font-size:11px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:4px;">
@@ -2078,11 +2075,6 @@
         if (smartAiToggle) {
           smartAiToggle.style.display = (toolName === 'inpaint') ? 'flex' : 'none';
         }
-
-        const onlineAiContainer = document.getElementById('imgOnlineAiContainer');
-        if (onlineAiContainer) {
-          onlineAiContainer.style.display = (toolName === 'inpaint') ? 'block' : 'none';
-        }
         
         const promptContainer = document.getElementById('imgInpaintPromptContainer');
         if (promptContainer) {
@@ -2481,14 +2473,6 @@
         });
       }
 
-      function openOnlineInpaint() {
-        if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.open_online_inpaint_window) {
-          pywebview.api.open_online_inpaint_window();
-        } else {
-          showToast('Online-KI-Fenster kann nicht geöffnet werden. Läuft die Desktop-App?');
-        }
-      }
-
       function updateResizeInfo() {
         const info = document.getElementById('imgResizeInfo');
         if (!info || !originalWidth || !originalHeight) return;
@@ -2732,7 +2716,7 @@
         window.addEventListener('pywebviewready', initSmartAiSettings);
       }
 
-      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, openOnlineInpaint, toggleLock, updateFormat, updateQuality, toggleFullscreen, toggleSmartAi };
+      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, toggleLock, updateFormat, updateQuality, toggleFullscreen, toggleSmartAi };
     })();
 
     // ==========================================
