@@ -182,6 +182,177 @@ WMO_CODES = {
     99: {"en": "Thunderstorm with heavy hail", "de": "Gewitter mit schwerem Hagel", "emoji": "⛈️"}
 }
 
+import http.server
+import socket
+import urllib.parse
+import threading
+
+class FileShareServer:
+    def __init__(self):
+        self.server = None
+        self.thread = None
+        self.port = 0
+        self.shared_file_path = None
+        self.shared_filename = None
+
+    def start(self):
+        if self.server is not None:
+            return
+        
+        server_instance = self
+        
+        class ShareHandler(http.server.BaseHTTPRequestHandler):
+            def log_message(self, format, *args):
+                pass  # Suppress logs to console
+
+            def do_GET(self):
+                parsed_path = urllib.parse.urlparse(self.path)
+                if parsed_path.path == '/download':
+                    file_path = server_instance.shared_file_path
+                    if not file_path or not os.path.exists(file_path):
+                        self.send_error(404, "File not found")
+                        return
+                    
+                    try:
+                        file_size = os.path.getsize(file_path)
+                        filename = server_instance.shared_filename or os.path.basename(file_path)
+                        
+                        self.send_response(200)
+                        import mimetypes
+                        mime_type, _ = mimetypes.guess_type(file_path)
+                        if not mime_type:
+                            mime_type = 'application/octet-stream'
+                        
+                        self.send_header('Content-Type', mime_type)
+                        self.send_header('Content-Length', str(file_size))
+                        
+                        encoded_filename = urllib.parse.quote(filename)
+                        self.send_header('Content-Disposition', f"attachment; filename*=UTF-8''{encoded_filename}")
+                        self.end_headers()
+                        
+                        with open(file_path, 'rb') as f:
+                            while True:
+                                chunk = f.read(64 * 1024)
+                                if not chunk:
+                                    break
+                                self.wfile.write(chunk)
+                    except Exception as e:
+                        try:
+                            self.send_error(500, f"Internal error: {str(e)}")
+                        except Exception:
+                            pass
+                else:
+                    self.send_response(200)
+                    self.send_header('Content-Type', 'text/html; charset=utf-8')
+                    self.end_headers()
+                    filename = server_instance.shared_filename or "Datei"
+                    size_str = server_instance.get_formatted_size()
+                    
+                    html_content = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ToolForge - Datei-Freigabe</title>
+    <style>
+        body {{
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #0d0b1e;
+            color: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }}
+        .card {{
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }}
+        h2 {{
+            background: linear-gradient(135deg, #c084fc 0%, #22d3ee 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-top: 0;
+            font-size: 24px;
+        }}
+        .file-info {{
+            margin: 24px 0;
+            font-size: 15px;
+            color: #94a3b8;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 16px;
+        }}
+        .filename {{
+            font-weight: 700;
+            color: #fff;
+            word-break: break-all;
+            margin-bottom: 8px;
+        }}
+        .btn {{
+            display: inline-block;
+            background: linear-gradient(135deg, #a855f7 0%, #22d3ee 100%);
+            color: white;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(168,85,247,0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            box-sizing: border-box;
+        }}
+        .btn:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168,85,247,0.6);
+        }}
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>Datei-Freigabe</h2>
+        <div class="file-info">
+            <div class="filename">{filename}</div>
+            <div>Gr&ouml;&szlig;e: {size_str}</div>
+        </div>
+        <a class="btn" href="/download" download>Herunterladen</a>
+    </div>
+</body>
+</html>"""
+                    self.wfile.write(html_content.encode('utf-8'))
+
+        self.server = http.server.HTTPServer(('0.0.0.0', 0), ShareHandler)
+        self.port = self.server.server_address[1]
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+        self.thread.start()
+
+    def get_formatted_size(self):
+        if not self.shared_file_path or not os.path.exists(self.shared_file_path):
+            return "0 B"
+        size = os.path.getsize(self.shared_file_path)
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if size < 1024.0:
+                return f"{size:.1f} {unit}"
+            size /= 1024.0
+        return f"{size:.1f} TB"
+
+    def set_file(self, file_path):
+        self.shared_file_path = file_path
+        self.shared_filename = os.path.basename(file_path)
+
 class ToolForgeAPI:
     APP_VERSION = "1.1.6"
 
@@ -191,6 +362,7 @@ class ToolForgeAPI:
         self._ffprobe_path = None
         self._init_ffmpeg()
         self._gpu_name = self._detect_gpu_name_once()
+        self._file_share_server = None
         
         # Caching variables for CPU and GPU details (updated asynchronously)
         self._cached_cpu_temp = None
@@ -1759,6 +1931,47 @@ del "%~f0"
             return {"success": True, "base64": f"data:image/png;base64,{img_str}"}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def share_file_local(self, filePath):
+        try:
+            if isinstance(filePath, (list, tuple)):
+                filePath = filePath[0]
+            if not filePath or not os.path.exists(filePath):
+                return {"success": False, "error": "Datei existiert nicht."}
+
+            if self._file_share_server is None:
+                self._file_share_server = FileShareServer()
+                self._file_share_server.start()
+
+            self._file_share_server.set_file(filePath)
+            
+            local_ip = self.get_local_ip()
+            port = self._file_share_server.port
+            url = f"http://{local_ip}:{port}/"
+            
+            filename = os.path.basename(filePath)
+            size = self._file_share_server.get_formatted_size()
+            
+            return {
+                "success": True,
+                "url": url,
+                "filename": filename,
+                "size": size
+            }
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_local_ip(self):
+        import socket
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        try:
+            s.connect(('10.255.255.255', 1))
+            IP = s.getsockname()[0]
+        except Exception:
+            IP = '127.0.0.1'
+        finally:
+            s.close()
+        return IP
 
     # ── APIs (Bypassing CORS completely!) ──
     def fetch_currency_rates(self):

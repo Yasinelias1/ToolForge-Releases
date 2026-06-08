@@ -625,6 +625,9 @@
         <button class="type-btn" data-type="email" onclick="setType('email', this)">
           E-Mail
         </button>
+        <button class="type-btn" data-type="file" onclick="setType('file', this)">
+          Datei
+        </button>
       </div>
     </div>
 
@@ -634,6 +637,20 @@
       <div class="input-wrapper">
         <textarea id="qr-input" placeholder="Text oder Link hier einfügen…" oninput="onInput()" maxlength="2000"></textarea>
         <span class="char-counter"><span id="char-count">0</span>/2000</span>
+      </div>
+    </div>
+
+    <!-- File sharing fields -->
+    <div id="file-fields" style="display:none; flex-direction:column; gap:14px;">
+      <div class="field-group">
+        <label>Datei zum Verschicken auswählen</label>
+        <button class="btn-download" id="select-file-btn" onclick="selectSharingFile()" style="margin: 0; border-color: var(--purple); background: var(--input-bg);">
+          📁 Datei auswählen
+        </button>
+        <div id="file-info-box" style="display:none; margin-top:8px; padding:12px; background:rgba(255,255,255,0.03); border:1px dashed var(--glass-border); border-radius:10px;">
+          <p id="file-info-name" style="font-size:0.9rem; font-weight:600; color:var(--white); word-break:break-all;"></p>
+          <p id="file-info-size" style="font-size:0.75rem; color:var(--muted); margin-top:4px;"></p>
+        </div>
       </div>
     </div>
 
@@ -764,10 +781,12 @@
     const textarea   = document.getElementById('qr-input');
     const wifiFields = document.getElementById('wifi-fields');
     const emailFields = document.getElementById('email-fields');
+    const fileFields  = document.getElementById('file-fields');
     const inputArea  = document.getElementById('input-area');
 
     wifiFields.style.display  = 'none';
     emailFields.style.display = 'none';
+    fileFields.style.display  = 'none';
     inputArea.style.display   = 'flex';
 
     if (type === 'wifi') {
@@ -776,6 +795,9 @@
     } else if (type === 'email') {
       inputArea.style.display   = 'none';
       emailFields.style.display = 'flex';
+    } else if (type === 'file') {
+      inputArea.style.display  = 'none';
+      fileFields.style.display = 'flex';
     } else {
       textarea.placeholder = type === 'url' ? 'https://example.com' : 'Text hier eingeben…';
     }
@@ -801,6 +823,27 @@
     document.getElementById('size-val').textContent = val;
   }
 
+  let sharedFileUrl = '';
+
+  function selectSharingFile() {
+    if (typeof pywebview === 'undefined') return;
+    pywebview.api.select_file(JSON.stringify([["Alle Dateien", "*.*"]])).then(filePath => {
+      if (!filePath) return;
+      pywebview.api.share_file_local(filePath).then(res => {
+        if (res && res.success) {
+          sharedFileUrl = res.url;
+          document.getElementById('file-info-name').textContent = res.filename;
+          document.getElementById('file-info-size').textContent = res.size;
+          document.getElementById('file-info-box').style.display = 'block';
+          showToast('Datei lokal freigegeben! 🌐');
+          generateQR();
+        } else {
+          showToast('Freigabe fehlgeschlagen: ' + (res.error || 'Fehler'), 'error');
+        }
+      });
+    });
+  }
+
   function buildContent() {
     if (currentType === 'wifi') {
       const ssid = document.getElementById('wifi-ssid').value.trim();
@@ -812,6 +855,9 @@
       const to  = document.getElementById('email-to').value.trim();
       const sub = encodeURIComponent(document.getElementById('email-sub').value.trim());
       return `mailto:${to}?subject=${sub}`;
+    }
+    if (currentType === 'file') {
+      return sharedFileUrl;
     }
     return document.getElementById('qr-input').value.trim();
   }
@@ -913,6 +959,7 @@
     });
   }
 
+  function showToast(msg, type = '') {
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = `toast show ${type}`;
