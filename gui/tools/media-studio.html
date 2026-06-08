@@ -986,7 +986,17 @@
                 <span id="imgSmartAiWarning" style="font-size:9px; color:#f87171; font-weight:normal;">(Bitte in Einstellungen herunterladen)</span>
               </label>
             </div>
-            <div id="imgCensorSidebarInpaintContainer" style="display:none; margin-top:12px;">
+            <div id="imgOnlineAiContainer" style="display:none; margin-top:12px;">
+              <button class="action-btn secondary" id="imgCensorOnlineInpaintBtn" onclick="window.imgCensor.openOnlineInpaint()" style="width:100%; margin:0; display:flex; align-items:center; justify-content:center; gap:6px; background:rgba(255,255,255,0.05); border:1px solid var(--border); color:var(--text); font-size:12px;">🌐 Kostenlose Online-KI (Externes Fenster)</button>
+            </div>
+            <div id="imgCensorSidebarInpaintContainer" style="display:none; margin-top:12px; flex-direction:column; gap:8px;">
+              <div id="imgInpaintPromptContainer" style="display:none; flex-direction:column; gap:6px;">
+                <label style="font-size:11px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:4px;">
+                  💬 KI-Anweisung <span style="font-size:9px; color:var(--text-muted); font-weight:normal;">(optional)</span>
+                </label>
+                <textarea id="imgInpaintPrompt" placeholder="z.B. 'Entferne den Becher' oder 'Ersetze mit Gras'..." style="width:100%; min-height:60px; max-height:120px; padding:10px; background:var(--surface2, rgba(255,255,255,0.04)); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:inherit; font-size:12px; resize:vertical; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent2, #a78bfa)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+                <span style="font-size:9px; color:var(--text-muted); line-height:1.3;">Beschreibe was die KI tun soll. Leer = automatisch entfernen. Benötigt Gemini API-Key in den Einstellungen.</span>
+              </div>
               <button class="action-btn primary" id="imgCensorSidebarInpaintBtn" onclick="window.imgCensor.applyInpaint()" style="width:100%; margin:0;">✨ KI-Retusche anwenden</button>
             </div>
           </div>
@@ -2027,7 +2037,7 @@
           inpaintBtn.style.display = showBtn ? 'flex' : 'none';
         }
         if (sidebarContainer) {
-          sidebarContainer.style.display = showBtn ? 'block' : 'none';
+          sidebarContainer.style.display = showBtn ? 'flex' : 'none';
         }
       }
 
@@ -2060,7 +2070,7 @@
           } else if (toolName === 'rect') {
             instruction.innerHTML = '⬜ <b>Balken</b>: Ziehe mit der Maus ein Rechteck auf dem Bild, um Bereiche mit der ausgewählten Farbe abzudecken.';
           } else if (toolName === 'inpaint') {
-            instruction.innerHTML = '✨ <b>KI-Retusche</b>: Zeichne über das Objekt, das entfernt werden soll, und klicke auf <b>"KI-Retusche anwenden"</b>.';
+            instruction.innerHTML = '✨ <b>KI-Retusche</b>: Markiere den Bereich und beschreibe optional per Textfeld, was die KI tun soll. Klicke dann auf <b>"KI-Retusche anwenden"</b>.';
           }
         }
         
@@ -2068,11 +2078,29 @@
         if (smartAiToggle) {
           smartAiToggle.style.display = (toolName === 'inpaint') ? 'flex' : 'none';
         }
+
+        const onlineAiContainer = document.getElementById('imgOnlineAiContainer');
+        if (onlineAiContainer) {
+          onlineAiContainer.style.display = (toolName === 'inpaint') ? 'block' : 'none';
+        }
+        
+        const promptContainer = document.getElementById('imgInpaintPromptContainer');
+        if (promptContainer) {
+          promptContainer.style.display = (toolName === 'inpaint') ? 'flex' : 'none';
+        }
         
         if (brushCursor) {
           brushCursor.style.display = 'none';
         }
         canvas.style.cursor = 'default';
+        
+        if (toolName === 'inpaint') {
+          const toggle = document.getElementById('imgCensorSmartAiToggle');
+          if (toggle && toggle.checked && typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.init_smart_inpaint) {
+            pywebview.api.init_smart_inpaint();
+          }
+        }
+        
         checkMaskEmpty();
       }
 
@@ -2404,6 +2432,8 @@
 
         const inpaintBtn = document.getElementById('imgCensorInpaintBtn');
         const sidebarInpaintBtn = document.getElementById('imgCensorSidebarInpaintBtn');
+        const promptInput = document.getElementById('imgInpaintPrompt');
+        const prompt = promptInput ? promptInput.value.trim() : '';
         
         if (inpaintBtn) {
           inpaintBtn.disabled = true;
@@ -2411,7 +2441,7 @@
         }
         if (sidebarInpaintBtn) {
           sidebarInpaintBtn.disabled = true;
-          sidebarInpaintBtn.textContent = '⏳ Retuschiere...';
+          sidebarInpaintBtn.textContent = prompt ? '🧠 Gemini verarbeitet...' : '⏳ Retuschiere...';
         }
 
         ctx.putImageData(cleanImageDataBeforeMask, 0, 0);
@@ -2419,7 +2449,7 @@
         const imgB64 = canvas.toDataURL('image/png');
         const maskB64 = maskCanvas.toDataURL('image/png');
 
-        pywebview.api.inpaint_image(imgB64, maskB64).then(res => {
+        pywebview.api.inpaint_image(imgB64, maskB64, prompt).then(res => {
           if (inpaintBtn) {
             inpaintBtn.disabled = false;
             inpaintBtn.textContent = '✨ KI-Retusche anwenden';
@@ -2440,7 +2470,8 @@
 
               saveState();
               checkMaskEmpty();
-              showToast('Retusche erfolgreich angewendet! ✨');
+              const method = res.method === 'gemini' ? ' (Gemini KI)' : ' (Lokal)';
+              showToast('Retusche erfolgreich angewendet!' + method + ' ✨');
             };
             resultImg.src = res.image;
           } else {
@@ -2448,6 +2479,14 @@
             showToast('Fehler bei der Retusche: ' + (res.error || 'Verarbeitung fehlgeschlagen.'), 'error');
           }
         });
+      }
+
+      function openOnlineInpaint() {
+        if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.open_online_inpaint_window) {
+          pywebview.api.open_online_inpaint_window();
+        } else {
+          showToast('Online-KI-Fenster kann nicht geöffnet werden. Läuft die Desktop-App?');
+        }
       }
 
       function updateResizeInfo() {
@@ -2665,14 +2704,9 @@
             toggle.disabled = false;
             warning.style.display = 'none';
             
-            pywebview.api.get_smart_inpaint_setting().then(settingRes => {
-              if (settingRes !== undefined) {
-                toggle.checked = !!settingRes;
-                if (toggle.checked) {
-                  pywebview.api.init_smart_inpaint();
-                }
-              }
-            });
+            // Default to unchecked to prevent 3-second freezing on tool load
+            toggle.checked = false;
+            pywebview.api.save_smart_inpaint_setting(false);
           } else {
             toggle.disabled = true;
             toggle.checked = false;
@@ -2698,7 +2732,7 @@
         window.addEventListener('pywebviewready', initSmartAiSettings);
       }
 
-      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, toggleLock, updateFormat, updateQuality, toggleFullscreen, toggleSmartAi };
+      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, openOnlineInpaint, toggleLock, updateFormat, updateQuality, toggleFullscreen, toggleSmartAi };
     })();
 
     // ==========================================

@@ -1006,6 +1006,28 @@
           </select>
         </div>
 
+        <!-- Gemini API Key -->
+        <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.5rem; padding-top: 1.2rem; border-top: 1px solid var(--border);">
+          <label style="font-size: 0.85rem; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 6px;" id="lblGeminiApiKey">
+            🧠 Gemini API-Key
+            <span style="font-size: 0.7rem; background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 2px 8px; border-radius: 20px; font-weight: 500;">Kostenlos</span>
+          </label>
+          <div style="display: flex; gap: 8px;">
+            <div style="flex: 1; position: relative;">
+              <input type="password" id="geminiApiKeyInput" placeholder="AIza..." style="width: 100%; padding: 0.75rem 2.5rem 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); outline: none; font-family: inherit; font-size: 0.9rem; transition: border-color 0.2s; box-sizing: border-box;" onfocus="this.style.borderColor='var(--accent2)'" onblur="this.style.borderColor='var(--border)'" />
+              <button onclick="toggleApiKeyVisibility()" style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--muted); cursor: pointer; padding: 4px; display:flex; align-items:center;" title="Anzeigen/Verbergen" id="btnToggleApiKey"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></button>
+            </div>
+            <button onclick="saveGeminiApiKey()" style="background: var(--accent); border: none; color: white; padding: 0 1.2rem; border-radius: 10px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: background 0.2s; font-family: inherit; white-space: nowrap;" onmouseover="this.style.background='var(--accent2)'" onmouseout="this.style.background='var(--accent)'" id="btnSaveGeminiKey">Speichern</button>
+          </div>
+          <div id="geminiApiKeyStatus" style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem;">
+            <span id="geminiKeyStatusDot" style="width: 8px; height: 8px; border-radius: 50%; background: #6b7280;"></span>
+            <span id="geminiKeyStatusText" style="color: var(--muted);">Kein API-Key konfiguriert</span>
+          </div>
+          <span style="font-size: 0.7rem; color: var(--muted); line-height: 1.4;">
+            Hol dir deinen kostenlosen API-Key von <a href="https://aistudio.google.com/apikey" target="_blank" style="color: var(--accent2); text-decoration: underline; cursor: pointer;">Google AI Studio</a> für KI-Bildbearbeitung mit Prompts.
+          </span>
+        </div>
+
         <!-- Danger Zone / Reset Settings -->
         <div style="margin-top: 0.5rem; padding-top: 1.2rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.6rem;">
           <label style="font-size: 0.85rem; font-weight: 600; color: var(--text);" id="lblResetSettings">Gefahrenbereich / Danger Zone</label>
@@ -1473,6 +1495,53 @@
           document.getElementById('versionBadge').textContent = installedAppVersion;
         });
         updateSmartAiUIStatus();
+        loadGeminiApiKeyStatus();
+      }
+    }
+
+    // ── Gemini API Key Management ──
+    function loadGeminiApiKeyStatus() {
+      if (typeof pywebview === 'undefined' || !pywebview.api || !pywebview.api.get_gemini_api_key) return;
+      pywebview.api.get_gemini_api_key().then(key => {
+        const dot = document.getElementById('geminiKeyStatusDot');
+        const text = document.getElementById('geminiKeyStatusText');
+        const input = document.getElementById('geminiApiKeyInput');
+        if (key && key.trim()) {
+          dot.style.background = '#10b981';
+          text.style.color = '#10b981';
+          text.textContent = 'API-Key konfiguriert ✓';
+          input.value = key;
+        } else {
+          dot.style.background = '#6b7280';
+          text.style.color = 'var(--muted)';
+          text.textContent = 'Kein API-Key konfiguriert';
+          input.value = '';
+        }
+      });
+    }
+
+    function saveGeminiApiKey() {
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+      const key = document.getElementById('geminiApiKeyInput').value.trim();
+      pywebview.api.save_gemini_api_key(key).then(res => {
+        if (res && res.success) {
+          loadGeminiApiKeyStatus();
+          showCustomAlert('Gemini API', key ? 'API-Key wurde gespeichert! Die KI-Retusche nutzt jetzt Gemini. 🧠' : 'API-Key wurde entfernt. KI-Retusche nutzt jetzt die lokale Methode.', '🧠');
+        } else {
+          showCustomAlert('Fehler', 'API-Key konnte nicht gespeichert werden: ' + (res ? res.error : ''), '❌');
+        }
+      });
+    }
+
+    function toggleApiKeyVisibility() {
+      const input = document.getElementById('geminiApiKeyInput');
+      const btn = document.getElementById('btnToggleApiKey');
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+      } else {
+        input.type = 'password';
+        btn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
       }
     }
 

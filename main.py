@@ -384,6 +384,9 @@ class ToolForgeAPI:
         config = self._load_config()
         self._use_smart_inpaint = config.get("use_smart_inpaint", False)
         
+        # Track active dashboard telemetry requests to avoid unnecessary CPU/GPU/process polling
+        self._last_stats_request_time = 0
+        
         # Start background hardware stats polling thread
         self._hw_thread = threading.Thread(target=self._background_hw_polling, daemon=True)
         self._hw_thread.start()
@@ -392,6 +395,11 @@ class ToolForgeAPI:
         import time
         counter = 0
         while True:
+            # Only poll if dashboard stats were requested recently (within the last 3.0 seconds)
+            if time.time() - self._last_stats_request_time > 3.0:
+                time.sleep(0.5)
+                continue
+                
             # 1. Query GPU stats (runs every 0.5 seconds, fast)
             gpu_pct = 0.0
             gpu_temp = None
@@ -494,6 +502,8 @@ class ToolForgeAPI:
         return None
 
     def get_system_stats(self):
+        import time
+        self._last_stats_request_time = time.time()
         try:
             import psutil
             
@@ -927,6 +937,19 @@ class ToolForgeAPI:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    def get_gemini_api_key(self):
+        config = self._load_config()
+        return config.get("gemini_api_key", "")
+
+    def save_gemini_api_key(self, key):
+        try:
+            config = self._load_config()
+            config["gemini_api_key"] = str(key).strip()
+            self._save_config(config)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def download_lama_model(self):
         try:
             if self._download_thread and self._download_thread.is_alive():
@@ -1249,7 +1272,134 @@ del "%~f0"
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def inpaint_image(self, img_base64, mask_base64):
+    def open_online_inpaint_window(self):
+        try:
+            webview.create_window(
+                title='Kostenlose KI-Retusche (Online)',
+                url='https://cleanup.pictures/',
+                width=1100,
+                height=800,
+                resizable=True,
+                background_color='#ffffff'
+            )
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def inpaint_image(self, img_base64, mask_base64, prompt=""):
+        try:
+            prompt_clean = prompt.strip()
+            config = self._load_config()
+            gemini_key = config.get("gemini_api_key", "").strip()
+            
+            if prompt_clean:
+                # User wants generative prompt-based editing
+                if not gemini_key:
+                    return {
+                        "success": False, 
+                        "error": "Für KI-Anweisungen (Prompts) wird ein Gemini API-Key benötigt. Bitte trage diesen in den Einstellungen ein."
+                    }
+                # Call Gemini and return result/error directly since local fallback cannot handle prompts
+                return self._gemini_inpaint(img_base64, mask_base64, prompt_clean, gemini_key)
+            else:
+                # User wants simple object removal (no prompt)
+                if gemini_key:
+                    try:
+                        result = self._gemini_inpaint(img_base64, mask_base64, "", gemini_key)
+                        if result and result.get("success"):
+                            return result
+                        print("Gemini inpaint failed, falling back to local:", result.get("error", "unknown"))
+                    except Exception as gemini_err:
+                        print("Gemini inpaint exception, falling back to local:", gemini_err)
+                
+                # Fallback to local inpainting (LaMa or Telea)
+                return self._local_inpaint(img_base64, mask_base64)
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def _gemini_inpaint(self, img_base64, mask_base64, prompt, api_key):
+        """Use Gemini API for intelligent generative inpainting."""
+        import re as _re
+        try:
+            # Extract raw base64 data
+            if "," in img_base64:
+                img_b64 = img_base64.split(",", 1)[1]
+            else:
+                img_b64 = img_base64
+            
+            if "," in mask_base64:
+                mask_b64 = mask_base64.split(",", 1)[1]
+            else:
+                mask_b64 = mask_base64
+            
+            # Build the prompt for Gemini
+            if prompt and prompt.strip():
+                user_prompt = prompt.strip()
+            else:
+                user_prompt = "Remove the marked/masked area and fill it naturally with the surrounding background. The result should look like the masked object was never there."
+            
+            full_prompt = f"""Edit this image based on the mask provided. The white areas in the mask indicate the region to modify.
+
+Instruction: {user_prompt}
+
+IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask exactly the same. Make the edit look natural and seamless."""
+            
+            # Call Gemini API with current image model (gemini-3.1-flash-image)
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key={api_key}"
+            
+            payload = {
+                "contents": [{
+                    "parts": [
+                        {"text": full_prompt},
+                        {
+                            "inline_data": {
+                                "mime_type": "image/png",
+                                "data": img_b64
+                            }
+                        },
+                        {"text": "This is the mask (white = area to edit):"},
+                        {
+                            "inline_data": {
+                                "mime_type": "image/png",
+                                "data": mask_b64
+                            }
+                        }
+                    ]
+                }],
+                "generationConfig": {
+                    "responseModalities": ["TEXT", "IMAGE"]
+                }
+            }
+            
+            headers = {"Content-Type": "application/json"}
+            response = requests.post(url, json=payload, headers=headers, timeout=120)
+            
+            if response.status_code != 200:
+                return {"success": False, "error": f"Gemini API error {response.status_code}: {response.text[:200]}"}
+            
+            result = response.json()
+            
+            # Extract image from response
+            candidates = result.get("candidates", [])
+            if not candidates:
+                return {"success": False, "error": "Keine Antwort von Gemini erhalten."}
+            
+            parts = candidates[0].get("content", {}).get("parts", [])
+            
+            for part in parts:
+                if "inlineData" in part:
+                    img_data = part["inlineData"]["data"]
+                    mime = part["inlineData"].get("mimeType", "image/png")
+                    return {"success": True, "image": f"data:{mime};base64,{img_data}", "method": "gemini"}
+            
+            return {"success": False, "error": "Gemini hat kein Bild in der Antwort zurückgegeben."}
+        except requests.exceptions.Timeout:
+            return {"success": False, "error": "Gemini API Timeout – bitte erneut versuchen."}
+        except Exception as e:
+            return {"success": False, "error": f"Gemini Fehler: {str(e)}"}
+
+    def _local_inpaint(self, img_base64, mask_base64):
+        """Fallback local inpainting using OpenCV/LaMa."""
         try:
             # Decode main image
             header, encoded = img_base64.split(",", 1)
@@ -1268,27 +1418,20 @@ del "%~f0"
                 return {"success": False, "error": "Konnte Maske nicht dekodieren."}
 
             h, w = img.shape[:2]
-            # Resize mask if dimensions don't match exactly
             if mask_img.shape[0] != h or mask_img.shape[1] != w:
                 mask_img = cv2.resize(mask_img, (w, h), interpolation=cv2.INTER_NEAREST)
 
-            # Create binary mask (single channel, uint8)
             if len(mask_img.shape) == 3 and mask_img.shape[2] == 4:
-                # If transparent PNG, mask is the alpha channel
                 mask = mask_img[:, :, 3]
             elif len(mask_img.shape) == 3:
-                # If 3 channel BGR, convert to gray and threshold
                 gray_mask = cv2.cvtColor(mask_img, cv2.COLOR_BGR2GRAY)
                 _, mask = cv2.threshold(gray_mask, 10, 255, cv2.THRESH_BINARY)
             else:
-                # Already single channel
                 _, mask = cv2.threshold(mask_img, 10, 255, cv2.THRESH_BINARY)
 
-            # Dilate the mask slightly (3x3 kernel) to ensure edge pixels of watermark are covered
             kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
             mask = cv2.dilate(mask, kernel, iterations=1)
 
-            # Check if Smart-KI is active and model is available
             if self._use_smart_inpaint and os.path.exists(self._model_path) and os.path.getsize(self._model_path) > 200000000:
                 try:
                     if self._lama_session is None:
@@ -1299,16 +1442,14 @@ del "%~f0"
                     print("Smart inpaint error, falling back to Telea:", smart_err)
                     dst = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
             else:
-                # Inpaint using Telea
                 dst = cv2.inpaint(img, mask, 3, cv2.INPAINT_TELEA)
 
-            # Encode result back to PNG base64
             success, buffer = cv2.imencode('.png', dst)
             if not success:
                 return {"success": False, "error": "Konnte Ergebnisbild nicht enkodieren."}
 
             res_b64 = base64.b64encode(buffer).decode('utf-8')
-            return {"success": True, "image": f"data:image/png;base64,{res_b64}"}
+            return {"success": True, "image": f"data:image/png;base64,{res_b64}", "method": "local"}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
