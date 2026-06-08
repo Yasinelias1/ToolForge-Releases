@@ -1932,34 +1932,80 @@ del "%~f0"
         except Exception as e:
             return {"success": False, "error": str(e)}
 
-    def share_file_local(self, filePath):
+    def share_file_local(self, filePath, shareOnInternet=False):
         try:
             if isinstance(filePath, (list, tuple)):
                 filePath = filePath[0]
             if not filePath or not os.path.exists(filePath):
                 return {"success": False, "error": "Datei existiert nicht."}
 
-            if self._file_share_server is None:
-                self._file_share_server = FileShareServer()
-                self._file_share_server.start()
-
-            self._file_share_server.set_file(filePath)
-            
-            local_ip = self.get_local_ip()
-            port = self._file_share_server.port
-            url = f"http://{local_ip}:{port}/"
-            
             filename = os.path.basename(filePath)
-            size = self._file_share_server.get_formatted_size()
             
-            return {
-                "success": True,
-                "url": url,
-                "filename": filename,
-                "size": size
-            }
+            # Format file size
+            size_bytes = os.path.getsize(filePath)
+            formatted_size = "0 B"
+            s = float(size_bytes)
+            for unit in ['B', 'KB', 'MB', 'GB']:
+                if s < 1024.0:
+                    formatted_size = f"{s:.1f} {unit}"
+                    break
+                s /= 1024.0
+
+            if shareOnInternet:
+                url = self._upload_to_internet_sharing(filePath)
+                return {
+                    "success": True,
+                    "url": url,
+                    "filename": filename,
+                    "size": formatted_size
+                }
+            else:
+                if self._file_share_server is None:
+                    self._file_share_server = FileShareServer()
+                    self._file_share_server.start()
+
+                self._file_share_server.set_file(filePath)
+                
+                local_ip = self.get_local_ip()
+                port = self._file_share_server.port
+                url = f"http://{local_ip}:{port}/"
+                
+                return {
+                    "success": True,
+                    "url": url,
+                    "filename": filename,
+                    "size": formatted_size
+                }
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def _upload_to_internet_sharing(self, file_path):
+        import requests
+        # Try 0x0.st first
+        try:
+            with open(file_path, 'rb') as f:
+                r = requests.post('https://0x0.st', files={'file': f}, timeout=45)
+            if r.status_code == 200:
+                url = r.text.strip()
+                if url.startswith('http'):
+                    return url
+        except Exception as e:
+            print("0x0.st upload failed:", e)
+
+        # Fallback to catbox.moe
+        try:
+            with open(file_path, 'rb') as f:
+                data = {'reqtype': 'fileupload'}
+                files = {'fileToUpload': f}
+                r = requests.post('https://catbox.moe/user/api.php', data=data, files=files, timeout=45)
+            if r.status_code == 200:
+                url = r.text.strip()
+                if url.startswith('http'):
+                    return url
+        except Exception as e:
+            print("Catbox upload failed:", e)
+            
+        raise Exception("Datei-Upload ins Internet ist fehlgeschlagen (Schnittstellen antworten nicht).")
 
     def get_local_ip(self):
         import socket

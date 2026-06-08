@@ -647,6 +647,12 @@
         <button class="btn-download" id="select-file-btn" onclick="selectSharingFile()" style="margin: 0; border-color: var(--purple); background: var(--input-bg);">
           📁 Datei auswählen
         </button>
+        <div style="margin-top:10px; display:flex; align-items:center; gap:8px;">
+          <input type="checkbox" id="share-internet-check" onchange="onShareModeChange()" style="width:16px; height:16px; accent-color:var(--purple); cursor:pointer;" />
+          <label for="share-internet-check" style="text-transform:none; font-size:0.82rem; font-weight:500; color:var(--muted-light); cursor:pointer; user-select:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
+            ☁️ Über das Internet teilen (für Mobilfunk/LTE)
+          </label>
+        </div>
         <div id="file-info-box" style="display:none; margin-top:8px; padding:12px; background:rgba(255,255,255,0.03); border:1px dashed var(--glass-border); border-radius:10px;">
           <p id="file-info-name" style="font-size:0.9rem; font-weight:600; color:var(--white); word-break:break-all;"></p>
           <p id="file-info-size" style="font-size:0.75rem; color:var(--muted); margin-top:4px;"></p>
@@ -824,23 +830,58 @@
   }
 
   let sharedFileUrl = '';
+  let lastSelectedFilePath = '';
 
   function selectSharingFile() {
     if (typeof pywebview === 'undefined') return;
     pywebview.api.select_file(JSON.stringify([["Alle Dateien", "*.*"]])).then(filePath => {
       if (!filePath) return;
-      pywebview.api.share_file_local(filePath).then(res => {
-        if (res && res.success) {
-          sharedFileUrl = res.url;
-          document.getElementById('file-info-name').textContent = res.filename;
-          document.getElementById('file-info-size').textContent = res.size;
-          document.getElementById('file-info-box').style.display = 'block';
-          showToast('Datei lokal freigegeben! 🌐');
-          generateQR();
+      lastSelectedFilePath = filePath;
+      triggerFileSharing();
+    });
+  }
+
+  function onShareModeChange() {
+    if (lastSelectedFilePath) {
+      triggerFileSharing();
+    }
+  }
+
+  function triggerFileSharing() {
+    if (!lastSelectedFilePath) return;
+    const shareOnInternet = document.getElementById('share-internet-check').checked;
+    const btn = document.getElementById('select-file-btn');
+    
+    if (shareOnInternet) {
+      showToast('Lade Datei hoch... Bitte warten ☁️');
+    }
+    
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '⏳ Verarbeite...';
+    
+    pywebview.api.share_file_local(lastSelectedFilePath, shareOnInternet).then(res => {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      
+      if (res && res.success) {
+        sharedFileUrl = res.url;
+        document.getElementById('file-info-name').textContent = res.filename;
+        document.getElementById('file-info-size').textContent = res.size;
+        document.getElementById('file-info-box').style.display = 'block';
+        if (shareOnInternet) {
+          showToast('Datei im Internet freigegeben! ☁️');
         } else {
-          showToast('Freigabe fehlgeschlagen: ' + (res.error || 'Fehler'), 'error');
+          showToast('Datei lokal freigegeben! 🌐');
         }
-      });
+        generateQR();
+      } else {
+        showToast('Freigabe fehlgeschlagen: ' + (res.error || 'Fehler'), 'error');
+      }
+    }).catch(err => {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      showToast('Fehler: ' + err, 'error');
     });
   }
 
