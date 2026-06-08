@@ -860,6 +860,9 @@
     const originalText = btn.innerHTML;
     btn.innerHTML = '⏳ Verarbeite...';
     
+    clearQR();
+    sharedFileUrl = '';
+    
     pywebview.api.share_file_local(lastSelectedFilePath, shareOnInternet).then(res => {
       btn.disabled = false;
       btn.innerHTML = originalText;
