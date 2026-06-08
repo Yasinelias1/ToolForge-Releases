@@ -1158,12 +1158,17 @@ del "%~f0"
         img_512 = cv2.resize(img_crop, (512, 512), interpolation=cv2.INTER_AREA)
         mask_512 = cv2.resize(mask_crop, (512, 512), interpolation=cv2.INTER_NEAREST)
         
-        img_input = img_512.astype(np.float32) / 255.0
+        # Convert BGR to RGB for the AI model
+        img_rgb = cv2.cvtColor(img_512, cv2.COLOR_BGR2RGB)
+        img_input = img_rgb.astype(np.float32) / 255.0
         img_input = np.transpose(img_input, (2, 0, 1))
         img_input = np.expand_dims(img_input, axis=0)
         
         mask_input = (mask_512 > 0).astype(np.float32)
         mask_input = np.expand_dims(np.expand_dims(mask_input, axis=0), axis=0)
+        
+        # Black out masked region in the input image (required preprocessing for LaMa)
+        img_input = img_input * (1.0 - mask_input)
         
         inputs = {
             session.get_inputs()[0].name: img_input,
@@ -1173,7 +1178,10 @@ del "%~f0"
         
         output = outputs[0][0]
         output = np.transpose(output, (1, 2, 0))
-        output = np.clip(output * 255.0, 0, 255).astype(np.uint8)
+        output = np.clip(output, 0, 255).astype(np.uint8)
+        
+        # Convert RGB back to BGR for OpenCV
+        output = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
         
         output_crop = cv2.resize(output, (x2_pad - x1_pad, y2_pad - y1_pad), interpolation=cv2.INTER_CUBIC)
         
