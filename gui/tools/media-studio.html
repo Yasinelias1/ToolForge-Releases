@@ -1193,6 +1193,35 @@
               </label>
             </div>
 
+            <div class="control-item" style="margin-top: 18px; border-top:1px solid var(--border); padding-top:16px;">
+              <span class="control-label">Bilder hochskalieren & Auflösung</span>
+              <div style="display:flex; flex-direction:column; gap:12px;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <span style="font-size:12px; color:var(--text-muted);">Upscale-Faktor (Bilder)</span>
+                  <select id="fsScaleFactor" style="padding:6px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:12px;">
+                    <option value="1.0">1.0x (Original)</option>
+                    <option value="1.5">1.5x (Bessere Erkennung)</option>
+                    <option value="2.0">2.0x (Super Resolution)</option>
+                  </select>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <span style="font-size:12px; color:var(--text-muted);">Ergebnis-Größe</span>
+                  <select id="fsRestoreSize" style="padding:6px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:12px;">
+                    <option value="true">Originalgröße (zurückskalieren)</option>
+                    <option value="false">Hochskaliert beibehalten</option>
+                  </select>
+                </div>
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:12px;">
+                  <span style="font-size:12px; color:var(--text-muted);">Detektions-Auflösung (KI)</span>
+                  <select id="fsDetResolution" style="padding:6px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:12px;">
+                    <option value="auto">Automatisch (Optimal)</option>
+                    <option value="640">Standard (640x640)</option>
+                    <option value="1280">Präzise (1280x1280)</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
             <div class="control-item" id="fsTimeRangeContainer" style="margin-top: 18px; border-top:1px solid var(--border); padding-top:16px; display:none;">
               <span class="control-label">Zeitbereich</span>
               <select id="fsTimeRangeSelect" onchange="window.faceSwap.toggleTimeRange()" style="width:100%; padding:10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); margin-bottom:10px;">
@@ -3568,6 +3597,10 @@
         
         const rectJson = JSON.stringify(selectedBoxes);
         
+        const scaleFactor = parseFloat(document.getElementById('fsScaleFactor').value) || 1.0;
+        const restoreSize = document.getElementById('fsRestoreSize').value === 'true';
+        const detResolution = document.getElementById('fsDetResolution').value || 'auto';
+        
         pywebview.api.process_face_swap(
           targetPath,
           sourceFaceBase64,
@@ -3576,7 +3609,10 @@
           tracking,
           autoFace,
           startT,
-          endT
+          endT,
+          scaleFactor,
+          restoreSize,
+          detResolution
         ).then(res => {
           progressCard.style.display = 'none';
           runBtn.disabled = false;

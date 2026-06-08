@@ -2143,13 +2143,19 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
             print("Error in classic face swap:", e)
             return target_img
 
-    def process_face_swap(self, file_path, face_swap_img_base64, use_premium_face_swap=False, rect_json="[]", tracking=False, auto_detect=True, start_time=-1.0, end_time=-1.0):
+    def process_face_swap(self, file_path, face_swap_img_base64, use_premium_face_swap=False, rect_json="[]", tracking=False, auto_detect=True, start_time=-1.0, end_time=-1.0, scale_factor=1.0, restore_original_size=True, det_resolution="auto"):
         if isinstance(file_path, (list, tuple)):
             file_path = file_path[0]
             
         use_premium = bool(use_premium_face_swap)
         auto_detect = bool(auto_detect)
         tracking = bool(tracking)
+        try:
+            scale_factor = float(scale_factor)
+        except:
+            scale_factor = 1.0
+        restore_original_size = str(restore_original_size).lower() == 'true'
+        det_resolution = str(det_resolution)
         
         # Check if the file is an image or a video
         ext = os.path.splitext(file_path.lower())[1]
@@ -2166,6 +2172,13 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 source_data = base64.b64decode(encoded)
                 nparr_src = np.frombuffer(source_data, np.uint8)
                 source_img = cv2.imdecode(nparr_src, cv2.IMREAD_COLOR)
+                
+                # Auto-upscale source image if it is small to help detection
+                if source_img is not None:
+                    sh, sw = source_img.shape[:2]
+                    if max(sh, sw) < 1024:
+                        scale = 1024.0 / max(sh, sw)
+                        source_img = cv2.resize(source_img, (int(sw * scale), int(sh * scale)), interpolation=cv2.INTER_CUBIC)
             except Exception as src_err:
                 return {"success": False, "error": f"Fehler beim Dekodieren des Quellgesichts: {str(src_err)}"}
                 
@@ -2208,6 +2221,24 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 else:
                     app = self._insightface_app
                     swapper = self._inswapper_model
+                
+                # Dynamic detection size for source face
+                if source_img is not None:
+                    sh, sw = source_img.shape[:2]
+                    if det_resolution == "auto":
+                        det_w = int((sw + 31) // 32 * 32)
+                        det_h = int((sh + 31) // 32 * 32)
+                        max_det = 1280
+                        if det_w > max_det or det_h > max_det:
+                            scale = max_det / max(det_w, det_h)
+                            det_w = int((det_w * scale) // 32 * 32)
+                            det_h = int((det_h * scale) // 32 * 32)
+                    elif det_resolution == "1280":
+                        det_w, det_h = 1280, 1280
+                    else:
+                        det_w, det_h = 640, 640
+                    
+                    app.prepare(ctx_id=-1, det_size=(det_w, det_h))
                     
                 # Extract source embedding once
                 src_faces = app.get(source_img)
@@ -2219,6 +2250,14 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                         "error": "Kein Gesicht im Quellbild per Premium-KI erkannt. Bitte verwende ein anderes Quellbild (z.B. ein Porträtfoto, auf dem das Gesicht groß und deutlich sichtbar ist)."
                     }
             except Exception as load_err:
+                import traceback
+                tb_str = traceback.format_exc()
+                print("Faceswap load error:\n", tb_str)
+                try:
+                    with open("faceswap_error.log", "w", encoding="utf-8") as f:
+                        f.write(tb_str)
+                except:
+                    pass
                 return {
                     "success": False,
                     "error": f"Fehler beim Laden der Premium KI-Modelle: {str(load_err)}"
@@ -2252,7 +2291,6 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                     [sw * 0.35, sh * 0.75],
                     [sw * 0.65, sh * 0.75]
                 ], dtype=np.float32)
-
         # Parse manual rectangles if any
         rects = []
         try:
@@ -2274,6 +2312,14 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                     return {"success": False, "error": "Konnte Bild nicht laden."}
                 
                 h_img, w_img = img.shape[:2]
+                orig_h, orig_w = h_img, w_img
+                
+                # Apply scaling if requested
+                if scale_factor > 1.0:
+                    new_w = int(w_img * scale_factor)
+                    new_h = int(h_img * scale_factor)
+                    img = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_CUBIC)
+                    h_img, w_img = img.shape[:2]
                 
                 # Gather target faces coordinates (x, y, w, h)
                 target_boxes = []
@@ -2300,10 +2346,10 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                         yn_faces = None
                         
                     for r_item in rects:
-                        bx = max(0, min(w_img - 1, int(r_item['x'])))
-                        by = max(0, min(h_img - 1, int(r_item['y'])))
-                        bw = max(1, min(w_img - bx, int(r_item['w'])))
-                        bh = max(1, min(h_img - by, int(r_item['h'])))
+                        bx = max(0, min(w_img - 1, int(r_item['x'] * scale_factor)))
+                        by = max(0, min(h_img - 1, int(r_item['y'] * scale_factor)))
+                        bw = max(1, min(w_img - bx, int(r_item['w'] * scale_factor)))
+                        bh = max(1, min(h_img - by, int(r_item['h'] * scale_factor)))
                         
                         best_iou = 0
                         best_face = None
@@ -2326,7 +2372,7 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                                 [bx + bw * 0.65, by + bh * 0.75]
                             ], dtype=np.float32)
                             target_boxes.append((bx, by, bw, bh, mock_lms))
-
+ 
                 # Apply Face Swap
                 if use_premium and source_face is not None:
                     for bx, by, bw, bh, landmarks in target_boxes:
@@ -2341,8 +2387,11 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 else:
                     for bx, by, bw, bh, landmarks in target_boxes:
                         img = self._apply_classic_face_swap(img, landmarks, source_img, src_landmarks, src_box)
-
+ 
                 # Save output to a temp file inside gui/tools/
+                if restore_original_size and scale_factor > 1.0:
+                    img = cv2.resize(img, (orig_w, orig_h), interpolation=cv2.INTER_CUBIC)
+                    
                 gui_tools_dir = get_resource_path('gui/tools')
                 import time
                 temp_name = f'temp_faceswap_{int(time.time())}.png'
@@ -2375,6 +2424,12 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 if fps <= 0: fps = 25.0
                 if total_frames <= 0: total_frames = 1
                 
+                # Apply scaling factor to processing size
+                proc_w, proc_h = orig_w, orig_h
+                if scale_factor > 1.0:
+                    proc_w = int(orig_w * scale_factor)
+                    proc_h = int(orig_h * scale_factor)
+                
                 fd, temp_avi = tempfile.mkstemp(suffix='.avi')
                 os.close(fd)
                 
@@ -2384,7 +2439,8 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                 temp_mp4 = os.path.join(gui_tools_dir, temp_name)
                 
                 fourcc = cv2.VideoWriter_fourcc(*'MJPG')
-                writer = cv2.VideoWriter(temp_avi, fourcc, fps, (orig_w, orig_h))
+                out_w, out_h = (orig_w, orig_h) if restore_original_size else (proc_w, proc_h)
+                writer = cv2.VideoWriter(temp_avi, fourcc, fps, (out_w, out_h))
                 
                 if not writer.isOpened():
                     cap.release()
@@ -2404,6 +2460,9 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                         in_time_range = (current_time >= start_time and current_time <= end_time)
                         
                     if not in_time_range:
+                        # Non-swapped frames must also match the output size
+                        if not restore_original_size and scale_factor > 1.0:
+                            frame = cv2.resize(frame, (proc_w, proc_h), interpolation=cv2.INTER_CUBIC)
                         writer.write(frame)
                         frame_idx += 1
                         if frame_idx % 10 == 0 or frame_idx == total_frames:
@@ -2411,25 +2470,29 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                             self._window.evaluate_js(f"if (typeof updateFaceSwapProgress === 'function') updateFaceSwapProgress({pct});")
                         continue
                         
+                    # Scale current frame if scale_factor > 1.0
+                    if scale_factor > 1.0:
+                        frame = cv2.resize(frame, (proc_w, proc_h), interpolation=cv2.INTER_CUBIC)
+                        
                     # Gather faces in this frame
                     faces_list = []
                     
                     if auto_detect:
                         if os.path.exists(yn_model_path):
                             try:
-                                if not hasattr(self, "_yunet_detector") or self._yunet_detector_size != (orig_w, orig_h):
+                                if not hasattr(self, "_yunet_detector") or self._yunet_detector_size != (proc_w, proc_h):
                                     self._yunet_detector = cv2.FaceDetectorYN.create(
-                                        yn_model_path, "", (orig_w, orig_h), 0.5, 0.3, 5000
+                                        yn_model_path, "", (proc_w, proc_h), 0.5, 0.3, 5000
                                     )
-                                    self._yunet_detector_size = (orig_w, orig_h)
+                                    self._yunet_detector_size = (proc_w, proc_h)
                                 ok_yn, yn_faces = self._yunet_detector.detect(frame)
                                 if ok_yn and yn_faces is not None:
                                     for f in yn_faces:
                                         fx, fy, fw, fh = [int(v) for v in f[0:4]]
-                                        fx = max(0, min(orig_w - 1, fx))
-                                        fy = max(0, min(orig_h - 1, fy))
-                                        fw = max(1, min(orig_w - fx, fw))
-                                        fh = max(1, min(orig_h - fy, fh))
+                                        fx = max(0, min(proc_w - 1, fx))
+                                        fy = max(0, min(proc_h - 1, fy))
+                                        fw = max(1, min(proc_w - fx, fw))
+                                        fh = max(1, min(proc_h - fy, fh))
                                         faces_list.append((fx, fy, fw, fh))
                             except Exception as yn_err:
                                 print("YuNet face detection error in frame loop:", yn_err)
@@ -2440,8 +2503,12 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                                 for r_item in rects:
                                     try:
                                         tr = cv2.TrackerMIL_create()
-                                        tr.init(frame, (r_item['x'], r_item['y'], r_item['w'], r_item['h']))
-                                        trackers.append((tr, r_item))
+                                        tx = int(r_item['x'] * scale_factor)
+                                        ty = int(r_item['y'] * scale_factor)
+                                        tw = int(r_item['w'] * scale_factor)
+                                        th = int(r_item['h'] * scale_factor)
+                                        tr.init(frame, (tx, ty, tw, th))
+                                        trackers.append((tr, {"x": tx, "y": ty, "w": tw, "h": th}))
                                     except Exception as tr_err:
                                         print("Failed to init tracker for box:", tr_err)
                             else:
@@ -2450,16 +2517,19 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                                     ok, bbox = tr.update(frame)
                                     if ok:
                                         tx, ty, tw, th = [int(v) for v in bbox]
-                                        tx = max(0, min(orig_w - 1, tx))
-                                        ty = max(0, min(orig_h - 1, ty))
-                                        tw = max(1, min(orig_w - tx, tw))
-                                        th = max(1, min(orig_h - ty, th))
+                                        tx = max(0, min(proc_w - 1, tx))
+                                        ty = max(0, min(proc_h - 1, ty))
+                                        tw = max(1, min(proc_w - tx, tw))
+                                        th = max(1, min(proc_h - ty, th))
                                         faces_list.append((tx, ty, tw, th))
                                         new_trackers.append((tr, {"x": tx, "y": ty, "w": tw, "h": th}))
                                 trackers = new_trackers
                         else:
                             for r_item in rects:
-                                tx, ty, tw, th = r_item['x'], r_item['y'], r_item['w'], r_item['h']
+                                tx = int(r_item['x'] * scale_factor)
+                                ty = int(r_item['y'] * scale_factor)
+                                tw = int(r_item['w'] * scale_factor)
+                                th = int(r_item['h'] * scale_factor)
                                 faces_list.append((tx, ty, tw, th))
                                 
                     # If we have faces to swap, extract their landmarks using YuNet
@@ -2467,11 +2537,11 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                     if faces_list:
                         if os.path.exists(yn_model_path):
                             try:
-                                if not hasattr(self, "_yunet_detector") or self._yunet_detector_size != (orig_w, orig_h):
+                                if not hasattr(self, "_yunet_detector") or self._yunet_detector_size != (proc_w, proc_h):
                                     self._yunet_detector = cv2.FaceDetectorYN.create(
-                                        yn_model_path, "", (orig_w, orig_h), 0.5, 0.3, 5000
+                                        yn_model_path, "", (proc_w, proc_h), 0.5, 0.3, 5000
                                     )
-                                    self._yunet_detector_size = (orig_w, orig_h)
+                                    self._yunet_detector_size = (proc_w, proc_h)
                                 ok_yn, yn_faces = self._yunet_detector.detect(frame)
                             except Exception as yn_err:
                                 print("YuNet face detection error in landmarks swap loop:", yn_err)
@@ -2519,6 +2589,10 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
                             for bx, by, bw, bh, landmarks in faces_with_landmarks:
                                 frame = self._apply_classic_face_swap(frame, landmarks, source_img, src_landmarks, src_box)
                                 
+                    # Resize frame back to original size if restore_original_size is requested
+                    if restore_original_size and scale_factor > 1.0:
+                        frame = cv2.resize(frame, (orig_w, orig_h), interpolation=cv2.INTER_CUBIC)
+                        
                     writer.write(frame)
                     frame_idx += 1
                     

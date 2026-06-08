@@ -32,6 +32,9 @@ def main():
         print(f"Error: ffmpeg binaries not found at {ffmpeg_bin_dir}. Please run main.py once first.")
         sys.exit(1)
 
+    # Locate insightface data objects (e.g. meanshape_68.pkl)
+    insightface_data_dir = os.path.join(venv_dir, "Lib", "site-packages", "insightface", "data")
+
     # Build command
     cmd = [
         pyinstaller_path,
@@ -47,6 +50,8 @@ def main():
         f"--add-data={os.path.join(project_dir, 'haarcascade_frontalface_alt2.xml')};.",
         # Add the ffmpeg binaries to the expected site-packages path inside sys._MEIPASS
         f"--add-data={ffmpeg_bin_dir};static_ffmpeg/bin",
+        # Add the insightface data package (contains meanshape_68.pkl)
+        f"--add-data={insightface_data_dir};insightface/data",
         os.path.join(project_dir, "main.py")
     ]
     
