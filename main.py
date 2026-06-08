@@ -77,7 +77,7 @@ WMO_CODES = {
 }
 
 class ToolForgeAPI:
-    APP_VERSION = "1.1.3"
+    APP_VERSION = "1.1.4"
 
     def __init__(self):
         self._window = None
@@ -225,18 +225,46 @@ class ToolForgeAPI:
         try:
             import time
             import requests
+            import threading
+            import socket
             
             session = requests.Session()
             
+            # Variables for the background updater thread
+            self.speedtest_active = True
+            self.speedtest_phase = 'ping'
+            self.speedtest_pct = 0
+            self.speedtest_value = 0.0
+
+            def update_loop():
+                last_phase = None
+                last_pct = None
+                last_val = None
+                while self.speedtest_active:
+                    phase = self.speedtest_phase
+                    pct = self.speedtest_pct
+                    val = self.speedtest_value
+                    if phase != last_phase or pct != last_pct or val != last_val:
+                        if phase == 'ping':
+                            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('{phase}', {pct}, {val:.0f});")
+                        else:
+                            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('{phase}', {pct}, {val:.2f});")
+                        last_phase = phase
+                        last_pct = pct
+                        last_val = val
+                    time.sleep(0.15)
+
+            updater_thread = threading.Thread(target=update_loop, daemon=True)
+            updater_thread.start()
+
             # 1. Ping Phase
-            self._window.evaluate_js("if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', 0, 0);")
-            
-            import socket
             pings = []
             
             # 1.1 Try UDP DNS query ping to 1.1.1.1:53 (extremely fast, connectionless, bypasses firewall SYN rate limiting)
             dns_query = b'\xaa\xbb\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x05speed\ncloudflare\x03com\x00\x00\x01\x00\x01'
             for i in range(5):
+                if not self.speedtest_active:
+                    break
                 t0 = time.time()
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -248,14 +276,15 @@ class ToolForgeAPI:
                     pass
                 finally:
                     s.close()
-                pct = int(((i + 1) / 5) * 100)
-                current_ping_estimate = sum(pings) / len(pings) if pings else 0
-                self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
+                self.speedtest_pct = int(((i + 1) / 5) * 100)
+                self.speedtest_value = sum(pings) / len(pings) if pings else 0
                 time.sleep(0.3)
                 
             # 1.2 Fallback to TCP ping on Port 443 (HTTPS - never blocked, extremely reliable)
-            if not pings:
+            if not pings and self.speedtest_active:
                 for i in range(5):
+                    if not self.speedtest_active:
+                        break
                     t0 = time.time()
                     try:
                         s = socket.create_connection(("speed.cloudflare.com", 443), timeout=0.4)
@@ -263,14 +292,15 @@ class ToolForgeAPI:
                         pings.append((time.time() - t0) * 1000)
                     except:
                         pass
-                    pct = int(((i + 1) / 5) * 100)
-                    current_ping_estimate = sum(pings) / len(pings) if pings else 0
-                    self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
+                    self.speedtest_pct = int(((i + 1) / 5) * 100)
+                    self.speedtest_value = sum(pings) / len(pings) if pings else 0
                     time.sleep(0.3)
 
             # 1.3 Fallback to TCP ping on Port 80 (HTTP) if Port 443 also failed
-            if not pings:
+            if not pings and self.speedtest_active:
                 for i in range(5):
+                    if not self.speedtest_active:
+                        break
                     t0 = time.time()
                     try:
                         s = socket.create_connection(("speed.cloudflare.com", 80), timeout=0.4)
@@ -278,18 +308,19 @@ class ToolForgeAPI:
                         pings.append((time.time() - t0) * 1000)
                     except:
                         pass
-                    pct = int(((i + 1) / 5) * 100)
-                    current_ping_estimate = sum(pings) / len(pings) if pings else 0
-                    self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
+                    self.speedtest_pct = int(((i + 1) / 5) * 100)
+                    self.speedtest_value = sum(pings) / len(pings) if pings else 0
                     time.sleep(0.3)
                     
             # 1.4 Fallback to HTTP ping if all TCP failed
-            if not pings:
+            if not pings and self.speedtest_active:
                 try:
                     session.get("https://speed.cloudflare.com/__down?bytes=0", timeout=1.0)
                 except:
                     pass
                 for i in range(5):
+                    if not self.speedtest_active:
+                        break
                     t0 = time.time()
                     try:
                         res = session.get("https://speed.cloudflare.com/__down?bytes=0", timeout=1.0)
@@ -297,22 +328,25 @@ class ToolForgeAPI:
                         pings.append((time.time() - t0) * 1000)
                     except:
                         pass
-                    pct = int(((i + 1) / 5) * 100)
-                    current_ping_estimate = sum(pings) / len(pings) if pings else 0
-                    self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', {pct}, {current_ping_estimate:.0f});")
+                    self.speedtest_pct = int(((i + 1) / 5) * 100)
+                    self.speedtest_value = sum(pings) / len(pings) if pings else 0
                     time.sleep(0.3)
                     
             ping = sum(pings) / len(pings) if pings else 20.0
 
             
             # 2. Download Phase
-            self._window.evaluate_js("if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('download', 0, 0);")
+            self.speedtest_phase = 'download'
+            self.speedtest_pct = 0
+            self.speedtest_value = 0.0
             
             dl_start = time.time()
             downloaded = 0
-            last_update_time = dl_start
             
-            while True:
+            stable_dl_start = None
+            stable_downloaded = 0
+            
+            while self.speedtest_active:
                 elapsed = time.time() - dl_start
                 if elapsed >= 5.0:
                     break
@@ -322,53 +356,81 @@ class ToolForgeAPI:
                 try:
                     with session.get(dl_url, stream=True, timeout=5) as r:
                         r.raise_for_status()
-                        for chunk in r.iter_content(chunk_size=16 * 1024): # 16KB chunks for high resolution
+                        for chunk in r.iter_content(chunk_size=128 * 1024): # 128KB chunks
+                            if not self.speedtest_active:
+                                break
                             if chunk:
                                 downloaded += len(chunk)
                                 el = time.time() - dl_start
                                 if el >= 5.0:
                                     break
                                 
-                                # Throttle JS calls to frontend to every 60ms
-                                now = time.time()
-                                if now - last_update_time >= 0.06:
-                                    current_speed = (downloaded * 8) / (el * 1000000) if el >= 0.5 else 0.0
-                                    pct = int((el / 5.0) * 100)
-                                    pct = min(99, pct)
-                                    self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('download', {pct}, {current_speed:.2f});")
-                                    last_update_time = now
+                                # Stable average calculation after 1.5 seconds
+                                if el >= 1.5:
+                                    if stable_dl_start is None:
+                                        stable_dl_start = time.time()
+                                        stable_downloaded = len(chunk)
+                                    else:
+                                        stable_downloaded += len(chunk)
+                                
+                                # Calculate current speed
+                                if stable_dl_start is not None:
+                                    stable_elapsed = time.time() - stable_dl_start
+                                    current_speed = (stable_downloaded * 8) / (stable_elapsed * 1000000) if stable_elapsed > 0 else 0.0
+                                else:
+                                    current_speed = (downloaded * 8) / (el * 1000000) if el >= 0.2 else 0.0
+                                
+                                self.speedtest_pct = min(99, int((el / 5.0) * 100))
+                                self.speedtest_value = current_speed
                 except:
                     pass
             
             dl_duration = time.time() - dl_start
-            final_dl_speed = (downloaded * 8) / (dl_duration * 1000000) if dl_duration >= 0.5 else 0.0
-            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('download', 100, {final_dl_speed:.2f});")
+            if stable_dl_start is not None:
+                stable_elapsed = time.time() - stable_dl_start
+                final_dl_speed = (stable_downloaded * 8) / (stable_elapsed * 1000000) if stable_elapsed > 0 else 0.0
+            else:
+                final_dl_speed = (downloaded * 8) / (dl_duration * 1000000) if dl_duration >= 0.5 else 0.0
             
             # 3. Upload Phase
-            self._window.evaluate_js("if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('upload', 0, 0);")
+            self.speedtest_phase = 'upload'
+            self.speedtest_pct = 0
+            self.speedtest_value = 0.0
             
             ul_url = "https://speed.cloudflare.com/__up"
             ul_start = time.time()
             uploaded = 0
-            chunk_data = os.urandom(16 * 1024) # 16KB chunks
-            last_update_time = ul_start
+            chunk_data = os.urandom(128 * 1024) # 128KB chunks
+            
+            stable_ul_start = None
+            stable_uploaded = 0
             
             def upload_generator():
-                nonlocal uploaded, last_update_time
-                while True:
+                nonlocal uploaded, stable_ul_start, stable_uploaded
+                while self.speedtest_active:
                     elapsed = time.time() - ul_start
                     if elapsed >= 5.0:
                         break
                     yield chunk_data
                     uploaded += len(chunk_data)
                     
-                    now = time.time()
-                    if now - last_update_time >= 0.06:
-                        current_speed = (uploaded * 8) / (elapsed * 1000000) if elapsed >= 0.5 else 0.0
-                        pct = int((elapsed / 5.0) * 100)
-                        pct = min(99, pct)
-                        self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('upload', {pct}, {current_speed:.2f});")
-                        last_update_time = now
+                    # Stable average calculation after 1.5 seconds
+                    if elapsed >= 1.5:
+                        if stable_ul_start is None:
+                            stable_ul_start = time.time()
+                            stable_uploaded = len(chunk_data)
+                        else:
+                            stable_uploaded += len(chunk_data)
+                    
+                    # Calculate current speed
+                    if stable_ul_start is not None:
+                        stable_elapsed = time.time() - stable_ul_start
+                        current_speed = (stable_uploaded * 8) / (stable_elapsed * 1000000) if stable_elapsed > 0 else 0.0
+                    else:
+                        current_speed = (uploaded * 8) / (elapsed * 1000000) if elapsed >= 0.2 else 0.0
+                    
+                    self.speedtest_pct = min(99, int((elapsed / 5.0) * 100))
+                    self.speedtest_value = current_speed
             
             try:
                 r_up = session.post(ul_url, data=upload_generator(), timeout=10)
@@ -377,10 +439,19 @@ class ToolForgeAPI:
                 pass
             
             ul_duration = time.time() - ul_start
-            final_ul_speed = (uploaded * 8) / (ul_duration * 1000000) if ul_duration > 0 else 0
-            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('upload', 100, {final_ul_speed:.2f});")
+            if stable_ul_start is not None:
+                stable_elapsed = time.time() - stable_ul_start
+                final_ul_speed = (stable_uploaded * 8) / (stable_elapsed * 1000000) if stable_elapsed > 0 else 0.0
+            else:
+                final_ul_speed = (uploaded * 8) / (ul_duration * 1000000) if ul_duration > 0 else 0.0
             
-            # Complete
+            # Stop updater thread
+            self.speedtest_active = False
+            updater_thread.join(timeout=0.5)
+            
+            # 4. Final Updates to frontend (outside background thread, direct and synchronous to set exact final state)
+            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('download', 100, {final_dl_speed:.2f});")
+            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('upload', 100, {final_ul_speed:.2f});")
             self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('complete', 100, {final_ul_speed:.2f});")
             
             return {
