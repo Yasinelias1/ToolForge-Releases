@@ -77,7 +77,7 @@ WMO_CODES = {
 }
 
 class ToolForgeAPI:
-    APP_VERSION = "1.1.0"
+    APP_VERSION = "1.1.2"
 
     def __init__(self):
         self._window = None

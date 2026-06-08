@@ -6,3 +6,6 @@ qrcode
 pyinstaller
 yt-dlp
 pypdf
+static-ffmpeg
+numpy
+psutil
