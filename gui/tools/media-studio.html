@@ -184,6 +184,17 @@
       gap: 20px;
     }
 
+    .bottom-controls-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 650px) {
+      .bottom-controls-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     /* File Dropzone/Selector */
     .file-selector-card {
       display: flex;
@@ -567,8 +578,17 @@
       height: calc(100vh - 48px);
       grid-template-columns: 1fr 340px;
     }
-    #tab-image-editor.fullscreen-active .grid-layout > .card {
+    #tab-image-editor.fullscreen-active .workspace-wrapper {
       height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    #tab-image-editor.fullscreen-active .workspace-wrapper > .card {
+      flex: 1;
+      height: 100%;
+    }
+    #tab-image-editor.fullscreen-active .bottom-controls-grid {
+      display: none !important;
     }
     #tab-image-editor.fullscreen-active .viewport {
       max-height: none;
@@ -852,33 +872,93 @@
          ───────────────────────────────────────────────────────────────── -->
     <div id="tab-image-editor" class="tab-content">
       <div class="grid-layout">
-        <!-- Left: Workspace -->
-        <div class="card" style="padding:0; overflow:hidden; display:flex; flex-direction:column;">
-          <div class="control-bar" id="imgCensorBar" style="display:none;">
-            <div class="zoom-ctrls">
-              <button class="zoom-btn" onclick="window.imgCensor.zoomOut()">−</button>
-              <span class="zoom-val" id="imgCensorZoomText">100%</span>
-              <button class="zoom-btn" onclick="window.imgCensor.zoomIn()">+</button>
-              <button class="zoom-btn" onclick="window.imgCensor.zoomFit()" style="width:auto; padding:0 10px; font-size:11px; font-weight:600;">Anpassen</button>
-              <button class="zoom-btn" id="imgFullscreenBtn" onclick="window.imgCensor.toggleFullscreen()" style="width:auto; padding:0 10px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:4px;">🖥️ Vollbild</button>
+        <!-- Left Column: Workspace and Bottom Controls -->
+        <div class="workspace-wrapper" style="display:flex; flex-direction:column; gap:20px; min-width:0;">
+          <!-- Left: Workspace -->
+          <div class="card" style="padding:0; overflow:hidden; display:flex; flex-direction:column; margin-bottom:0;">
+            <div class="control-bar" id="imgCensorBar" style="display:none;">
+              <div class="zoom-ctrls">
+                <button class="zoom-btn" onclick="window.imgCensor.zoomOut()">−</button>
+                <span class="zoom-val" id="imgCensorZoomText">100%</span>
+                <button class="zoom-btn" onclick="window.imgCensor.zoomIn()">+</button>
+                <button class="zoom-btn" onclick="window.imgCensor.zoomFit()" style="width:auto; padding:0 10px; font-size:11px; font-weight:600;">Anpassen</button>
+                <button class="zoom-btn" id="imgFullscreenBtn" onclick="window.imgCensor.toggleFullscreen()" style="width:auto; padding:0 10px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:4px;">🖥️ Vollbild</button>
+              </div>
+              <span style="font-size:11px; color:var(--text-muted); margin-left:auto;">
+                Tipp: Drücke <b>Strg+V</b> zum Einfügen aus der Zwischenablage.
+              </span>
             </div>
-            <span style="font-size:11px; color:var(--text-muted); margin-left:auto;">
-              Tipp: Drücke <b>Strg+V</b> zum Einfügen aus der Zwischenablage.
-            </span>
+            <div class="viewport" id="imgCensorViewport">
+              <!-- Dropzone -->
+              <div class="file-selector-card" id="imgCensorDrop" onclick="window.imgCensor.openImage()" style="max-width:500px; width:100%;">
+                <span class="upload-icon">🖼️</span>
+                <div class="upload-title">Bild auswählen oder ablegen</div>
+                <div class="upload-desc">Klicke, um ein Bild auszuwählen (PNG, JPG, WebP). Oder Screenshot per <b>Strg+V</b> einfügen.</div>
+              </div>
+              <input type="file" id="imgCensorInput" style="display:none;" accept="image/*" />
+              <!-- Canvas -->
+              <div class="canvas-wrapper" id="imgCensorCanvasWrapper">
+                <canvas id="imgCensorCanvas"></canvas>
+                <canvas id="imgCensorMag" width="80" height="80" class="magnifier"></canvas>
+                <div id="brushCursor" style="position: absolute; pointer-events: none; border: 1.5px solid rgba(255, 255, 255, 0.95); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5); border-radius: 50%; display: none; z-index: 1000; transform: translate(-50%, -50%); background: rgba(255, 64, 128, 0.15); box-sizing: border-box;"></div>
+              </div>
+            </div>
           </div>
-          <div class="viewport" id="imgCensorViewport">
-            <!-- Dropzone -->
-            <div class="file-selector-card" id="imgCensorDrop" onclick="window.imgCensor.openImage()" style="max-width:500px; width:100%;">
-              <span class="upload-icon">🖼️</span>
-              <div class="upload-title">Bild auswählen oder ablegen</div>
-              <div class="upload-desc">Klicke, um ein Bild auszuwählen (PNG, JPG, WebP). Oder Screenshot per <b>Strg+V</b> einfügen.</div>
+          
+          <!-- Bottom Controls -->
+          <div class="bottom-controls-grid">
+            <!-- Integrated Resizer Options -->
+            <div class="card" id="imgResizeCard" style="margin-bottom:0;">
+              <div class="group-title">Abmessungen &amp; Export</div>
+              
+              <div style="display:flex; align-items:center; gap:8px;">
+                <div style="flex:1;">
+                  <span class="control-label" style="font-size:11px; margin-bottom:4px;">Breite (px)</span>
+                  <input type="number" id="imgResizeWidth" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
+                </div>
+                <div style="cursor:pointer; margin-top:16px; display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:8px;" id="imgResizeLockBtn" onclick="window.imgCensor.toggleLock()">
+                  <span id="imgResizeLockIcon">🔒</span>
+                </div>
+                <div style="flex:1;">
+                  <span class="control-label" style="font-size:11px; margin-bottom:4px;">Höhe (px)</span>
+                  <input type="number" id="imgResizeHeight" disabled style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); opacity:0.6;" />
+                </div>
+              </div>
+              
+              <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="imgResizeInfo">
+                Ziel-Größe (Export): Original
+              </div>
+              
+              <div style="margin-top:12px;">
+                <span class="control-label" style="font-size:11px; margin-bottom:4px;">Ausgabeformat</span>
+                <select id="imgResizeFormat" onchange="window.imgCensor.updateFormat()" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);">
+                  <option value="PNG" selected>PNG Grafik (.png)</option>
+                  <option value="JPG">JPG Bild (.jpg)</option>
+                  <option value="WEBP">WebP Grafik (.webp)</option>
+                </select>
+              </div>
+              
+              <div id="imgResizeQualityWrap" style="display:none; margin-top:12px;">
+                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                  <span>Komprimierungsqualität</span>
+                  <span id="imgResizeQualityVal" style="font-weight:600;">85%</span>
+                </div>
+                <input type="range" id="imgResizeQualityRange" min="1" max="100" value="85" style="width:100%;" oninput="window.imgCensor.updateQuality()" />
+              </div>
             </div>
-            <input type="file" id="imgCensorInput" style="display:none;" accept="image/*" />
-            <!-- Canvas -->
-            <div class="canvas-wrapper" id="imgCensorCanvasWrapper">
-              <canvas id="imgCensorCanvas"></canvas>
-              <canvas id="imgCensorMag" width="80" height="80" class="magnifier"></canvas>
-              <div id="brushCursor" style="position: absolute; pointer-events: none; border: 1.5px solid rgba(255, 255, 255, 0.95); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5); border-radius: 50%; display: none; z-index: 1000; transform: translate(-50%, -50%); background: rgba(255, 64, 128, 0.15); box-sizing: border-box;"></div>
+
+            <!-- Actions Card -->
+            <div class="card" style="margin-bottom:0;">
+              <div class="group-title">Aktionen</div>
+              <div class="control-item" style="margin-bottom: 10px;">
+                <span class="control-label" style="font-size:12px;">Dateiname (ohne Endung)</span>
+                <input type="text" id="imgFilename" placeholder="z.B. bearbeitetes-bild" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
+              </div>
+              <div class="btn-group" style="display: flex; flex-direction: column;">
+                <button class="action-btn secondary" id="imgCensorUndo" onclick="window.imgCensor.undo()" disabled>↩️ Rückgängig</button>
+                <button class="action-btn primary" id="imgCensorSave" onclick="window.imgCensor.downloadImage()" disabled>💾 Bild speichern unter...</button>
+                <button class="action-btn secondary" id="imgCensorReset" onclick="window.imgCensor.resetApp()" style="display:none; margin-top:4px;">❌ Neues Bild laden</button>
+              </div>
             </div>
           </div>
         </div>
@@ -924,59 +1004,6 @@
                 <span id="imgCensorSizeVal" style="font-weight:600;">20 px</span>
               </div>
               <input type="range" id="imgCensorSizeRange" min="2" max="100" value="20" style="width: 100%;" />
-            </div>
-          </div>
-
-          <!-- Integrated Resizer Options -->
-          <div class="card" id="imgResizeCard">
-            <div class="group-title">Abmessungen &amp; Export</div>
-            
-            <div style="display:flex; align-items:center; gap:8px;">
-              <div style="flex:1;">
-                <span class="control-label" style="font-size:11px; margin-bottom:4px;">Breite (px)</span>
-                <input type="number" id="imgResizeWidth" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);" />
-              </div>
-              <div style="cursor:pointer; margin-top:16px; display:flex; align-items:center; justify-content:center; width:32px; height:32px; border:1px solid var(--border); border-radius:8px;" id="imgResizeLockBtn" onclick="window.imgCensor.toggleLock()">
-                <span id="imgResizeLockIcon">🔒</span>
-              </div>
-              <div style="flex:1;">
-                <span class="control-label" style="font-size:11px; margin-bottom:4px;">Höhe (px)</span>
-                <input type="number" id="imgResizeHeight" disabled style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); opacity:0.6;" />
-              </div>
-            </div>
-            
-            <div style="font-size:11px; color:var(--text-muted); margin-top:6px;" id="imgResizeInfo">
-              Ziel-Größe (Export): Original
-            </div>
-            
-            <div style="margin-top:12px;">
-              <span class="control-label" style="font-size:11px; margin-bottom:4px;">Ausgabeformat</span>
-              <select id="imgResizeFormat" onchange="window.imgCensor.updateFormat()" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text);">
-                <option value="PNG" selected>PNG Grafik (.png)</option>
-                <option value="JPG">JPG Bild (.jpg)</option>
-                <option value="WEBP">WebP Grafik (.webp)</option>
-              </select>
-            </div>
-            
-            <div id="imgResizeQualityWrap" style="display:none; margin-top:12px;">
-              <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
-                <span>Komprimierungsqualität</span>
-                <span id="imgResizeQualityVal" style="font-weight:600;">85%</span>
-              </div>
-              <input type="range" id="imgResizeQualityRange" min="1" max="100" value="85" style="width:100%;" oninput="window.imgCensor.updateQuality()" />
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="group-title">Aktionen</div>
-            <div class="control-item" style="margin-bottom: 10px;">
-              <span class="control-label" style="font-size:12px;">Dateiname (ohne Endung)</span>
-              <input type="text" id="imgFilename" placeholder="z.B. bearbeitetes-bild" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
-            </div>
-            <div class="btn-group" style="display: flex; flex-direction: column;">
-              <button class="action-btn secondary" id="imgCensorUndo" onclick="window.imgCensor.undo()" disabled>↩️ Rückgängig</button>
-              <button class="action-btn primary" id="imgCensorSave" onclick="window.imgCensor.downloadImage()" disabled>💾 Bild speichern unter...</button>
-              <button class="action-btn secondary" id="imgCensorReset" onclick="window.imgCensor.resetApp()" style="display:none; margin-top:4px;">❌ Neues Bild laden</button>
             </div>
           </div>
         </div>
