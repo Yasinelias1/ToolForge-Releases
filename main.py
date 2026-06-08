@@ -450,6 +450,9 @@ class ToolForgeAPI:
                     
             ping = sum(pings) / len(pings) if pings else 20.0
 
+            # Send final ping directly to frontend
+            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('ping', 100, {ping:.0f});")
+            time.sleep(0.1)
             
             # 2. Download Phase
             self.speedtest_phase = 'download'
@@ -507,6 +510,10 @@ class ToolForgeAPI:
                 final_dl_speed = (stable_downloaded * 8) / (stable_elapsed * 1000000) if stable_elapsed > 0 else 0.0
             else:
                 final_dl_speed = (downloaded * 8) / (dl_duration * 1000000) if dl_duration >= 0.5 else 0.0
+            
+            # Send final download speed directly to frontend
+            self._window.evaluate_js(f"if (typeof updateSpeedtestStatus === 'function') updateSpeedtestStatus('download', 100, {final_dl_speed:.2f});")
+            time.sleep(0.15)
             
             # 3. Upload Phase
             self.speedtest_phase = 'upload'
