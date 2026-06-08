@@ -1038,12 +1038,29 @@
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-          <!-- v1.1.4 details -->
+          <!-- v1.1.5 details -->
           <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'" open>
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
-                🚀 Version 1.1.4
+                🚀 Version 1.1.5
                 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🎨 <strong style="color: var(--text);">Bild-Editor Vollbildmodus</strong>: Neuer Button für den Vollbildmodus im Bild-Editor. Blendet die Tab-Navigation aus und passt das Canvas dynamisch an. Kann mit ESC beendet werden.</li>
+                <li>🖌️ <strong style="color: var(--text);">Verbesserte Pinsel-Maske</strong>: Der Retusche-Pinsel nutzt nun die aktuell ausgewählte Pinsel-Farbe und ist auf dem Canvas teiltransparent (0.45) gezeichnet, um das Bild darunter zu sehen.</li>
+                <li>✨ <strong style="color: var(--text);">Sidebar Schnell-Aktion</strong>: Ein zusätzlicher, synchronisierter Button "KI-Retusche anwenden" direkt in der rechten Tools-Sidebar erspart lästiges Herunterscrollen.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.1.4 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                📦 Version 1.1.4
               </span>
               <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
             </summary>
@@ -1391,7 +1408,7 @@
     }
 
     // ── Settings Tab Actions ──
-    let installedAppVersion = 'v1.1.4';
+    let installedAppVersion = 'v1.1.5';
 
     function loadSettingsTab() {
       if (typeof pywebview !== 'undefined' && pywebview.api) {
@@ -1863,6 +1880,9 @@
         badgeCurrent: "Aktuell",
         footerText: "Deine persönliche Toolbox · Made with <span>♥</span> · ",
         footerToolsSuffix: " Tools",
+        changelog_v115_list: `<li>🎨 <strong style="color: var(--text);">Bild-Editor Vollbildmodus</strong>: Neuer Button für den Vollbildmodus im Bild-Editor. Blendet die Tab-Navigation aus und passt das Canvas dynamisch an. Kann mit ESC beendet werden.</li>
+                <li>🖌️ <strong style="color: var(--text);">Verbesserte Pinsel-Maske</strong>: Der Retusche-Pinsel nutzt nun die aktuell ausgewählte Pinsel-Farbe und ist auf dem Canvas teiltransparent (0.45) gezeichnet, um das Bild darunter zu sehen.</li>
+                <li>✨ <strong style="color: var(--text);">Sidebar Schnell-Aktion</strong>: Ein zusätzlicher, synchronisierter Button "KI-Retusche anwenden" direkt in der rechten Tools-Sidebar erspart lästiges Herunterscrollen.</li>`,
         changelog_v114_list: `<li>⚡ <strong style="color: var(--text);">Speedtest-Messergebnisse</strong>: Berechnung der Durchschnittswerte basiert nun exklusiv auf der stabilen Phase (nach Ausschluss der ersten 1,5s Einschwingphase/Slow-Start).</li>
                 <li>⏱️ <strong style="color: var(--text);">Flüssiges UI & Ruckelfreiheit</strong>: Vollständige Entkopplung der Netzwerk-Messungen von den UI-Aktualisierungen durch einen asynchronen Thread. Keine Framedrops oder Hänger mehr.</li>`,
         changelog_v113_list: `<li>⚙️ <strong style="color: var(--text);">Einstellungen-Persistenz</strong>: Vollständige Speicherung aller Einstellungen (Sprache, Theme, Dashboard-Optionen) direkt in der backendseitigen config.json für permanente Haltbarkeit.</li>
@@ -1978,6 +1998,9 @@
         badgeCurrent: "Current",
         footerText: "Your personal toolbox · Made with <span>♥</span> · ",
         footerToolsSuffix: " tools",
+        changelog_v115_list: `<li>🎨 <strong style="color: var(--text);">Image Editor Fullscreen</strong>: Added a fullscreen mode button to maximize the editor canvas, hiding tab menus. Easily exit fullscreen with the Escape key.</li>
+                <li>🖌️ <strong style="color: var(--text);">Improved Brush Masking</strong>: Inpainting brushes now adapt to the selected color and render with opacity (0.45) on the canvas to see underlying images.</li>
+                <li>✨ <strong style="color: var(--text);">Sidebar Quick-Action</strong>: A synchronized "Apply Inpaint" button directly in the right-side Tools sidebar eliminates the need to scroll down.</li>`,
         changelog_v114_list: `<li>⚡ <strong style="color: var(--text);">Speedtest Measurements</strong>: Average speeds are now computed exclusively over the stable connection phase (excluding the initial 1.5s TCP slow-start ramp-up).</li>
                 <li>⏱️ <strong style="color: var(--text);">Fluid UI & Stutter Fixes</strong>: Decoupled network measurement loops from frontend UI updates using a background updater thread, preventing any lag or dropped frames.</li>`,
         changelog_v113_list: `<li>⚙️ <strong style="color: var(--text);">Settings Persistence</strong>: Save and restore all options (language, active theme, and dashboard metrics visibility) inside the config.json backend file.</li>
@@ -2127,30 +2150,34 @@
       if (changelogCard) {
         changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
         const detailsElements = changelogCard.querySelectorAll('details');
-        if (detailsElements.length >= 6) {
-          const sum114 = detailsElements[0].querySelector('summary');
-          sum114.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.4 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
-          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v114_list;
+        if (detailsElements.length >= 7) {
+          const sum115 = detailsElements[0].querySelector('summary');
+          sum115.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.1.5 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v115_list;
 
-          const sum113 = detailsElements[1].querySelector('summary');
+          const sum114 = detailsElements[1].querySelector('summary');
+          sum114.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.4`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v114_list;
+
+          const sum113 = detailsElements[2].querySelector('summary');
           sum113.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.3`;
-          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v113_list;
+          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v113_list;
           
-          const sum112 = detailsElements[2].querySelector('summary');
+          const sum112 = detailsElements[3].querySelector('summary');
           sum112.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.2`;
-          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v112_list;
+          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v112_list;
           
-          const sum111 = detailsElements[3].querySelector('summary');
+          const sum111 = detailsElements[4].querySelector('summary');
           sum111.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.1`;
-          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v111_list;
+          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v111_list;
 
-          const sum110 = detailsElements[4].querySelector('summary');
+          const sum110 = detailsElements[5].querySelector('summary');
           sum110.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0`;
-          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v110_list;
+          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v110_list;
 
-          const sum100 = detailsElements[5].querySelector('summary');
+          const sum100 = detailsElements[6].querySelector('summary');
           sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
-          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v100_list;
+          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v100_list;
         }
       }
       

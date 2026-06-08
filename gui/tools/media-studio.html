@@ -552,6 +552,34 @@
       border-color: var(--accent);
       box-shadow: 0 0 12px rgba(168, 85, 247, 0.3);
     }
+
+    /* Fullscreen Mode for Image Editor */
+    #tab-image-editor.fullscreen-active {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      background: #09090e; /* Match main application background */
+      padding: 24px;
+      overflow: hidden;
+      display: block !important;
+    }
+    #tab-image-editor.fullscreen-active .grid-layout {
+      height: calc(100vh - 48px);
+      grid-template-columns: 1fr 340px;
+    }
+    #tab-image-editor.fullscreen-active .grid-layout > .card {
+      height: 100%;
+    }
+    #tab-image-editor.fullscreen-active .viewport {
+      max-height: none;
+      flex: 1;
+      height: calc(100vh - 120px);
+    }
+    #tab-image-editor.fullscreen-active .sidebar-controls {
+      height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding-right: 4px;
+    }
   </style>
 </head>
 <body>
@@ -832,6 +860,7 @@
               <span class="zoom-val" id="imgCensorZoomText">100%</span>
               <button class="zoom-btn" onclick="window.imgCensor.zoomIn()">+</button>
               <button class="zoom-btn" onclick="window.imgCensor.zoomFit()" style="width:auto; padding:0 10px; font-size:11px; font-weight:600;">Anpassen</button>
+              <button class="zoom-btn" id="imgFullscreenBtn" onclick="window.imgCensor.toggleFullscreen()" style="width:auto; padding:0 10px; font-size:11px; font-weight:600; display:flex; align-items:center; gap:4px;">🖥️ Vollbild</button>
             </div>
             <span style="font-size:11px; color:var(--text-muted); margin-left:auto;">
               Tipp: Drücke <b>Strg+V</b> zum Einfügen aus der Zwischenablage.
@@ -866,6 +895,9 @@
             </div>
             <div id="imgToolInstruction" style="margin-top: 12px; font-size: 11px; color: var(--text-muted); line-height: 1.45; background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 10px; border-radius: 8px;">
               🖌️ <b>Pinsel</b>: Zeichne frei auf dem Bild mit der ausgewählten Pinselgröße und Farbe.
+            </div>
+            <div id="imgCensorSidebarInpaintContainer" style="display:none; margin-top:12px;">
+              <button class="action-btn primary" id="imgCensorSidebarInpaintBtn" onclick="window.imgCensor.applyInpaint()" style="width:100%; margin:0;">✨ KI-Retusche anwenden</button>
             </div>
           </div>
           <div class="card">
@@ -1924,10 +1956,23 @@
         navigator.clipboard.writeText(currentColor).then(() => showToast('Farbe kopiert! ✓'));
       }
 
+      function hexToRgba(hex, alpha) {
+        let c = hex.substring(1);
+        if (c.length === 3) {
+          c = c[0] + c[0] + c[1] + c[1] + c[2] + c[2];
+        }
+        const r = parseInt(c.substring(0, 2), 16);
+        const g = parseInt(c.substring(2, 4), 16);
+        const b = parseInt(c.substring(4, 6), 16);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+      }
+
       function checkMaskEmpty() {
         const inpaintBtn = document.getElementById('imgCensorInpaintBtn');
+        const sidebarContainer = document.getElementById('imgCensorSidebarInpaintContainer');
         if (!maskCanvas || !maskCtx) {
           if (inpaintBtn) inpaintBtn.style.display = 'none';
+          if (sidebarContainer) sidebarContainer.style.display = 'none';
           return;
         }
         const imgData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
@@ -1939,8 +1984,12 @@
             break;
           }
         }
+        const showBtn = (!empty && activeTool === 'inpaint');
         if (inpaintBtn) {
-          inpaintBtn.style.display = empty ? 'none' : 'flex';
+          inpaintBtn.style.display = showBtn ? 'flex' : 'none';
+        }
+        if (sidebarContainer) {
+          sidebarContainer.style.display = showBtn ? 'block' : 'none';
         }
       }
 
@@ -1981,6 +2030,7 @@
           brushCursor.style.display = 'none';
         }
         canvas.style.cursor = 'default';
+        checkMaskEmpty();
       }
 
       if (input) {
@@ -2019,6 +2069,13 @@
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
           e.preventDefault();
           undo();
+        }
+
+        if (e.key === 'Escape') {
+          const editor = document.getElementById('tab-image-editor');
+          if (editor.classList.contains('fullscreen-active')) {
+            toggleFullscreen();
+          }
         }
       });
 
@@ -2109,8 +2166,8 @@
           brushCursor.style.display = 'block';
           
           if (activeTool === 'inpaint') {
-            brushCursor.style.background = 'rgba(244, 63, 94, 0.25)';
-            brushCursor.style.borderColor = 'rgba(244, 63, 94, 0.95)';
+            brushCursor.style.background = hexToRgba(currentColor, 0.25);
+            brushCursor.style.borderColor = hexToRgba(currentColor, 0.95);
           } else {
             brushCursor.style.background = currentColor + '22';
             brushCursor.style.borderColor = 'rgba(255, 255, 255, 0.85)';
@@ -2158,7 +2215,7 @@
           ctx.beginPath();
           ctx.moveTo(coords.x, coords.y);
           ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-          ctx.lineWidth = size; ctx.strokeStyle = 'rgba(244, 63, 94, 0.55)';
+          ctx.lineWidth = size; ctx.strokeStyle = hexToRgba(currentColor, 0.45);
           ctx.lineTo(coords.x, coords.y);
           ctx.stroke();
         }
@@ -2184,6 +2241,7 @@
           maskCtx.lineTo(coords.x, coords.y);
           maskCtx.stroke();
 
+          ctx.strokeStyle = hexToRgba(currentColor, 0.45);
           ctx.lineTo(coords.x, coords.y);
           ctx.stroke();
         }
@@ -2286,8 +2344,16 @@
         }
 
         const inpaintBtn = document.getElementById('imgCensorInpaintBtn');
-        inpaintBtn.disabled = true;
-        inpaintBtn.textContent = '⏳ Retuschiere...';
+        const sidebarInpaintBtn = document.getElementById('imgCensorSidebarInpaintBtn');
+        
+        if (inpaintBtn) {
+          inpaintBtn.disabled = true;
+          inpaintBtn.textContent = '⏳ Retuschiere...';
+        }
+        if (sidebarInpaintBtn) {
+          sidebarInpaintBtn.disabled = true;
+          sidebarInpaintBtn.textContent = '⏳ Retuschiere...';
+        }
 
         ctx.putImageData(cleanImageDataBeforeMask, 0, 0);
 
@@ -2295,8 +2361,14 @@
         const maskB64 = maskCanvas.toDataURL('image/png');
 
         pywebview.api.inpaint_image(imgB64, maskB64).then(res => {
-          inpaintBtn.disabled = false;
-          inpaintBtn.textContent = '✨ KI-Retusche anwenden';
+          if (inpaintBtn) {
+            inpaintBtn.disabled = false;
+            inpaintBtn.textContent = '✨ KI-Retusche anwenden';
+          }
+          if (sidebarInpaintBtn) {
+            sidebarInpaintBtn.disabled = false;
+            sidebarInpaintBtn.textContent = '✨ KI-Retusche anwenden';
+          }
 
           if (res && res.success) {
             const resultImg = new Image();
@@ -2482,7 +2554,23 @@
         checkMaskEmpty();
       }
 
-      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, toggleLock, updateFormat, updateQuality };
+      function toggleFullscreen() {
+        const editor = document.getElementById('tab-image-editor');
+        const btn = document.getElementById('imgFullscreenBtn');
+        const active = editor.classList.toggle('fullscreen-active');
+        if (active) {
+          btn.innerHTML = '🎛️ Normal';
+          showToast('Vollbildmodus aktiviert! 🖥️');
+        } else {
+          btn.innerHTML = '🖥️ Vollbild';
+          showToast('Vollbildmodus deaktiviert.');
+        }
+        setTimeout(() => {
+          zoomFit();
+        }, 100);
+      }
+
+      window.imgCensor = { openImage, zoomIn, zoomOut, zoomFit, setTool, copyHex, undo, downloadImage, resetApp, applyInpaint, toggleLock, updateFormat, updateQuality, toggleFullscreen };
     })();
 
     // ==========================================
