@@ -967,7 +967,6 @@
               <input type="text" id="imgFilename" placeholder="z.B. bearbeitetes-bild" style="width:100%; padding:8px 10px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); color:var(--text); font-size:13px;" />
             </div>
             <div class="btn-group" style="display: flex; flex-direction: column;">
-              <button class="action-btn primary" id="imgCensorInpaintBtn" onclick="window.imgCensor.applyInpaint()" style="display:none; margin-bottom:8px;">✨ KI-Retusche anwenden</button>
               <button class="action-btn secondary" id="imgCensorUndo" onclick="window.imgCensor.undo()" disabled>↩️ Rückgängig</button>
               <button class="action-btn primary" id="imgCensorSave" onclick="window.imgCensor.downloadImage()" disabled>💾 Bild speichern unter...</button>
               <button class="action-btn secondary" id="imgCensorReset" onclick="window.imgCensor.resetApp()" style="display:none; margin-top:4px;">❌ Neues Bild laden</button>
@@ -1931,6 +1930,8 @@
       let maskCtx = null;
       let maskHistory = [];
       let cleanImageDataBeforeMask = null;
+      let strokePoints = [];
+      let strokeStartData = null;
 
       sizeRange.addEventListener('input', e => {
         size = parseInt(e.target.value);
@@ -2205,6 +2206,10 @@
           if (maskHistory.length >= 20) maskHistory.shift();
           maskHistory.push(maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height));
 
+          // Capture visual state before drawing this stroke to prevent opacity buildup
+          strokeStartData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          strokePoints = [coords];
+
           maskCtx.beginPath();
           maskCtx.moveTo(coords.x, coords.y);
           maskCtx.lineCap = 'round'; maskCtx.lineJoin = 'round';
@@ -2241,9 +2246,19 @@
           maskCtx.lineTo(coords.x, coords.y);
           maskCtx.stroke();
 
-          ctx.strokeStyle = hexToRgba(currentColor, 0.45);
-          ctx.lineTo(coords.x, coords.y);
-          ctx.stroke();
+          strokePoints.push(coords);
+          if (strokeStartData) {
+            // Restore visual state and redraw stroke as single clean path with constant transparency
+            ctx.putImageData(strokeStartData, 0, 0);
+            ctx.beginPath();
+            ctx.moveTo(strokePoints[0].x, strokePoints[0].y);
+            ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+            ctx.lineWidth = size; ctx.strokeStyle = hexToRgba(currentColor, 0.45);
+            for (let i = 1; i < strokePoints.length; i++) {
+              ctx.lineTo(strokePoints[i].x, strokePoints[i].y);
+            }
+            ctx.stroke();
+          }
         }
       });
 
@@ -2252,6 +2267,8 @@
           isDrawing = false;
           if (activeTool === 'inpaint') {
             checkMaskEmpty();
+            strokePoints = [];
+            strokeStartData = null;
           }
         }
         magnifier.style.display = 'none';
