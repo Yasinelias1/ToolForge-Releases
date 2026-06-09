@@ -1290,12 +1290,29 @@
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-          <!-- v1.2.0 details -->
+          <!-- v1.2.1 details -->
           <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'" open>
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
-                🚀 Version 1.2.0
+                🚀 Version 1.2.1
                 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🎬 <strong style="color: var(--text);">Direkter Medien-Hub</strong>: "Medien-Studio" entfernt und durch direkten Zugriff auf Video-Editor, Bild-Editor, GIF Creator und Face Swap in der Werkzeug-Tabelle ersetzt.</li>
+                <li>↔️ <strong style="color: var(--text);">Inline-IFrame-Navigation</strong>: Tools öffnen sich nun inline direkt unter der jeweiligen Grid-Reihe als einklappbares IFrame-Panel mit Schließen-Button.</li>
+                <li>💾 <strong style="color: var(--text);">Einstellungs-Restoring</strong>: Zuverlässiges Laden und Wiederherstellen der Dashboard-Optionen (z.B. Live-Chart-Verlauf) direkt aus der backendseitigen config.json auf Anwendungsstart.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.0 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.0
               </span>
               <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
             </summary>
@@ -1346,7 +1363,6 @@
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
                 🚀 Version 1.1.6
-                <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
               </span>
               <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
             </summary>
@@ -2561,6 +2577,9 @@
         faceSwapModelDownloadSuccess: "Premium Face-Swap Modelle erfolgreich heruntergeladen! 🎉",
         faceSwapModelDeleteSuccess: "Premium Face-Swap Modelle gelöscht.",
         
+        changelog_v121_list: `<li>🎬 <strong style="color: var(--text);">Direkter Medien-Hub</strong>: "Medien-Studio" entfernt und durch direkten Zugriff auf Video-Editor, Bild-Editor, GIF Creator und Face Swap in der Werkzeug-Tabelle ersetzt.</li>
+                <li>↔️ <strong style="color: var(--text);">Inline-IFrame-Navigation</strong>: Tools öffnen sich nun inline direkt unter der jeweiligen Grid-Reihe als einklappbares IFrame-Panel mit Schließen-Button.</li>
+                <li>💾 <strong style="color: var(--text);">Einstellungs-Restoring</strong>: Zuverlässiges Laden und Wiederherstellen der Dashboard-Optionen (z.B. Live-Chart-Verlauf) direkt aus der backendseitigen config.json auf Anwendungsstart.</li>`,
         changelog_v120_list: `<li>🔗 <strong style="color: var(--text);">Permanente Dateifreigabe</strong>: Neues All-in-One-Sharing-Tool mit QR-Codes, Port- &amp; Subdomain-Konfiguration.</li>
                 <li>⚙️ <strong style="color: var(--text);">Strukturierte Einstellungen</strong>: Komplette Reorganisation der Einstellungsseite in 5 saubere Abschnitte.</li>
                 <li>🚀 <strong style="color: var(--text);">Autostart-Optimierung</strong>: Dedizierte Optionen für Windows-Autostart und automatischen Tunnel-Launch.</li>`,
@@ -2733,6 +2752,9 @@
         faceSwapModelDownloadSuccess: "Premium Face-Swap models downloaded successfully! 🎉",
         faceSwapModelDeleteSuccess: "Premium Face-Swap models deleted.",
         
+        changelog_v121_list: `<li>🎬 <strong style="color: var(--text);">Direct Media Hub</strong>: Removed "Media Studio" and replaced it with direct grid cards for Video Editor, Image Editor, GIF Creator, and Face Swap.</li>
+                <li>↔️ <strong style="color: var(--text);">Inline IFrame Panels</strong>: Tools now load inline directly below their grid row as a collapsible iframe panel with a close button.</li>
+                <li>💾 <strong style="color: var(--text);">Settings Restoring</strong>: Startup settings are now robustly restored from the backend config.json (including live performance chart visibility).</li>`,
         changelog_v120_list: `<li>🔗 <strong style="color: var(--text);">Permanent File Sharing</strong>: Brand new sharing panel with QR codes, port, and custom subdomain settings.</li>
                 <li>⚙️ <strong style="color: var(--text);">Clean Settings UX</strong>: Grouped all settings logically into 5 clean panels with the Danger Zone at the bottom.</li>
                 <li>🚀 <strong style="color: var(--text);">Autostart Configuration</strong>: Independent toggles for Windows startup and automatic tunnel activation.</li>`,
@@ -2919,50 +2941,54 @@
       if (changelogCard) {
         changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
         const detailsElements = changelogCard.querySelectorAll('details');
-        if (detailsElements.length >= 11) {
-          const sum120 = detailsElements[0].querySelector('summary');
-          sum120.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.0 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
-          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v120_list;
+        if (detailsElements.length >= 12) {
+          const sum121 = detailsElements[0].querySelector('summary');
+          sum121.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.1 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v121_list;
 
-          const sum119 = detailsElements[1].querySelector('summary');
+          const sum120 = detailsElements[1].querySelector('summary');
+          sum120.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.0`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v120_list;
+
+          const sum119 = detailsElements[2].querySelector('summary');
           sum119.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.9`;
-          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v119_list;
+          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v119_list;
 
-          const sum118 = detailsElements[2].querySelector('summary');
+          const sum118 = detailsElements[3].querySelector('summary');
           sum118.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.8`;
-          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v118_list;
+          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v118_list;
 
-          const sum116 = detailsElements[3].querySelector('summary');
+          const sum116 = detailsElements[4].querySelector('summary');
           sum116.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.6`;
-          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v116_list;
+          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v116_list;
 
-          const sum115 = detailsElements[4].querySelector('summary');
+          const sum115 = detailsElements[5].querySelector('summary');
           sum115.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.5`;
-          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v115_list;
+          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v115_list;
 
-          const sum114 = detailsElements[5].querySelector('summary');
+          const sum114 = detailsElements[6].querySelector('summary');
           sum114.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.4`;
-          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v114_list;
+          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v114_list;
 
-          const sum113 = detailsElements[6].querySelector('summary');
+          const sum113 = detailsElements[7].querySelector('summary');
           sum113.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.3`;
-          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v113_list;
+          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v113_list;
           
-          const sum112 = detailsElements[7].querySelector('summary');
+          const sum112 = detailsElements[8].querySelector('summary');
           sum112.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.2`;
-          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v112_list;
+          detailsElements[8].querySelector('ul').innerHTML = dict.changelog_v112_list;
           
-          const sum111 = detailsElements[8].querySelector('summary');
+          const sum111 = detailsElements[9].querySelector('summary');
           sum111.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.1`;
-          detailsElements[8].querySelector('ul').innerHTML = dict.changelog_v111_list;
+          detailsElements[9].querySelector('ul').innerHTML = dict.changelog_v111_list;
 
-          const sum110 = detailsElements[9].querySelector('summary');
+          const sum110 = detailsElements[10].querySelector('summary');
           sum110.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0`;
-          detailsElements[9].querySelector('ul').innerHTML = dict.changelog_v110_list;
+          detailsElements[10].querySelector('ul').innerHTML = dict.changelog_v110_list;
 
-          const sum100 = detailsElements[10].querySelector('summary');
+          const sum100 = detailsElements[11].querySelector('summary');
           sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
-          detailsElements[10].querySelector('ul').innerHTML = dict.changelog_v100_list;
+          detailsElements[11].querySelector('ul').innerHTML = dict.changelog_v100_list;
         }
       }
 
