@@ -235,6 +235,22 @@
     .hub-section:nth-child(2) { animation-delay: 0.15s; }
     .hub-section:nth-child(3) { animation-delay: 0.25s; }
 
+    .hub-section .grid {
+      transition: opacity 0.3s ease, max-height 0.4s ease;
+      overflow: hidden;
+      max-height: 2000px;
+      opacity: 1;
+    }
+    .hub-section.collapsed .grid {
+      max-height: 0;
+      opacity: 0;
+      pointer-events: none;
+      margin-bottom: 0;
+    }
+    .hub-section.collapsed {
+      margin-bottom: 1.5rem;
+    }
+
     .hub-header {
       display: flex;
       align-items: center;
@@ -243,6 +259,21 @@
       padding-bottom: 0.8rem;
       border-bottom: 1px solid var(--border);
       position: relative;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.2s ease;
+    }
+    .hub-header:hover {
+      border-bottom-color: rgba(255, 255, 255, 0.15);
+    }
+    .hub-arrow {
+      font-size: 0.8rem;
+      color: var(--muted);
+      transition: transform 0.25s ease;
+      margin-left: 0.5rem;
+    }
+    .hub-section.collapsed .hub-arrow {
+      transform: rotate(-90deg);
     }
     .hub-header::after {
       content: '';
@@ -411,6 +442,74 @@
       z-index: 1;
     }
     .tool-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+
+    /* ── Collapsible Inline Tool Iframe Container ── */
+    .tool-iframe-container {
+      grid-column: 1 / -1;
+      width: 100%;
+      height: 0;
+      opacity: 0;
+      overflow: hidden;
+      transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, margin 0.3s ease;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+      backdrop-filter: blur(16px);
+      animation: fadeUp 0.4s ease both;
+    }
+    .tool-iframe-container.active {
+      height: 80vh;
+      opacity: 1;
+      margin-top: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .tool-iframe-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.8rem 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--border);
+      border-top-left-radius: inherit;
+      border-top-right-radius: inherit;
+    }
+    .tool-iframe-title {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+    .tool-iframe-close-btn {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      padding: 0.4rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .tool-iframe-close-btn:hover {
+      background: rgba(239, 68, 68, 0.2);
+      border-color: #ef4444;
+      transform: translateY(-1px);
+    }
+    .tool-iframe {
+      flex-grow: 1;
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: transparent;
+      border-bottom-left-radius: inherit;
+      border-bottom-right-radius: inherit;
+    }
+    .active-tool-card {
+      border-color: var(--accent) !important;
+      box-shadow: 0 0 15px rgba(124, 58, 237, 0.3) !important;
+    }
 
     /* ── "coming soon" badge ── */
     .coming-soon {
@@ -730,25 +829,50 @@
 
     <!-- ═══════════════ MEDIEN-HUB ═══════════════ -->
     <section class="hub-section" data-hub="media">
-      <div class="hub-header">
+      <div class="hub-header" onclick="toggleHub('media')">
         <div class="hub-icon">🎬</div>
         <div class="hub-title-wrap">
           <div class="hub-title">Medien-Hub</div>
           <div class="hub-subtitle">Video, Audio &amp; Bild-Tools</div>
         </div>
-        <div class="hub-count">3 Tools</div>
+        <div class="hub-count">6 Tools</div>
+        <span class="hub-arrow">▼</span>
       </div>
       <div class="grid">
 
-        <a class="tool-card" href="tools/media-studio.html" style="--card-color1:#7c3aed;--card-color2:#ec4899" data-tags="medien studio gif video image bild zensur zensieren retusche resizer kompressor watermark animation schneiden trimmer editor">
-          <span class="card-icon">🎬</span>
-          <div class="card-title">Medien-Studio</div>
-          <div class="card-desc">All-in-One Medienstudio: Video-Editor (Schneiden, Skalieren, Tempo), Video- &amp; Bild-Zensur, Bild-Editor (Resizer) und GIF-Erstellung.</div>
-          <div class="card-tag">🎞️ Video &amp; 🎨 Bild</div>
+        <a class="tool-card" href="tools/media-studio.html?tab=video-editor" onclick="event.preventDefault(); openToolInline(this, 'tools/media-studio.html?tab=video-editor')" style="--card-color1:#7c3aed;--card-color2:#ec4899" data-tags="video editor schneiden tempo speed trimmer">
+          <span class="card-icon">✂️</span>
+          <div class="card-title">Video-Editor</div>
+          <div class="card-desc">Trimmen, Skalieren &amp; Tempo anpassen.</div>
+          <div class="card-tag">🎞️ Video</div>
           <span class="card-arrow">→</span>
         </a>
 
-        <a class="tool-card" href="tools/video-downloader.html" style="--card-color1:#ef4444;--card-color2:#ec4899" data-tags="video downloader youtube tiktok shorts instagram mp4 download mp3 mov mkv webm wav m4a">
+        <a class="tool-card" href="tools/media-studio.html?tab=image-editor" onclick="event.preventDefault(); openToolInline(this, 'tools/media-studio.html?tab=image-editor')" style="--card-color1:#ec4899;--card-color2:#a855f7" data-tags="image editor resizer bild format sizing">
+          <span class="card-icon">🎨</span>
+          <div class="card-title">Bild-Editor</div>
+          <div class="card-desc">Größe, Format &amp; Auflösung anpassen.</div>
+          <div class="card-tag">🎨 Bild</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/media-studio.html?tab=gif-creator" onclick="event.preventDefault(); openToolInline(this, 'tools/media-studio.html?tab=gif-creator')" style="--card-color1:#a855f7;--card-color2:#6366f1" data-tags="gif creator video animation">
+          <span class="card-icon">🎬</span>
+          <div class="card-title">GIF Creator</div>
+          <div class="card-desc">Videos in animierte GIFs konvertieren.</div>
+          <div class="card-tag">🎬 Animation</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/media-studio.html?tab=face-swap" onclick="event.preventDefault(); openToolInline(this, 'tools/media-studio.html?tab=face-swap')" style="--card-color1:#6366f1;--card-color2:#06b6d4" data-tags="face swap face-swap face_swap zensur censor video zensieren premium ki">
+          <span class="card-icon">👤</span>
+          <div class="card-title">Face Swap &amp; Zensur</div>
+          <div class="card-desc">Gesichter in Bildern &amp; Videos tauschen oder zensieren (klassisch &amp; Premium KI).</div>
+          <div class="card-tag">👤 KI &amp; Zensur</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/video-downloader.html" onclick="event.preventDefault(); openToolInline(this, 'tools/video-downloader.html')" style="--card-color1:#ef4444;--card-color2:#ec4899" data-tags="video downloader youtube tiktok shorts instagram mp4 download mp3 mov mkv webm wav m4a">
           <span class="card-icon">📥</span>
           <div class="card-title">Video-Downloader</div>
           <div class="card-desc">Lade Videos von YouTube, TikTok, Shorts, Instagram und Co. herunter. Format (MP4, MOV, MP3 etc.) frei wählbar.</div>
@@ -756,7 +880,7 @@
           <span class="card-arrow">→</span>
         </a>
 
-        <a class="tool-card" href="tools/audio-recorder.html" style="--card-color1:#c084fc;--card-color2:#ec4899" data-tags="audio recorder record mikrofon microphone mp3 wav aufnahme diktiergerät sprachnotiz">
+        <a class="tool-card" href="tools/audio-recorder.html" onclick="event.preventDefault(); openToolInline(this, 'tools/audio-recorder.html')" style="--card-color1:#c084fc;--card-color2:#ec4899" data-tags="audio recorder record mikrofon microphone mp3 wav aufnahme diktiergerät sprachnotiz">
           <span class="card-icon">🎙️</span>
           <div class="card-title">Audio-Recorder</div>
           <div class="card-desc">Nimm Sprache oder Töne direkt offline über dein Mikrofon auf und speichere sie als hochwertige MP3 oder WAV.</div>
@@ -769,17 +893,18 @@
 
     <!-- ═══════════════ DOKUMENTEN-HUB ═══════════════ -->
     <section class="hub-section" data-hub="docs">
-      <div class="hub-header">
+      <div class="hub-header" onclick="toggleHub('docs')">
         <div class="hub-icon">📄</div>
         <div class="hub-title-wrap">
           <div class="hub-title">Dokumenten-Hub</div>
           <div class="hub-subtitle">PDFs, Dateien &amp; Codes</div>
         </div>
         <div class="hub-count">4 Tools</div>
+        <span class="hub-arrow">▼</span>
       </div>
       <div class="grid">
 
-        <a class="tool-card" href="tools/pdf-studio.html" style="--card-color1:#ef4444;--card-color2:#f97316" data-tags="pdf studio merge split zusammenfügen aufteilen extrahieren konverter bilder gallery compress komprimieren">
+        <a class="tool-card" href="tools/pdf-studio.html" onclick="event.preventDefault(); openToolInline(this, 'tools/pdf-studio.html')" style="--card-color1:#ef4444;--card-color2:#f97316" data-tags="pdf studio merge split zusammenfügen aufteilen extrahieren konverter bilder gallery compress komprimieren">
           <span class="card-icon">📄</span>
           <div class="card-title">PDF-Studio</div>
           <div class="card-desc">Füge PDFs zusammen, teile Seiten auf, konvertiere Bilder in PDF oder komprimiere die Dateigröße – alles lokal.</div>
@@ -787,7 +912,7 @@
           <span class="card-arrow">→</span>
         </a>
 
-        <a class="tool-card" href="tools/file-compressor.html" style="--card-color1:#06b6d4;--card-color2:#6366f1" data-tags="kompressor compress datei file image bild audio mp3 jpg png webp resize größe verkleinern">
+        <a class="tool-card" href="tools/file-compressor.html" onclick="event.preventDefault(); openToolInline(this, 'tools/file-compressor.html')" style="--card-color1:#06b6d4;--card-color2:#6366f1" data-tags="kompressor compress datei file image bild audio mp3 jpg png webp resize größe verkleinern">
           <span class="card-icon">🗜️</span>
           <div class="card-title">Dateikompressor</div>
           <div class="card-desc">Verkleinere die Dateigröße von Bildern und Audio-Dateien offline mit anpassbarer Qualität und Abmessung.</div>
@@ -795,7 +920,7 @@
           <span class="card-arrow">→</span>
         </a>
 
-        <a class="tool-card" href="tools/file-share.html" style="--card-color1:#6366f1;--card-color2:#a855f7" data-tags="share datei link versenden download freigabe upload transfer peer local internet">
+        <a class="tool-card" href="tools/file-share.html" onclick="event.preventDefault(); openToolInline(this, 'tools/file-share.html')" style="--card-color1:#6366f1;--card-color2:#a855f7" data-tags="share datei link versenden download freigabe upload transfer peer local internet">
           <span class="card-icon">🔗</span>
           <div class="card-title">Datei-Freigabe</div>
           <div class="card-desc">Gib Dateien im lokalen Netzwerk oder über das Internet frei. Generiert einen Download-Link und QR-Code zum Teilen.</div>
@@ -803,7 +928,7 @@
           <span class="card-arrow">→</span>
         </a>
 
-        <a class="tool-card" href="tools/qr-generator.html" style="--card-color1:#06b6d4;--card-color2:#3b82f6" data-tags="qr code link url">
+        <a class="tool-card" href="tools/qr-generator.html" onclick="event.preventDefault(); openToolInline(this, 'tools/qr-generator.html')" style="--card-color1:#06b6d4;--card-color2:#3b82f6" data-tags="qr code link url">
           <span class="card-icon">🔳</span>
           <div class="card-title">QR-Code-Generator</div>
           <div class="card-desc">Erstelle QR-Codes für URLs, Text oder Kontakte. Farbe wählen, Größe anpassen, als PNG herunterladen.</div>
@@ -816,25 +941,26 @@
 
     <!-- ═══════════════ SYSTEM-HUB ═══════════════ -->
     <section class="hub-section" data-hub="system">
-      <div class="hub-header">
+      <div class="hub-header" onclick="toggleHub('system')">
         <div class="hub-icon">⚙️</div>
         <div class="hub-title-wrap">
           <div class="hub-title">System-Hub</div>
           <div class="hub-subtitle">Netzwerk &amp; Finanzen</div>
         </div>
         <div class="hub-count">3 Tools</div>
+        <span class="hub-arrow">▼</span>
       </div>
       <div class="grid">
 
-        <a class="tool-card" href="tools/currency-converter.html" style="--card-color1:#f59e0b;--card-color2:#ef4444" data-tags="währung currency euro dollar umrechner">
+        <a class="tool-card" href="tools/currency-converter.html" onclick="event.preventDefault(); openToolInline(this, 'tools/currency-converter.html')" style="--card-color1:#f59e0b;--card-color2:#ef4444" data-tags="währung currency euro dollar umrechner">
           <span class="card-icon">💱</span>
           <div class="card-title">Währungsrechner</div>
-          <div class="card-desc">Live-Kurse für 20+ Währungen. Einfach Betrag eingeben und sofort alle wichtigen Kurse sehen.</div>
+          <div class="card-desc">Live-Kurse für 20+ Währungen. Einfach Betrag eingeben und sofort alle wichtigsten Kurse sehen.</div>
           <div class="card-tag">💶 Finanzen · Live</div>
           <span class="card-arrow">→</span>
         </a>
 
-        <a class="tool-card" href="tools/network-info.html" style="--card-color1:#6366f1;--card-color2:#06b6d4" data-tags="ip netzwerk network info browser">
+        <a class="tool-card" href="tools/network-info.html" onclick="event.preventDefault(); openToolInline(this, 'tools/network-info.html')" style="--card-color1:#6366f1;--card-color2:#06b6d4" data-tags="ip netzwerk network info browser">
           <span class="card-icon">🌐</span>
           <div class="card-title">IP & Netzwerk-Info</div>
           <div class="card-desc">Deine öffentliche IP, Standort, ISP und Browser-Infos auf einen Blick. Beliebige IPs nachschlagen.</div>
@@ -842,7 +968,7 @@
           <span class="card-arrow">→</span>
         </a>
 
-        <a class="tool-card" href="tools/speedtest.html" style="--card-color1:#06b6d4;--card-color2:#a855f7" data-tags="speed test speedtest internet geschwindigkeit download upload ping netzwerk verbindung">
+        <a class="tool-card" href="tools/speedtest.html" onclick="event.preventDefault(); openToolInline(this, 'tools/speedtest.html')" style="--card-color1:#06b6d4;--card-color2:#a855f7" data-tags="speed test speedtest internet geschwindigkeit download upload ping netzwerk verbindung">
           <span class="card-icon">⚡</span>
           <div class="card-title">Speedtest</div>
           <div class="card-desc">Messe deine Internet-Geschwindigkeit (Download, Upload und Ping) sicher und lokal über Cloudflare-Server.</div>
@@ -956,19 +1082,19 @@
           <div class="options-grid">
             <label class="option-item">
               <input type="checkbox" id="optCpu" class="option-checkbox" checked onchange="toggleOpt('dbCardCpu', this.checked)" />
-              CPU-Auslastung anzeigen
+              <span id="optCpuLabel">CPU-Auslastung anzeigen</span>
             </label>
             <label class="option-item">
               <input type="checkbox" id="optRam" class="option-checkbox" checked onchange="toggleOpt('dbCardRam', this.checked)" />
-              RAM-Auslastung anzeigen
+              <span id="optRamLabel">RAM-Auslastung anzeigen</span>
             </label>
             <label class="option-item">
               <input type="checkbox" id="optGpu" class="option-checkbox" checked onchange="toggleOpt('dbCardGpu', this.checked)" />
-              GPU-Auslastung anzeigen
+              <span id="optGpuLabel">GPU-Auslastung anzeigen</span>
             </label>
             <label class="option-item">
               <input type="checkbox" id="optChart" class="option-checkbox" checked onchange="toggleOpt('dbCardChart', this.checked)" />
-              Live-Chart anzeigen
+              <span id="optChartLabel">Live-Chart anzeigen</span>
             </label>
             <label class="option-item">
               <input type="checkbox" id="optWeather" class="option-checkbox" checked onchange="toggleOpt('dbCardWeather', this.checked)" />
@@ -1404,6 +1530,10 @@
     searchInput.addEventListener('input', () => {
       const q = searchInput.value.toLowerCase().trim();
 
+      if (q) {
+        collapseActiveTool();
+      }
+
       allCards.forEach(card => {
         const text = (card.dataset.tags || '') + ' ' + card.textContent.toLowerCase();
         card.style.display = (!q || text.includes(q)) ? '' : 'none';
@@ -1416,6 +1546,85 @@
       });
     });
 
+    // ── Collapsible Hubs & Inline Tools Navigation ──
+    let activeIframeContainer = null;
+    let activeCard = null;
+
+    function toggleHub(hubId) {
+      const section = document.querySelector(`.hub-section[data-hub="${hubId}"]`);
+      if (section) {
+        section.classList.toggle('collapsed');
+        const isCollapsed = section.classList.contains('collapsed');
+        localStorage.setItem(`hub_collapsed_${hubId}`, isCollapsed);
+      }
+    }
+
+    function openToolInline(card, url) {
+      if (activeCard === card) {
+        collapseActiveTool();
+        return;
+      }
+      
+      collapseActiveTool();
+      
+      const container = document.createElement('div');
+      container.className = 'tool-iframe-container';
+      
+      const header = document.createElement('div');
+      header.className = 'tool-iframe-header';
+      
+      const title = document.createElement('span');
+      title.className = 'tool-iframe-title';
+      title.textContent = card.querySelector('.card-title').textContent;
+      
+      const closeBtn = document.createElement('button');
+      closeBtn.className = 'tool-iframe-close-btn';
+      closeBtn.innerHTML = currentLang === 'en' ? '✕ Close' : '✕ Schließen';
+      closeBtn.onclick = (e) => {
+        e.stopPropagation();
+        collapseActiveTool();
+      };
+      
+      header.appendChild(title);
+      header.appendChild(closeBtn);
+      container.appendChild(header);
+      
+      const iframe = document.createElement('iframe');
+      iframe.className = 'tool-iframe';
+      iframe.src = url;
+      container.appendChild(iframe);
+      
+      card.parentNode.insertBefore(container, card.nextSibling);
+      card.classList.add('active-tool-card');
+      
+      setTimeout(() => {
+        container.classList.add('active');
+        container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+      
+      activeIframeContainer = container;
+      activeCard = card;
+    }
+
+    function collapseActiveTool() {
+      if (activeIframeContainer) {
+        const tempContainer = activeIframeContainer;
+        const tempCard = activeCard;
+        
+        tempCard.classList.remove('active-tool-card');
+        tempContainer.classList.remove('active');
+        
+        setTimeout(() => {
+          if (tempContainer.parentNode) {
+            tempContainer.parentNode.removeChild(tempContainer);
+          }
+        }, 400);
+        
+        activeIframeContainer = null;
+        activeCard = null;
+      }
+    }
+
     // Modal toggle (deprecated, kept as fallback or removed)
     function toggleSettingsModal() {
       switchTab('settings');
@@ -1425,6 +1634,7 @@
     let dbInterval = null;
 
     function switchTab(tabId) {
+      collapseActiveTool();
       document.querySelectorAll('.nav-tab').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
 
@@ -2233,8 +2443,17 @@
         hubSystemSub: "Netzwerk & Finanzen",
         
         cardMediaStudioTitle: "Medien-Studio",
-        cardMediaStudioDesc: "All-in-One Medienstudio: Video-Editor (Schneiden, Skalieren, Tempo), Video- & Bild-Zensur, Bild-Editor (Resizer) und GIF-Erstellung.",
+        cardMediaStudioDesc: "Kreativwerkzeuge: Video-Editor, Zensur, Bild-Editor & GIF Creator",
         cardMediaStudioTag: "🎞️ Video & 🎨 Bild",
+        
+        cardSubVideoEditorTitle: "Video-Editor",
+        cardSubVideoEditorDesc: "Trimmen & Tempo",
+        cardSubImageEditorTitle: "Bild-Editor",
+        cardSubImageEditorDesc: "Größe & Format",
+        cardSubGifCreatorTitle: "GIF Creator",
+        cardSubGifCreatorDesc: "Videos in GIFs",
+        cardSubFaceSwapTitle: "Face Swap",
+        cardSubFaceSwapDesc: "KI-Gesichtstausch",
         
         cardVideoDownloaderTitle: "Video-Downloader",
         cardVideoDownloaderDesc: "Lade Videos von YouTube, TikTok, Shorts, Instagram und Co. herunter. Format (MP4, MOV, MP3 etc.) frei wählbar.",
@@ -2396,8 +2615,17 @@
         hubSystemSub: "Network & Finance",
         
         cardMediaStudioTitle: "Media Studio",
-        cardMediaStudioDesc: "All-in-One Media Studio: Video editor (trim, resize, speed), video/image censorship, image resizing, and GIF creation.",
+        cardMediaStudioDesc: "Creative Tools: Video Editor, Censorship, Image Editor & GIF Creator",
         cardMediaStudioTag: "🎞️ Video & 🎨 Image",
+        
+        cardSubVideoEditorTitle: "Video Editor",
+        cardSubVideoEditorDesc: "Trim & Speed",
+        cardSubImageEditorTitle: "Image Editor",
+        cardSubImageEditorDesc: "Size & Format",
+        cardSubGifCreatorTitle: "GIF Creator",
+        cardSubGifCreatorDesc: "Videos to GIFs",
+        cardSubFaceSwapTitle: "Face Swap",
+        cardSubFaceSwapDesc: "AI Face Swapping",
         
         cardVideoDownloaderTitle: "Video Downloader",
         cardVideoDownloaderDesc: "Download videos from YouTube, TikTok, Shorts, Instagram and more. Format (MP4, MOV, MP3 etc.) is selectable.",
@@ -2569,7 +2797,7 @@
       if (hubs.length >= 3) {
         hubs[0].querySelector('.hub-title').textContent = dict.hubMediaTitle;
         hubs[0].querySelector('.hub-subtitle').textContent = dict.hubMediaSub;
-        hubs[0].querySelector('.hub-count').textContent = lang === 'en' ? '3 Tools' : '3 Tools';
+        hubs[0].querySelector('.hub-count').textContent = lang === 'en' ? '6 Tools' : '6 Tools';
         
         hubs[1].querySelector('.hub-title').textContent = dict.hubDocsTitle;
         hubs[1].querySelector('.hub-subtitle').textContent = dict.hubDocsSub;
@@ -2581,9 +2809,22 @@
       }
 
       // Tool Cards (Translated dynamically by href mapping)
-      const cards = document.querySelectorAll('.tool-card');
+      // Translate parent Media Studio collapsible card (by ID)
+      const mediaStudioCard = document.getElementById('mediaStudioCard');
+      if (mediaStudioCard) {
+        const titleEl = document.getElementById('lblMediaStudioCardTitle');
+        const descEl = document.getElementById('lblMediaStudioCardDesc');
+        if (titleEl) titleEl.textContent = dict.cardMediaStudioTitle;
+        if (descEl) descEl.textContent = dict.cardMediaStudioDesc;
+      }
+
+      // Tool Cards & Sub-Cards (Translated dynamically by href mapping)
+      const cards = document.querySelectorAll('.tool-card, .sub-tool-card');
       const cardMapping = {
-        'tools/media-studio.html': 'cardMediaStudio',
+        'tools/media-studio.html?tab=video-editor': 'cardSubVideoEditor',
+        'tools/media-studio.html?tab=image-editor': 'cardSubImageEditor',
+        'tools/media-studio.html?tab=gif-creator': 'cardSubGifCreator',
+        'tools/media-studio.html?tab=face-swap': 'cardSubFaceSwap',
         'tools/video-downloader.html': 'cardVideoDownloader',
         'tools/audio-recorder.html': 'cardAudioRecorder',
         'tools/pdf-studio.html': 'cardPdfStudio',
@@ -2602,9 +2843,14 @@
           const title = dict[keyBase + 'Title'];
           const desc = dict[keyBase + 'Desc'];
           const tag = dict[keyBase + 'Tag'];
-          if (title) card.querySelector('.card-title').textContent = title;
-          if (desc) card.querySelector('.card-desc').textContent = desc;
-          if (tag) card.querySelector('.card-tag').textContent = tag;
+          
+          const titleEl = card.querySelector('.card-title') || card.querySelector('.sub-card-title');
+          const descEl = card.querySelector('.card-desc') || card.querySelector('.sub-card-desc');
+          const tagEl = card.querySelector('.card-tag');
+          
+          if (title && titleEl) titleEl.textContent = title;
+          if (desc && descEl) descEl.textContent = desc;
+          if (tag && tagEl) tagEl.textContent = tag;
         }
       });
 
@@ -2622,13 +2868,10 @@
       
       const optionsCard = document.querySelector('.options-card');
       optionsCard.querySelector('.db-card-title').textContent = dict.dbOptionsTitle;
-      const optionLabels = optionsCard.querySelectorAll('.option-item');
-      if (optionLabels.length >= 4) {
-        optionLabels[0].childNodes[2].textContent = ' ' + dict.optCpuLabel;
-        optionLabels[1].childNodes[2].textContent = ' ' + dict.optRamLabel;
-        optionLabels[2].childNodes[2].textContent = ' ' + dict.optGpuLabel;
-        optionLabels[3].childNodes[2].textContent = ' ' + dict.optChartLabel;
-      }
+      if (document.getElementById('optCpuLabel')) document.getElementById('optCpuLabel').textContent = dict.optCpuLabel;
+      if (document.getElementById('optRamLabel')) document.getElementById('optRamLabel').textContent = dict.optRamLabel;
+      if (document.getElementById('optGpuLabel')) document.getElementById('optGpuLabel').textContent = dict.optGpuLabel;
+      if (document.getElementById('optChartLabel')) document.getElementById('optChartLabel').textContent = dict.optChartLabel;
       if (document.getElementById('optWeatherLabel')) {
         document.getElementById('optWeatherLabel').textContent = dict.optWeatherLabel;
       }
@@ -2963,6 +3206,15 @@
 
     // Initialize version info on page load
     window.addEventListener('DOMContentLoaded', () => {
+      // Restore hub collapsed states
+      document.querySelectorAll('.hub-section').forEach(section => {
+        const hubId = section.getAttribute('data-hub');
+        const isCollapsed = localStorage.getItem(`hub_collapsed_${hubId}`) === 'true';
+        if (isCollapsed) {
+          section.classList.add('collapsed');
+        }
+      });
+
       // Immediate load from localStorage for instant display
       loadSavedTheme();
       updateToolCountText();
@@ -3002,6 +3254,13 @@
           if (pywebview.api.get_theme) {
             pywebview.api.get_theme().then(themeName => {
               if (themeName) changeTheme(themeName);
+            });
+          }
+          
+          // 5. Load dashboard options from python API (overrides localStorage)
+          if (pywebview.api.get_dashboard_options) {
+            pywebview.api.get_dashboard_options().then(opts => {
+              if (opts) applyDashboardOptions(opts);
             });
           }
           

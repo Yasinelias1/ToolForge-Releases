@@ -3723,6 +3723,15 @@
         resetAll
       };
     })();
+
+    // Parse tab from URL parameter on load
+    window.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tab = urlParams.get('tab');
+      if (tab) {
+        switchTab(tab);
+      }
+    });
   </script>
 </body>
 </html>

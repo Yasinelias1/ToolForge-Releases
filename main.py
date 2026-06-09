@@ -505,7 +505,7 @@ class FileShareServer:
             self.thread = None
 
 class ToolForgeAPI:
-    APP_VERSION = "1.2.0"
+    APP_VERSION = "1.2.1"
 
     def __init__(self):
         self._window = None
@@ -4079,10 +4079,13 @@ if __name__ == '__main__':
     theme_name = config.get("theme", "sunset")
     update_html_theme(html_file, theme_name)
 
-    # Create window
+    # Create window (use file:// URL with query param to bypass WebView2 cache)
+    abs_html_path = os.path.abspath(html_file)
+    html_url = f"file:///{abs_html_path.replace('\\\\', '/').replace('\\', '/')}?v={api.APP_VERSION}"
+
     window = webview.create_window(
         title='ToolForge Desktop',
-        url=html_file,
+        url=html_url,
         js_api=api,
         width=1220,
         height=850,
