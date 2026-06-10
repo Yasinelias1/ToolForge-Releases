@@ -3730,6 +3730,40 @@
       const tab = urlParams.get('tab');
       if (tab) {
         switchTab(tab);
+
+        // Customize the header to match the opened tool
+        const headerTitle = document.querySelector('header h1');
+        const headerDesc = document.querySelector('header p');
+        const tabNav = document.querySelector('.tabs-nav');
+
+        if (tab === 'video-editor' || tab === 'video-censor') {
+          if (headerTitle) headerTitle.textContent = "✂️ Video-Editor & Zensur";
+          if (headerDesc) headerDesc.textContent = "Trimme dein Video, passe die Geschwindigkeit an oder zensiere Bereiche.";
+          
+          // Show only Video-Zensur and Video-Editor tabs, hide the rest
+          if (tabNav) {
+            tabNav.querySelectorAll('.tab-btn').forEach(btn => {
+              const dataTab = btn.getAttribute('data-tab');
+              if (dataTab === 'video-editor' || dataTab === 'video-censor') {
+                btn.style.display = ''; // Restore default display
+              } else {
+                btn.style.display = 'none'; // Hide other tabs
+              }
+            });
+          }
+        } else if (tab === 'image-editor') {
+          if (headerTitle) headerTitle.textContent = "🎨 Bild-Editor";
+          if (headerDesc) headerDesc.textContent = "Passe die Größe, das Format und die Auflösung deiner Bilder offline an.";
+          if (tabNav) tabNav.style.display = 'none';
+        } else if (tab === 'gif-creator') {
+          if (headerTitle) headerTitle.textContent = "🎬 GIF Creator";
+          if (headerDesc) headerDesc.textContent = "Konvertiere deine lokalen Videos in animierte GIFs.";
+          if (tabNav) tabNav.style.display = 'none';
+        } else if (tab === 'face-swap') {
+          if (headerTitle) headerTitle.textContent = "👤 Face Swap";
+          if (headerDesc) headerDesc.textContent = "Tausche Gesichter in Bildern und Videos mithilfe von künstlicher Intelligenz.";
+          if (tabNav) tabNav.style.display = 'none';
+        }
       }
     });
   </script>
