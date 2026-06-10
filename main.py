@@ -565,6 +565,25 @@ class ToolForgeAPI:
         # Start background hardware stats polling thread
         self._hw_thread = threading.Thread(target=self._background_hw_polling, daemon=True)
         self._hw_thread.start()
+        
+        # Register atexit cleanup handler
+        import atexit
+        atexit.register(self.cleanup)
+
+    def cleanup(self):
+        print("ToolForgeAPI cleaning up resources...", flush=True)
+        if hasattr(self, '_ssh_tunnel') and self._ssh_tunnel:
+            try:
+                self._ssh_tunnel.stop()
+            except Exception as e:
+                print("Error stopping SSH tunnel on cleanup:", e, flush=True)
+            self._ssh_tunnel = None
+        if hasattr(self, '_file_share_server') and self._file_share_server:
+            try:
+                self._file_share_server.stop()
+            except Exception as e:
+                print("Error stopping file share server on cleanup:", e, flush=True)
+            self._file_share_server = None
 
     def _background_hw_polling(self):
         import time
@@ -1404,6 +1423,7 @@ class ToolForgeAPI:
                     break
             
             exe_dir = get_executable_dir()
+            exe_name = os.path.basename(sys.executable)
             batch_path = os.path.join(temp_dir, "install_update.bat")
             
             # Write batch file
@@ -1413,23 +1433,30 @@ echo Installiere ToolForge Update...
 echo Bitte warten, bis das Update abgeschlossen ist.
 timeout /t 2 /nobreak > nul
 
-taskkill /f /im ToolForge.exe > nul 2>&1
+taskkill /f /im "{exe_name}" > nul 2>&1
 timeout /t 1 /nobreak > nul
+
+if /i not "{exe_name}"=="ToolForge.exe" (
+    del /f /q "{exe_dir}\\{exe_name}" > nul 2>&1
+)
 
 xcopy /y /s /e "{src_dir}\\*.*" "{exe_dir}\\" > nul
 
 echo Update erfolgreich! Starte ToolForge neu...
-start "" "{exe_dir}\\ToolForge.exe"
+start "" /d "{exe_dir}" "{exe_dir}\\ToolForge.exe"
 
 del "%~f0"
 """
             with open(batch_path, "w", encoding="utf-8") as f:
                 f.write(batch_content)
             
-            # Popen cmd in background
+            # Clean up active resources/subprocesses before exiting
+            self.cleanup()
+            
+            # Popen cmd in background, starting in temp_dir so it doesn't lock exe_dir
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            subprocess.Popen(f'cmd.exe /c "{batch_path}"', shell=True, startupinfo=startupinfo)
+            subprocess.Popen(f'cmd.exe /c "{batch_path}"', shell=True, startupinfo=startupinfo, cwd=temp_dir)
             
             # Close window and exit immediately so batch file can write files without block
             if self._window:
@@ -4100,6 +4127,10 @@ if __name__ == '__main__':
     # Save settings on close handler
     def on_closing():
         print("ToolForge window is closing. Ensuring settings are saved...")
+        try:
+            api.cleanup()
+        except Exception as e:
+            print("Error during API cleanup in on_closing:", e)
         
     window.events.closing += on_closing
     
