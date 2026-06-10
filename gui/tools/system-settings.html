@@ -862,7 +862,10 @@
           <div style="display: flex; align-items: center; gap: 8px;">
             <span style="font-size: 1.3rem;">🔌</span> <span id="lblPnpTitle">Angeschlossene Geräte verwalten</span>
           </div>
-          <button class="action-btn" onclick="openSystemUtility('devices')" style="padding: 0.5rem 1rem; font-size: 0.82rem;" id="lblPnpSettingsBtn">⚙️ Geräte-Manager</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="action-btn" onclick="openSystemUtility('display')" style="padding: 0.5rem 1rem; font-size: 0.82rem;" id="lblPnpDisplayBtn">🖥️ Anzeigeeinstellungen</button>
+            <button class="action-btn" onclick="openSystemUtility('devices')" style="padding: 0.5rem 1rem; font-size: 0.82rem;" id="lblPnpSettingsBtn">⚙️ Geräte-Manager</button>
+          </div>
         </div>
 
         <!-- PnP Device Category Filter Sub-Tabs -->
@@ -989,6 +992,7 @@
         pnpAdminTitle: "Admin-Rechte erforderlich",
         pnpAdminDesc: "Das Verwalten von System-Geräten benötigt Administratorrechte. Starte ToolForge als Administrator.",
         pnpTitle: "Angeschlossene Geräte verwalten",
+        pnpDisplayBtn: "🖥️ Anzeigeeinstellungen",
         pnpSettingsBtn: "⚙️ Geräte-Manager",
         pnpDeviceConnected: "Bereit / Aktiv",
         pnpDeviceDisconnected: "Deaktiviert",
@@ -1053,6 +1057,7 @@
         pnpAdminTitle: "Admin Rights Required",
         pnpAdminDesc: "Managing system hardware devices requires Administrator rights. Run ToolForge as Administrator.",
         pnpTitle: "Manage Connected Devices",
+        pnpDisplayBtn: "🖥️ Display Settings",
         pnpSettingsBtn: "⚙️ Device Manager",
         pnpDeviceConnected: "Ready / Active",
         pnpDeviceDisconnected: "Disabled",
@@ -1110,6 +1115,7 @@
       document.getElementById('lblPnpAdminTitle').textContent = dict.pnpAdminTitle;
       document.getElementById('lblPnpAdminDesc').textContent = dict.pnpAdminDesc;
       document.getElementById('lblPnpTitle').textContent = dict.pnpTitle;
+      document.getElementById('lblPnpDisplayBtn').textContent = dict.pnpDisplayBtn;
       document.getElementById('lblPnpSettingsBtn').textContent = dict.pnpSettingsBtn;
 
       document.getElementById('lblShMixerTitle').textContent = dict.shMixerTitle;

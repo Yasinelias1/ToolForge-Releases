@@ -1226,6 +1226,8 @@ class ToolForgeAPI:
                 os.startfile("ms-settings:power")
             elif utility == "windowsupdate":
                 os.startfile("ms-settings:windowsupdate")
+            elif utility == "display":
+                os.startfile("ms-settings:display")
             return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
