@@ -712,12 +712,24 @@ class ToolForgeAPI:
         self._last_stats_request_time = time.time()
         try:
             import psutil
+            import ctypes
+            
+            # Check if running as administrator
+            is_elevated = False
+            try:
+                is_elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            except:
+                pass
             
             # Fast, in-thread psutil queries
             cpu_pct = psutil.cpu_percent()
             ram = psutil.virtual_memory()
             ram_used_gb = ram.used / (1024 ** 3)
             ram_total_gb = ram.total / (1024 ** 3)
+            
+            cpu_temp_status = "ok"
+            if self._cached_cpu_temp is None:
+                cpu_temp_status = "not_supported" if is_elevated else "admin_required"
             
             # Subprocess-heavy values are read instantly from the background cache
             return {
@@ -729,7 +741,8 @@ class ToolForgeAPI:
                 "gpu_name": self._gpu_name,
                 "gpu_pct": self._cached_gpu_pct if self._cached_gpu_detected else None,
                 "gpu_temp": self._cached_gpu_temp,
-                "cpu_temp": self._cached_cpu_temp
+                "cpu_temp": self._cached_cpu_temp,
+                "cpu_temp_status": cpu_temp_status
             }
         except Exception as e:
             return {"success": False, "error": str(e)}

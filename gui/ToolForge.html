@@ -2385,11 +2385,19 @@
               if (stats.cpu_temp !== null) {
                 cpuTempText = `${stats.cpu_temp}°C`;
               } else {
-                const titleText = currentLang === 'en' 
-                  ? 'Windows blocks sensor access without Admin rights. Start the app as Administrator to read CPU temperatures.' 
-                  : 'Windows blockiert den Sensorzugriff ohne Admin-Rechte. Starte die App als Administrator, um die echte CPU-Temperatur auszulesen.';
-                const lockText = currentLang === 'en' ? '🔒 Admin required' : '🔒 Admin erforderlich';
-                cpuTempText = `<span class="temp-lock" title="${titleText}">${lockText}</span>`;
+                if (stats.cpu_temp_status === 'not_supported') {
+                  const titleText = currentLang === 'en'
+                    ? 'No supported hardware CPU sensors detected by Windows WMI.'
+                    : 'Keine unterstützten CPU-Sensoren über Windows WMI gefunden.';
+                  const lockText = currentLang === 'en' ? '⚠️ Not supported' : '⚠️ Nicht unterstützt';
+                  cpuTempText = `<span class="temp-lock" style="color: #ff9e0b; border-color: rgba(255,158,11,0.2); background: rgba(255,158,11,0.05);" title="${titleText}">${lockText}</span>`;
+                } else {
+                  const titleText = currentLang === 'en' 
+                    ? 'Windows blocks sensor access without Admin rights. Start the app as Administrator to read CPU temperatures.' 
+                    : 'Windows blockiert den Sensorzugriff ohne Admin-Rechte. Starte die App als Administrator, um die echte CPU-Temperatur auszulesen.';
+                  const lockText = currentLang === 'en' ? '🔒 Admin required' : '🔒 Admin erforderlich';
+                  cpuTempText = `<span class="temp-lock" title="${titleText}">${lockText}</span>`;
+                }
               }
               const txtCpuUtilization = currentLang === 'en' ? 'Utilization: ' : 'Auslastung: ';
               const txtCpuTemp = currentLang === 'en' ? 'Temperature: ' : 'Temperatur: ';
