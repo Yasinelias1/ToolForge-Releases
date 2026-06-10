@@ -505,7 +505,7 @@ class FileShareServer:
             self.thread = None
 
 class ToolForgeAPI:
-    APP_VERSION = "1.2.1"
+    APP_VERSION = "1.2.8"
 
     def __init__(self):
         self._window = None
@@ -707,6 +707,13 @@ class ToolForgeAPI:
             pass
         return None
 
+    def check_admin(self):
+        try:
+            import ctypes
+            return {"success": True, "is_admin": ctypes.windll.shell32.IsUserAnAdmin() != 0}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def get_system_stats(self):
         import time
         self._last_stats_request_time = time.time()
@@ -750,22 +757,58 @@ class ToolForgeAPI:
     def get_firewall_blocks(self):
         try:
             ps_script = (
-                "Get-NetFirewallRule -DisplayName 'ToolForge Block - *' -ErrorAction SilentlyContinue | "
-                "ForEach-Object { [PSCustomObject]@{ "
-                "Name = $_.Name; "
-                "DisplayName = $_.DisplayName; "
-                "Program = ($_ | Get-NetFirewallApplicationFilter).ProgramPath "
-                "} } | ConvertTo-Json"
+                "$rules = Get-CimInstance -Namespace root/standardcimv2 -ClassName MSFT_NetFirewallRule "
+                "-Filter \"DisplayName Like 'ToolForge Block - %' And Direction = 2\"; "
+                "$filters = Get-CimInstance -Namespace root/standardcimv2 -ClassName MSFT_NetApplicationFilter; "
+                "$filterMap = @{}; "
+                "foreach ($f in $filters) { "
+                "  if ($f.CreationClassName -match 'FirewallRule\\|(.+)$') { "
+                "    $filterMap[$Matches[1]] = $f.AppPath "
+                "  } "
+                "}; "
+                "$result = foreach ($r in $rules) { "
+                "  [PSCustomObject]@{ "
+                "    Name = $r.InstanceID; "
+                "    DisplayName = $r.DisplayName; "
+                "    Program = $filterMap[$r.InstanceID] "
+                "  } "
+                "}; "
+                "$result | ConvertTo-Json"
             )
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=10)
             
             if res.returncode == 0 and res.stdout.strip():
                 data = json.loads(res.stdout.strip())
                 if isinstance(data, dict):
-                    return {"success": True, "rules": [data]}
-                return {"success": True, "rules": data}
+                    data = [data]
+                
+                # Group by DisplayName
+                grouped = {}
+                for rule in data:
+                    display_name = rule.get("DisplayName") or rule.get("Name")
+                    program = rule.get("Program")
+                    if not display_name:
+                        continue
+                    
+                    if display_name not in grouped:
+                        grouped[display_name] = {
+                            "DisplayName": display_name,
+                            "Name": rule.get("Name"),
+                            "Program": program,
+                            "Programs": []
+                        }
+                    
+                    if program:
+                        grouped[display_name]["Programs"].append(program)
+                
+                # Choose the shortest path length as the primary Program path
+                for g in grouped.values():
+                    if g["Programs"]:
+                        g["Program"] = min(g["Programs"], key=len)
+                        
+                return {"success": True, "rules": list(grouped.values())}
             return {"success": True, "rules": []}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -780,21 +823,93 @@ class ToolForgeAPI:
             if not is_elevated:
                 return {"success": False, "error": "Administratorrechte erforderlich."}
                 
+            # Find all executables inside the app folder to block version subdirectories too (e.g., Opera GX, Discord)
+            exes_to_block = self._get_executables_to_block(exe_path)
+            if not exes_to_block:
+                return {"success": False, "error": "Keine ausführbaren Dateien (.exe) zum Blockieren gefunden."}
+            
             rule_name = f"ToolForge Block - {app_name}"
-            ps_script = (
-                f'New-NetFirewallRule -DisplayName "{rule_name}" -Direction Outbound '
-                f'-Program "{exe_path}" -Action Block -ErrorAction Stop'
-            )
+            
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
             
-            if res.returncode == 0:
-                return {"success": True}
-            else:
-                return {"success": False, "error": res.stderr.strip()}
+            # Delete any existing rules with this name first to prevent duplicate rules in Windows
+            subprocess.run(["netsh", "advfirewall", "firewall", "delete", "rule", f"name={rule_name}"], startupinfo=startupinfo, capture_output=True, timeout=10)
+            
+            # Add new firewall rules using netsh (inbound and outbound)
+            for path in exes_to_block:
+                res_out = subprocess.run(["netsh", "advfirewall", "firewall", "add", "rule", f"name={rule_name}", "dir=out", "action=block", f"program={path}"], startupinfo=startupinfo, capture_output=True, timeout=10)
+                if res_out.returncode != 0:
+                    err_msg = res_out.stderr.decode('cp850', errors='replace').strip() or res_out.stdout.decode('cp850', errors='replace').strip()
+                    return {"success": False, "error": f"Outbound Fehler: {err_msg}"}
+                    
+                res_in = subprocess.run(["netsh", "advfirewall", "firewall", "add", "rule", f"name={rule_name}", "dir=in", "action=block", f"program={path}"], startupinfo=startupinfo, capture_output=True, timeout=10)
+                if res_in.returncode != 0:
+                    err_msg = res_in.stderr.decode('cp850', errors='replace').strip() or res_in.stdout.decode('cp850', errors='replace').strip()
+                    return {"success": False, "error": f"Inbound Fehler: {err_msg}"}
+            
+            # Terminate running processes to drop active connections
+            try:
+                import psutil
+                import os
+                normalized_block_paths = {os.path.abspath(p).lower() for p in exes_to_block}
+                for proc in psutil.process_iter(['pid', 'name', 'exe']):
+                    try:
+                        exe = proc.info.get('exe')
+                        if exe:
+                            if os.path.abspath(exe).lower() in normalized_block_paths:
+                                proc.kill()
+                    except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+                        pass
+            except Exception as pe:
+                pass
+            return {"success": True}
         except Exception as e:
             return {"success": False, "error": str(e)}
+
+    def _get_executables_to_block(self, target_path):
+        import os
+        target_path = os.path.abspath(target_path)
+        if not os.path.exists(target_path):
+            return [target_path]
+            
+        if os.path.isdir(target_path):
+            exes = []
+            for root, dirs, files in os.walk(target_path):
+                for f in files:
+                    if f.endswith('.exe'):
+                        exes.append(os.path.join(root, f))
+            return exes
+
+        dir_name = os.path.dirname(target_path)
+        file_name = os.path.basename(target_path)
+        
+        shared_dirs = {"programs", "local", "roaming", "program", "program files", "program files (x86)", "application", "desktop", "downloads", "temp"}
+        
+        dir_basename = os.path.basename(dir_name).lower()
+        if dir_basename in shared_dirs:
+            return [target_path]
+            
+        app_root = dir_name
+        while True:
+            parent = os.path.dirname(app_root)
+            parent_name = os.path.basename(parent).lower()
+            if not parent_name or parent_name in shared_dirs or parent == app_root:
+                break
+            app_root = parent
+            
+        exes = []
+        try:
+            for root, dirs, files in os.walk(app_root):
+                for f in files:
+                    if f.endswith('.exe'):
+                        exes.append(os.path.join(root, f))
+        except:
+            pass
+            
+        if not exes:
+            return [target_path]
+        return list(set(exes))
 
     def remove_firewall_block(self, rule_name):
         try:
@@ -806,15 +921,15 @@ class ToolForgeAPI:
             if not is_elevated:
                 return {"success": False, "error": "Administratorrechte erforderlich."}
                 
-            ps_script = f'Remove-NetFirewallRule -DisplayName "{rule_name}" -ErrorAction Stop'
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
+            res = subprocess.run(["netsh", "advfirewall", "firewall", "delete", "rule", f"name={rule_name}"], startupinfo=startupinfo, capture_output=True, timeout=15)
             
             if res.returncode == 0:
                 return {"success": True}
             else:
-                return {"success": False, "error": res.stderr.strip()}
+                err_msg = res.stderr.decode('cp850', errors='replace').strip() or res.stdout.decode('cp850', errors='replace').strip()
+                return {"success": False, "error": err_msg}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -823,47 +938,65 @@ class ToolForgeAPI:
             ps_script = 'Get-PnpDevice -Class Bluetooth -ErrorAction SilentlyContinue | ConvertTo-Json'
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=6)
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo, timeout=6)
             
             devices = []
-            if res.returncode == 0 and res.stdout.strip():
-                data = json.loads(res.stdout.strip())
-                if isinstance(data, dict):
-                    data = [data]
-                
-                ignored_keywords = [
-                    "enumerator", "microsoft", "intel(r)", "qualcomm", "realtek", 
-                    "generic", "rfcomm", "avrcp", "hands-free", "gatt", "device identification",
-                    "audioservice", "bthport", "bthusb", "treiber", "driver", "transport", "le-att"
-                ]
-                
-                seen_ids = set()
-                for item in data:
-                    name = item.get("FriendlyName")
-                    instance_id = item.get("InstanceId")
-                    status = item.get("Status", "Unknown")
-                    present = item.get("Present", False)
-                    service = item.get("Service", "").lower()
+            if res.returncode == 0 and res.stdout:
+                stdout_str = res.stdout.decode('cp850', errors='replace').strip()
+                if stdout_str:
+                    data = json.loads(stdout_str)
+                    if isinstance(data, dict):
+                        data = [data]
                     
-                    if not name or not instance_id:
-                        continue
-                        
-                    if instance_id in seen_ids:
-                        continue
-                    seen_ids.add(instance_id)
+                    ignored_keywords = [
+                        "enumerator", "microsoft", "intel(r)", "qualcomm", "realtek", 
+                        "generic", "rfcomm", "avrcp", "hands-free", "gatt", "device identification",
+                        "audioservice", "bthport", "bthusb", "treiber", "driver", "transport", "le-att"
+                    ]
                     
-                    lower_name = name.lower()
-                    if any(kw in lower_name for kw in ignored_keywords):
-                        continue
-                    if any(kw in service for kw in ignored_keywords):
-                        continue
+                    device_dict = {}
+                    for item in data:
+                        name = item.get("FriendlyName")
+                        instance_id = item.get("InstanceId")
+                        status = item.get("Status", "Unknown")
+                        present = item.get("Present", False)
+                        service = (item.get("Service") or "").lower()
                         
-                    devices.append({
-                        "name": name,
-                        "id": instance_id,
-                        "status": status,
-                        "present": present
-                    })
+                        if not name or not instance_id:
+                            continue
+                            
+                        lower_name = name.lower()
+                        if any(kw in lower_name for kw in ignored_keywords):
+                            continue
+                        if any(kw in service for kw in ignored_keywords):
+                            continue
+                            
+                        is_physical = "dev_" in instance_id.lower() and not instance_id.lower().startswith("usb\\")
+                        if is_physical:
+                            try:
+                                parts = instance_id.lower().split("dev_")
+                                device_key = parts[1].split("\\")[0]
+                            except:
+                                device_key = instance_id.lower()
+                        else:
+                            device_key = instance_id.lower()
+                            
+                        dev_obj = {
+                            "name": name,
+                            "id": instance_id,
+                            "status": status,
+                            "present": present,
+                            "type": "physical" if is_physical else "service"
+                        }
+                        
+                        if device_key in device_dict:
+                            # Prefer keeping the one that is present
+                            if present and not device_dict[device_key]["present"]:
+                                device_dict[device_key] = dev_obj
+                        else:
+                            device_dict[device_key] = dev_obj
+                            
+                    devices = list(device_dict.values())
             return {"success": True, "devices": devices}
         except Exception as e:
             return {"success": False, "error": str(e)}
@@ -883,12 +1016,114 @@ class ToolForgeAPI:
             
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo, timeout=5)
             
             if res.returncode == 0:
                 return {"success": True}
             else:
-                return {"success": False, "error": res.stderr.strip()}
+                stderr_str = res.stderr.decode('cp850', errors='replace').strip()
+                return {"success": False, "error": stderr_str}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_connected_devices(self):
+        try:
+            classes = ["Camera", "DiskDrive", "CDROM", "Monitor", "Mouse", "Keyboard", "MEDIA", "WPD"]
+            class_filter = ",".join(classes)
+            ps_script = f'Get-PnpDevice -PresentOnly -Class {class_filter} -ErrorAction SilentlyContinue | ConvertTo-Json'
+            
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo, timeout=10)
+            
+            devices = []
+            if res.returncode == 0 and res.stdout:
+                stdout_str = res.stdout.decode('cp850', errors='replace').strip()
+                if stdout_str:
+                    data = json.loads(stdout_str)
+                    if isinstance(data, dict):
+                        data = [data]
+                        
+                    ignored_keywords = [
+                        "microsoft", "intel(r)", "qualcomm", "realtek", "generic", "software",
+                        "root\\", "swd\\", "enumerator", "proxy", "virtual", "kernel", "nvme", "amd "
+                    ]
+                    
+                    device_dict = {}
+                    for item in data:
+                        name = item.get("FriendlyName")
+                        instance_id = item.get("InstanceId")
+                        status = item.get("Status", "Unknown")
+                        present = item.get("Present", False)
+                        pnp_class = item.get("Class")
+                        
+                        if not name or not instance_id:
+                            continue
+                            
+                        lower_id = instance_id.lower()
+                        if lower_id in device_dict:
+                            continue
+                            
+                        lower_name = name.lower()
+                        
+                        if "root\\" in lower_id and "camera" not in lower_id:
+                            continue
+                        if "swd\\mmdevapi" in lower_id:
+                            continue
+                        if "driverenum" in lower_id:
+                            continue
+                        if lower_name in ["standard-tastatur (ps/2)", "microsoft-maus", "hauptplatine", "systemfirmware"]:
+                            continue
+                            
+                        category = "Other"
+                        if pnp_class == "Mouse":
+                            category = "Mouse"
+                        elif pnp_class == "Keyboard":
+                            category = "Keyboard"
+                        elif pnp_class == "Camera":
+                            category = "Camera"
+                        elif pnp_class in ["MEDIA", "AudioEndpoint"]:
+                            category = "Audio"
+                        elif pnp_class in ["DiskDrive", "CDROM", "WPD"]:
+                            category = "Storage"
+                        elif pnp_class == "Monitor":
+                            category = "Monitor"
+                            
+                        device_dict[lower_id] = {
+                            "name": name,
+                            "id": instance_id,
+                            "status": status,
+                            "present": present,
+                            "class": pnp_class,
+                            "category": category
+                        }
+                    devices = list(device_dict.values())
+            return {"success": True, "devices": devices}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def toggle_pnp_device(self, device_id, enable):
+        try:
+            import ctypes
+            is_elevated = False
+            try: is_elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            except: pass
+            
+            if not is_elevated:
+                return {"success": False, "error": "Administratorrechte erforderlich."}
+                
+            cmd_verb = "Enable-PnpDevice" if enable else "Disable-PnpDevice"
+            ps_script = f'{cmd_verb} -InstanceId "{device_id}" -Confirm:$false -ErrorAction Stop'
+            
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo, timeout=5)
+            
+            if res.returncode == 0:
+                return {"success": True}
+            else:
+                stderr_str = res.stderr.decode('cp850', errors='replace').strip()
+                return {"success": False, "error": stderr_str}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -897,11 +1132,82 @@ class ToolForgeAPI:
             cmd = ["ipconfig", "/flushdns"]
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=3)
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo, timeout=3)
             if res.returncode == 0:
                 return {"success": True}
             else:
-                return {"success": False, "error": res.stderr.strip()}
+                stderr_str = res.stderr.decode('cp850', errors='replace').strip()
+                return {"success": False, "error": stderr_str}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_auto_admin(self):
+        try:
+            config = self._load_config()
+            return config.get("auto_admin", False)
+        except:
+            return False
+
+    def save_auto_admin(self, enabled):
+        try:
+            config = self._load_config()
+            config["auto_admin"] = bool(enabled)
+            self._save_config(config)
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_installed_apps(self):
+        try:
+            ps_script = (
+                "Add-Type -AssemblyName System.Drawing\n"
+                "$paths = @(\n"
+                "    \"$env:ProgramData\\Microsoft\\Windows\\Start Menu\\Programs\",\n"
+                "    \"$env:AppData\\Microsoft\\Windows\\Start Menu\\Programs\"\n"
+                ")\n"
+                "$shell = New-Object -ComObject WScript.Shell\n"
+                "$apps = @()\n"
+                "Get-ChildItem -Path $paths -Filter *.lnk -Recurse -ErrorAction SilentlyContinue | ForEach-Object {\n"
+                "    try {\n"
+                "        $shortcut = $shell.CreateShortcut($_.FullName)\n"
+                "        $target = $shortcut.TargetPath\n"
+                "        if ($target -and $target.EndsWith('.exe') -and (Test-Path $target -ErrorAction SilentlyContinue)) {\n"
+                "            $name = $_.BaseName\n"
+                "            if ($name -notmatch 'uninstall|entfernen|help|update|setup|installer|config|register|verbose|debug|crash|feedback|remove|diagnose|patcher') {\n"
+                "                if ($target -notmatch 'uninstall|entfernen|helper|setup|installer|crash|update|patcher') {\n"
+                "                    if ($target -notmatch '^C:\\\\Windows') {\n"
+                "                        $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($target)\n"
+                "                        $bitmap = $icon.ToBitmap()\n"
+                "                        $ms = New-Object System.IO.MemoryStream\n"
+                "                        $bitmap.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)\n"
+                "                        $bytes = $ms.ToArray()\n"
+                "                        $base64 = [Convert]::ToBase64String($bytes)\n"
+                "                        $ms.Close()\n"
+                "                        $bitmap.Dispose()\n"
+                "                        $icon.Dispose()\n"
+                "                        $apps += [PSCustomObject]@{ name = $name; path = $target; icon = $base64 }\n"
+                "                    }\n"
+                "                }\n"
+                "            }\n"
+                "        }\n"
+                "    } catch {}\n"
+                "}\n"
+                "$uniqueApps = $apps | Group-Object path | ForEach-Object { $_.Group[0] } | Sort-Object name\n"
+                "$uniqueApps | ConvertTo-Json"
+            )
+            script_utf16 = ps_script.encode('utf-16le')
+            script_b64 = base64.b64encode(script_utf16).decode('ascii')
+            
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-EncodedCommand", script_b64], stdout=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=12)
+            
+            if res.returncode == 0 and res.stdout.strip():
+                data = json.loads(res.stdout.strip())
+                if isinstance(data, dict):
+                    return {"success": True, "apps": [data]}
+                return {"success": True, "apps": data}
+            return {"success": True, "apps": []}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
@@ -912,6 +1218,8 @@ class ToolForgeAPI:
                 subprocess.Popen("sndvol.exe", shell=True)
             elif utility == "bluetooth":
                 os.startfile("ms-settings:bluetooth")
+            elif utility == "devices":
+                subprocess.Popen("devmgmt.msc", shell=True)
             elif utility == "network":
                 os.startfile("ms-settings:network-status")
             elif utility == "power":
@@ -4279,6 +4587,44 @@ IMPORTANT: Return ONLY the edited full image. Keep everything outside the mask e
             return {"success": False, "error": str(e)}
 
 if __name__ == '__main__':
+    # Auto-elevate to Administrator if auto_admin is set to true in config.json
+    import json
+    import ctypes
+    
+    def get_executable_dir_standalone():
+        if hasattr(sys, 'frozen'):
+            return os.path.dirname(sys.executable)
+        return os.path.abspath(".")
+        
+    config_path = os.path.join(get_executable_dir_standalone(), "config.json")
+    auto_admin = False
+    if os.path.exists(config_path):
+        try:
+            with open(config_path, "r", encoding="utf-8") as f:
+                cfg = json.load(f)
+                auto_admin = cfg.get("auto_admin", False)
+        except:
+            pass
+
+    if auto_admin:
+        try:
+            is_admin = ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except:
+            is_admin = False
+
+        if not is_admin:
+            try:
+                if hasattr(sys, 'frozen'):
+                    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(sys.argv[1:]), None, 1)
+                else:
+                    script = os.path.abspath(sys.argv[0])
+                    params = f'"{script}" ' + " ".join(sys.argv[1:])
+                    ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1)
+                sys.exit(0)
+            except Exception as e:
+                print("Administratorrechte erforderlich. UAC-Abfrage abgelehnt oder fehlgeschlagen:", e)
+                sys.exit(1)
+
     # Cleanup any old temp files in the gui/tools folder
     try:
         tools_dir = get_resource_path('gui/tools')

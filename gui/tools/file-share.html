@@ -408,6 +408,94 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+    /* ── custom confirm modal ── */
+    .custom-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .custom-modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .custom-modal-box {
+      background: rgba(13, 13, 24, 0.95);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 450px;
+      padding: 1.8rem;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
+      transform: scale(0.92);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .custom-modal-overlay.active .custom-modal-box {
+      transform: scale(1);
+    }
+    .custom-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .custom-modal-icon {
+      font-size: 1.6rem;
+      color: var(--accent2);
+    }
+    .custom-modal-header h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .custom-modal-body {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text);
+      opacity: 0.85;
+      margin-bottom: 1.8rem;
+    }
+    .custom-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .modal-btn {
+      padding: 0.65rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .modal-btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .modal-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .modal-btn-primary {
+      background: var(--accent);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .modal-btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -739,7 +827,7 @@
           if (res && res.success) {
             refreshServerStatus();
           } else {
-            alert("Fehler: " + (res ? res.error : "unbekannt"));
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Error: ' : 'Fehler: ') + (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
           }
         });
       });
@@ -754,7 +842,7 @@
           if (res && res.success) {
             refreshServerStatus();
           } else {
-            alert("Fehler: " + (res ? res.error : "unbekannt"));
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Error: ' : 'Fehler: ') + (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
           }
         });
       });
@@ -763,7 +851,7 @@
     function saveServerPort() {
       const portVal = parseInt(document.getElementById('serverPortInput').value);
       if (isNaN(portVal) || portVal < 0 || portVal > 65535) {
-        alert(currentLang === 'en' ? "Please enter a valid port number (0-65535)." : "Bitte gib einen gültigen Port ein (0-65535).");
+        showCustomAlert(currentLang === 'en' ? 'Invalid Input' : 'Ungültige Eingabe', currentLang === 'en' ? "Please enter a valid port number (0-65535)." : "Bitte gib einen gültigen Port ein (0-65535).", '⚠️');
         return;
       }
       pywebview.api.save_share_port(portVal).then(res => {
@@ -771,7 +859,7 @@
           showToast(currentLang === 'en' ? "Port saved and server restarted! 💾" : "Port gespeichert und Server neu gestartet! 💾");
           refreshServerStatus();
         } else {
-          alert("Fehler: " + (res ? res.error : "unbekannt"));
+          showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Error: ' : 'Fehler: ') + (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
         }
       });
     }
@@ -779,7 +867,7 @@
     function saveTunnelSubdomain() {
       const sub = document.getElementById('tunnelSubdomainInput').value.trim().toLowerCase();
       if (!sub) {
-        alert(currentLang === 'en' ? "Please enter a subdomain." : "Bitte gib eine Subdomain ein.");
+        showCustomAlert(currentLang === 'en' ? 'Invalid Input' : 'Ungültige Eingabe', currentLang === 'en' ? "Please enter a subdomain." : "Bitte gib eine Subdomain ein.", '⚠️');
         return;
       }
       pywebview.api.save_share_subdomain(sub).then(res => {
@@ -787,7 +875,7 @@
           showToast(currentLang === 'en' ? "Subdomain saved! 💾" : "Subdomain erfolgreich gespeichert! 💾");
           refreshServerStatus();
         } else {
-          alert("Fehler: " + (res ? res.error : "unbekannt"));
+          showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Error: ' : 'Fehler: ') + (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
         }
       });
     }
@@ -799,7 +887,7 @@
           if (res && res.success) {
             showToast(currentLang === 'en' ? "Auto-start tunnel settings updated!" : "Tunnel-Autostart-Einstellungen aktualisiert!");
           } else {
-            alert("Fehler: " + (res ? res.error : "unbekannt"));
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Error: ' : 'Fehler: ') + (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
           }
         });
       }
@@ -914,11 +1002,11 @@
             // Reload shares table
             loadActiveShares();
           } else {
-            alert("Fehler beim Teilen der Datei: " + (res ? res.error : "unbekannt"));
+            showCustomAlert(currentLang === 'en' ? 'Error Sharing File' : 'Fehler beim Teilen der Datei', (currentLang === 'en' ? 'Failed to share file: ' : 'Fehler beim Teilen der Datei: ') + (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
           }
         }).catch(err => {
           shareBtn.disabled = false;
-          alert("Verbindungsfehler: " + err);
+          showCustomAlert(currentLang === 'en' ? 'Connection Error' : 'Verbindungsfehler', (currentLang === 'en' ? 'Connection error: ' : 'Verbindungsfehler: ') + err, '❌');
         });
       });
     }
@@ -1045,7 +1133,7 @@
             showToast(dict.toastQrCopied || "QR-Code-Bild kopiert! 📋");
           }).catch(err => {
             console.error("Clipboard write failed:", err);
-            alert(currentLang === 'en' ? "Failed to copy image automatically." : "Bild konnte nicht automatisch kopiert werden.");
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', currentLang === 'en' ? "Failed to copy image automatically." : "Bild konnte nicht automatisch kopiert werden.", '❌');
           });
         })
         .catch(err => console.error("Blob fetch failed:", err));
@@ -1138,6 +1226,71 @@
         });
       });
     });
+  </script>
+  <!-- Custom Modal (Alert & Confirm) -->
+  <div id="customModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+      <div class="custom-modal-header">
+        <span class="custom-modal-icon" id="customModalIcon">⚠️</span>
+        <h3 id="customModalTitle">Bestätigung</h3>
+      </div>
+      <div class="custom-modal-body" id="customModalMessage">
+        Möchtest du fortfahren?
+      </div>
+      <div class="custom-modal-footer">
+        <button id="customModalCancelBtn" class="modal-btn modal-btn-secondary">Abbrechen</button>
+        <button id="customModalOkBtn" class="modal-btn modal-btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Save original alert function
+    const _originalAlert = window.alert;
+
+    function showCustomAlert(title, message, icon = '💡') {
+      const modal = document.getElementById('customModal');
+      if (!modal) {
+        if (typeof _originalAlert === 'function') {
+          _originalAlert(message);
+        } else {
+          alert(message);
+        }
+        return Promise.resolve(true);
+      }
+      return new Promise((resolve) => {
+        const titleEl = document.getElementById('customModalTitle');
+        const msgEl = document.getElementById('customModalMessage');
+        const iconEl = document.getElementById('customModalIcon');
+        const cancelBtn = document.getElementById('customModalCancelBtn');
+        const okBtn = document.getElementById('customModalOkBtn');
+        
+        iconEl.textContent = icon;
+        titleEl.textContent = title || (currentLang === 'en' ? 'Information' : 'Hinweis');
+        msgEl.textContent = message;
+        cancelBtn.style.display = 'none';
+        okBtn.textContent = 'OK';
+        
+        modal.classList.add('active');
+        
+        function handleOk() {
+          cleanup();
+          resolve(true);
+        }
+        
+        function cleanup() {
+          modal.classList.remove('active');
+          okBtn.removeEventListener('click', handleOk);
+        }
+        
+        okBtn.addEventListener('click', handleOk);
+      });
+    }
+
+    // Intercept native browser alert
+    window.alert = function(message) {
+      showCustomAlert(currentLang === 'en' ? 'Notification' : 'Hinweis', message, '💡');
+    };
   </script>
 </body>
 </html>

@@ -143,6 +143,42 @@
       box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
     }
 
+    /* Bluetooth sub-tabs styling */
+    .sub-tabs-nav {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.25rem;
+      gap: 0.2rem;
+      margin: 1.2rem 0;
+      background: rgba(255, 255, 255, 0.01);
+    }
+    .sub-tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.55rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .sub-tab-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .sub-tab-btn.active {
+      color: #fff;
+      background: var(--gradient);
+      box-shadow: 0 2px 8px rgba(168, 85, 247, 0.15);
+    }
+
     /* Tab Content panels */
     .tab-panel {
       display: none;
@@ -530,6 +566,167 @@
       opacity: 0;
       transition: opacity 0.2s;
     }
+
+    /* App list cards */
+    .app-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 0.75rem 1rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      overflow: hidden;
+      gap: 10px;
+    }
+    .app-card:hover {
+      border-color: var(--accent);
+      background: rgba(168, 85, 247, 0.05);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.1);
+    }
+    .app-icon-badge {
+      font-size: 1.2rem;
+      background: rgba(255, 255, 255, 0.03);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+      transition: all 0.25s;
+    }
+    .app-card:hover .app-icon-badge {
+      background: rgba(168, 85, 247, 0.1);
+      border-color: rgba(168, 85, 247, 0.3);
+    }
+    .app-block-btn {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      flex-shrink: 0;
+    }
+    .app-card:hover .app-block-btn {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.05);
+    }
+    .app-unblock-btn {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      flex-shrink: 0;
+    }
+    .app-card:hover .app-unblock-btn {
+      background: rgba(16, 185, 129, 0.25);
+      border-color: rgba(16, 185, 129, 0.4);
+      transform: scale(1.05);
+    }
+
+    /* ── custom confirm modal ── */
+    .custom-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 10000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .custom-modal-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .custom-modal-box {
+      background: rgba(13, 13, 24, 0.95);
+      backdrop-filter: blur(24px);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      width: 90%;
+      max-width: 450px;
+      padding: 1.8rem;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.8);
+      transform: scale(0.92);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .custom-modal-overlay.active .custom-modal-box {
+      transform: scale(1);
+    }
+    .custom-modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+    }
+    .custom-modal-icon {
+      font-size: 1.6rem;
+      color: var(--accent2);
+    }
+    .custom-modal-header h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.5px;
+    }
+    .custom-modal-body {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text);
+      opacity: 0.85;
+      margin-bottom: 1.8rem;
+    }
+    .custom-modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+    .modal-btn {
+      padding: 0.65rem 1.4rem;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    .modal-btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+    .modal-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255,255,255,0.15);
+    }
+    .modal-btn-primary {
+      background: var(--accent);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .modal-btn-primary:hover {
+      background: var(--accent2);
+      transform: translateY(-1px);
+    }
   </style>
 </head>
 <body>
@@ -548,12 +745,14 @@
     <div class="tabs-nav">
       <button class="tab-btn active" onclick="switchTab('network')" id="tabBtnNetwork">🌐 Netzwerk & Firewall</button>
       <button class="tab-btn" onclick="switchTab('devices')" id="tabBtnDevices">👤 Bluetooth-Geräte</button>
+      <button class="tab-btn" onclick="switchTab('pnpdevices')" id="tabBtnPnpDevices">🔌 Angeschlossene Geräte</button>
       <button class="tab-btn" onclick="switchTab('shortcuts')" id="tabBtnShortcuts">⚡ Schnell-Aktionen</button>
     </div>
 
     <!-- TAB 1: NETWERK & FIREWALL -->
     <div id="panelNetwork" class="tab-panel active">
       <!-- Firewall App Blocker -->
+      <!-- Card 1: Netzwerksperre (Drag & Drop) -->
       <div class="card" style="min-height: 250px;">
         <div class="admin-overlay" id="firewallAdminOverlay">
           <div class="admin-lock-icon">🔒</div>
@@ -571,6 +770,36 @@
 
         <div class="rule-list" id="ruleList">
           <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Card 2: Schnell-Auswahl installierter Programme -->
+      <div class="card" style="min-height: 250px; margin-top: 1.5rem;">
+        <div class="admin-overlay" id="installedAppsAdminOverlay">
+          <div class="admin-lock-icon">🔒</div>
+          <div class="admin-title" id="lblAppsAdminTitle">Admin-Rechte erforderlich</div>
+          <div class="admin-desc" id="lblAppsAdminDesc">Das Blockieren installierter Programme benötigt Administratorrechte. Starte ToolForge als Administrator.</div>
+        </div>
+
+        <div class="card-title" style="justify-content: space-between; align-items: center; border-bottom: none; margin-bottom: 0.5rem; padding-bottom: 0;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.3rem;">📦</span>
+            <span id="lblInstalledAppsCardTitle">Installierte Programme</span>
+          </div>
+          <div style="font-size: 0.8rem; color: var(--text-muted);" id="lblInstalledAppsCount">Lade...</div>
+        </div>
+        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 1.2rem;" id="lblInstalledAppsCardDesc">Wähle ein häufig genutztes Programm aus der Liste, um es direkt zu blockieren.</p>
+        
+        <!-- Search bar input -->
+        <div style="position: relative; margin-bottom: 1.2rem; width: 100%;">
+          <input type="text" id="appSearchInput" placeholder="Programm suchen..." oninput="filterInstalledApps()" style="width: 100%; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.8rem 1rem 0.8rem 2.5rem; color: #fff; font-size: 0.9rem; outline: none; transition: border-color 0.25s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'" />
+          <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); font-size: 0.95rem; opacity: 0.5;">🔍</span>
+        </div>
+
+        <!-- Apps grid -->
+        <div id="installedAppsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.8rem; max-height: 250px; overflow-y: auto; padding-right: 4px;">
+          <!-- Populated dynamically -->
+          <div class="empty-state" style="padding: 2rem; grid-column: 1/-1;" id="lblAppsLoading">Lade Programme...</div>
         </div>
       </div>
 
@@ -603,8 +832,62 @@
           </div>
           <button class="action-btn" onclick="openSystemUtility('bluetooth')" style="padding: 0.5rem 1rem; font-size: 0.82rem;" id="lblBtSettingsBtn">⚙️ Windows-Einstellungen</button>
         </div>
+
+        <!-- Bluetooth Sub-Tabs -->
+        <div class="sub-tabs-nav">
+          <button class="sub-tab-btn active" id="btnBtSubKnown" onclick="switchBtSubTab('known')">
+            <span>📱</span> <span id="lblBtSubKnownText">Bekannte Geräte (0)</span>
+          </button>
+          <button class="sub-tab-btn" id="btnBtSubServices" onclick="switchBtSubTab('services')">
+            <span>⚙️</span> <span id="lblBtSubServicesText">Systemdienste & Profile (0)</span>
+          </button>
+        </div>
         
         <div class="device-grid" id="deviceList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CONNECTED DEVICES (PnP/USB) -->
+    <div id="panelPnpDevices" class="tab-panel">
+      <div class="card" style="min-height: 200px;">
+        <div class="admin-overlay" id="pnpAdminOverlay">
+          <div class="admin-lock-icon">🔒</div>
+          <div class="admin-title" id="lblPnpAdminTitle">Admin-Rechte erforderlich</div>
+          <div class="admin-desc" id="lblPnpAdminDesc">Das Verwalten von System-Geräten benötigt Administratorrechte. Starte ToolForge als Administrator.</div>
+        </div>
+
+        <div class="card-title" style="justify-content: space-between; border-bottom: none; margin-bottom: 0;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.3rem;">🔌</span> <span id="lblPnpTitle">Angeschlossene Geräte verwalten</span>
+          </div>
+          <button class="action-btn" onclick="openSystemUtility('devices')" style="padding: 0.5rem 1rem; font-size: 0.82rem;" id="lblPnpSettingsBtn">⚙️ Geräte-Manager</button>
+        </div>
+
+        <!-- PnP Device Category Filter Sub-Tabs -->
+        <div class="sub-tabs-nav" style="flex-wrap: wrap;">
+          <button class="sub-tab-btn active" id="btnPnpSubAll" onclick="switchPnpCategory('all')">
+            <span id="lblPnpSubAllText">Alle (0)</span>
+          </button>
+          <button class="sub-tab-btn" id="btnPnpSubInput" onclick="switchPnpCategory('input')">
+            <span>⌨️</span> <span id="lblPnpSubInputText">Eingabe (0)</span>
+          </button>
+          <button class="sub-tab-btn" id="btnPnpSubCamera" onclick="switchPnpCategory('camera')">
+            <span>📷</span> <span id="lblPnpSubCameraText">Kameras (0)</span>
+          </button>
+          <button class="sub-tab-btn" id="btnPnpSubAudio" onclick="switchPnpCategory('audio')">
+            <span>🎵</span> <span id="lblPnpSubAudioText">Audio (0)</span>
+          </button>
+          <button class="sub-tab-btn" id="btnPnpSubStorage" onclick="switchPnpCategory('storage')">
+            <span>💾</span> <span id="lblPnpSubStorageText">Speicher (0)</span>
+          </button>
+          <button class="sub-tab-btn" id="btnPnpSubMonitor" onclick="switchPnpCategory('monitor')">
+            <span>🖥️</span> <span id="lblPnpSubMonitorText">Monitore (0)</span>
+          </button>
+        </div>
+        
+        <div class="device-grid" id="pnpDeviceList">
           <!-- Populated dynamically -->
         </div>
       </div>
@@ -665,6 +948,12 @@
         fwTitle: "Netzwerksperre für Programme",
         dragText: "Datei auswählen (.exe) oder hierher ziehen",
         dragSub: "Blockiert ausgehende Internetverbindungen für das Programm",
+        lblInstalledAppsCardTitle: "Installierte Programme",
+        lblInstalledAppsCardDesc: "Wähle ein häufig genutztes Programm aus der Liste, um es direkt zu blockieren.",
+        lblAppsLoading: "Lade Programme...",
+        noAppsFound: "Keine Programme gefunden.",
+        lblAppsAdminTitle: "Admin-Rechte erforderlich",
+        lblAppsAdminDesc: "Das Blockieren installierter Programme benötigt Administratorrechte. Starte ToolForge als Administrator.",
         rulesEmpty: "Keine blockierten Programme über ToolForge eingerichtet.",
         unblockSuccess: "Programm erfolgreich freigegeben!",
         blockSuccess: "Internetverbindung für das Programm erfolgreich blockiert!",
@@ -684,6 +973,8 @@
         btDevicesEmpty: "Keine Bluetooth-Geräte gefunden.",
         btStatusOff: "Ausgeschaltet",
         btStatusOn: "Bereit",
+        btSubKnown: "Bekannte Geräte",
+        btSubServices: "Systemdienste & Profile",
         
         shMixerTitle: "Lautstärkemixer",
         shMixerDesc: "Öffnet den Windows-Mixer zur Steuerung einzelner App-Lautstärken.",
@@ -692,7 +983,22 @@
         shNetworkTitle: "Netzwerkstatus",
         shNetworkDesc: "Öffnet die Netzwerkeinstellungen zur Diagnose der Internetverbindung.",
         shUpdateTitle: "Windows Update",
-        shUpdateDesc: "Prüfe direkt nach den neuesten Windows-Betriebssystem-Updates."
+        shUpdateDesc: "Prüfe direkt nach den neuesten Windows-Betriebssystem-Updates.",
+        
+        tabPnpDevices: "🔌 Angeschlossene Geräte",
+        pnpAdminTitle: "Admin-Rechte erforderlich",
+        pnpAdminDesc: "Das Verwalten von System-Geräten benötigt Administratorrechte. Starte ToolForge als Administrator.",
+        pnpTitle: "Angeschlossene Geräte verwalten",
+        pnpSettingsBtn: "⚙️ Geräte-Manager",
+        pnpDeviceConnected: "Bereit / Aktiv",
+        pnpDeviceDisconnected: "Deaktiviert",
+        pnpDevicesEmpty: "Keine kompatiblen Geräte gefunden.",
+        pnpSubAll: "Alle",
+        pnpSubInput: "Eingabe",
+        pnpSubCamera: "Kameras",
+        pnpSubAudio: "Audio",
+        pnpSubStorage: "Speicher",
+        pnpSubMonitor: "Monitore"
       },
       en: {
         backBtn: "← Back",
@@ -706,6 +1012,12 @@
         fwTitle: "Program Internet Blocker",
         dragText: "Select file (.exe) or drag it here",
         dragSub: "Blocks outbound internet connections for the program",
+        lblInstalledAppsCardTitle: "Installed Programs",
+        lblInstalledAppsCardDesc: "Choose a commonly used program from the list to block it directly.",
+        lblAppsLoading: "Loading applications...",
+        noAppsFound: "No applications found.",
+        lblAppsAdminTitle: "Admin Rights Required",
+        lblAppsAdminDesc: "Blocking installed programs requires Administrator rights. Run ToolForge as Administrator.",
         rulesEmpty: "No blocked programs configured via ToolForge.",
         unblockSuccess: "Program successfully unblocked!",
         blockSuccess: "Program successfully blocked from the internet!",
@@ -725,6 +1037,8 @@
         btDevicesEmpty: "No Bluetooth devices found.",
         btStatusOff: "Disabled",
         btStatusOn: "Ready",
+        btSubKnown: "Known Devices",
+        btSubServices: "System Services & Profiles",
         
         shMixerTitle: "Volume Mixer",
         shMixerDesc: "Opens the Windows Volume Mixer to adjust individual app volumes.",
@@ -733,7 +1047,22 @@
         shNetworkTitle: "Network Status",
         shNetworkDesc: "Opens network adapter settings to diagnose internet connectivity.",
         shUpdateTitle: "Windows Update",
-        shUpdateDesc: "Directly check for the latest Windows operating system updates."
+        shUpdateDesc: "Directly check for the latest Windows operating system updates.",
+        
+        tabPnpDevices: "🔌 Connected Devices",
+        pnpAdminTitle: "Admin Rights Required",
+        pnpAdminDesc: "Managing system hardware devices requires Administrator rights. Run ToolForge as Administrator.",
+        pnpTitle: "Manage Connected Devices",
+        pnpSettingsBtn: "⚙️ Device Manager",
+        pnpDeviceConnected: "Ready / Active",
+        pnpDeviceDisconnected: "Disabled",
+        pnpDevicesEmpty: "No compatible devices found.",
+        pnpSubAll: "All",
+        pnpSubInput: "Input",
+        pnpSubCamera: "Cameras",
+        pnpSubAudio: "Audio",
+        pnpSubStorage: "Storage",
+        pnpSubMonitor: "Monitors"
       }
     };
 
@@ -754,6 +1083,20 @@
       document.getElementById('lblFwTitle').textContent = dict.fwTitle;
       document.getElementById('lblDragText').textContent = dict.dragText;
       document.getElementById('lblDragSub').textContent = dict.dragSub;
+      
+      const appsCardTitle = document.getElementById('lblInstalledAppsCardTitle');
+      if (appsCardTitle) appsCardTitle.textContent = dict.lblInstalledAppsCardTitle;
+      const appsCardDesc = document.getElementById('lblInstalledAppsCardDesc');
+      if (appsCardDesc) appsCardDesc.textContent = dict.lblInstalledAppsCardDesc;
+      const appsAdminTitle = document.getElementById('lblAppsAdminTitle');
+      if (appsAdminTitle) appsAdminTitle.textContent = dict.lblAppsAdminTitle;
+      const appsAdminDesc = document.getElementById('lblAppsAdminDesc');
+      if (appsAdminDesc) appsAdminDesc.textContent = dict.lblAppsAdminDesc;
+      
+      const appSearchInput = document.getElementById('appSearchInput');
+      if (appSearchInput) appSearchInput.placeholder = currentLang === 'de' ? "Programm suchen..." : "Search program...";
+      const lblAppsLoading = document.getElementById('lblAppsLoading');
+      if (lblAppsLoading) lblAppsLoading.textContent = dict.lblAppsLoading;
 
       document.getElementById('lblDnsTitle').textContent = dict.dnsTitle;
       document.getElementById('lblDnsDesc').textContent = dict.dnsDesc;
@@ -763,6 +1106,11 @@
       document.getElementById('lblBtAdminDesc').textContent = dict.btAdminDesc;
       document.getElementById('lblBtTitle').textContent = dict.btTitle;
       document.getElementById('lblBtSettingsBtn').textContent = dict.btSettingsBtn;
+
+      document.getElementById('lblPnpAdminTitle').textContent = dict.pnpAdminTitle;
+      document.getElementById('lblPnpAdminDesc').textContent = dict.pnpAdminDesc;
+      document.getElementById('lblPnpTitle').textContent = dict.pnpTitle;
+      document.getElementById('lblPnpSettingsBtn').textContent = dict.pnpSettingsBtn;
 
       document.getElementById('lblShMixerTitle').textContent = dict.shMixerTitle;
       document.getElementById('lblShMixerDesc').textContent = dict.shMixerDesc;
@@ -775,6 +1123,7 @@
 
       loadFirewallRules();
       loadBluetoothDevices();
+      loadConnectedDevices();
     }
 
     function switchTab(tabId) {
@@ -788,6 +1137,10 @@
         document.getElementById('tabBtnDevices').classList.add('active');
         document.getElementById('panelDevices').classList.add('active');
         loadBluetoothDevices();
+      } else if (tabId === 'pnpdevices') {
+        document.getElementById('tabBtnPnpDevices').classList.add('active');
+        document.getElementById('panelPnpDevices').classList.add('active');
+        loadConnectedDevices();
       } else if (tabId === 'shortcuts') {
         document.getElementById('tabBtnShortcuts').classList.add('active');
         document.getElementById('panelShortcuts').classList.add('active');
@@ -797,21 +1150,61 @@
     // --- Admin state check ---
     function checkAdminStatus() {
       if (typeof pywebview !== 'undefined' && pywebview.api) {
-        pywebview.api.get_system_stats().then(stats => {
-          isAdmin = (stats.cpu_temp_status === 'ok' || stats.cpu_temp_status === 'not_supported');
+        const handleAdminResult = (adminVal) => {
+          isAdmin = adminVal;
+          console.log("Admin status check completed. isAdmin =", isAdmin);
+          const fwOverlay = document.getElementById('firewallAdminOverlay');
+          const btOverlay = document.getElementById('bluetoothAdminOverlay');
+          const pnpOverlay = document.getElementById('pnpAdminOverlay');
+          const appsOverlay = document.getElementById('installedAppsAdminOverlay');
           
           if (!isAdmin) {
-            document.getElementById('firewallAdminOverlay').classList.add('show');
-            document.getElementById('bluetoothAdminOverlay').classList.add('show');
+            if (fwOverlay) fwOverlay.classList.add('show');
+            if (btOverlay) btOverlay.classList.add('show');
+            if (pnpOverlay) pnpOverlay.classList.add('show');
+            if (appsOverlay) appsOverlay.classList.add('show');
           } else {
-            document.getElementById('firewallAdminOverlay').classList.remove('show');
-            document.getElementById('bluetoothAdminOverlay').classList.remove('show');
+            if (fwOverlay) fwOverlay.classList.remove('show');
+            if (btOverlay) btOverlay.classList.remove('show');
+            if (pnpOverlay) pnpOverlay.classList.remove('show');
+            if (appsOverlay) appsOverlay.classList.remove('show');
           }
-        });
+        };
+
+        if (pywebview.api.check_admin) {
+          pywebview.api.check_admin().then(res => {
+            if (res && res.success) {
+              handleAdminResult(res.is_admin);
+            } else {
+              fallbackAdminCheck();
+            }
+          }).catch(err => {
+            console.error("Error calling check_admin:", err);
+            fallbackAdminCheck();
+          });
+        } else {
+          fallbackAdminCheck();
+        }
+
+        function fallbackAdminCheck() {
+          pywebview.api.get_system_stats().then(stats => {
+            if (stats) {
+              handleAdminResult(stats.cpu_temp_status === 'ok' || stats.cpu_temp_status === 'not_supported');
+            } else {
+              handleAdminResult(false);
+            }
+          }).catch(err => {
+            console.error("Error calling get_system_stats for admin status:", err);
+            handleAdminResult(false);
+          });
+        }
       }
     }
 
     // --- Tab 1: Netzwerksperre (Firewall) ---
+    let blockedPathsMap = new Map();
+    let installedApps = [];
+
     function loadFirewallRules() {
       if (typeof pywebview === 'undefined' || !pywebview.api) return;
       
@@ -820,9 +1213,12 @@
         listEl.innerHTML = '';
         const dict = langDict[currentLang] || langDict['de'];
 
+        blockedPathsMap.clear();
+
         if (res && res.success) {
           if (res.rules.length === 0) {
             listEl.innerHTML = `<div class="empty-state">${dict.rulesEmpty}</div>`;
+            renderInstalledApps();
             return;
           }
 
@@ -831,19 +1227,163 @@
             const cleanName = displayName.replace('ToolForge Block - ', '');
             const path = rule.Program || 'N/A';
 
+            if (rule.Programs && Array.isArray(rule.Programs)) {
+              rule.Programs.forEach(p => {
+                blockedPathsMap.set(p.replace(/\//g, '\\').toLowerCase(), displayName);
+              });
+            } else if (rule.Program) {
+              blockedPathsMap.set(rule.Program.replace(/\//g, '\\').toLowerCase(), displayName);
+            }
+
+            const subCount = (rule.Programs && rule.Programs.length > 1) 
+              ? ` (+ ${rule.Programs.length - 1} ${currentLang === 'de' ? 'weitere Dateien' : 'more files'})` 
+              : '';
+            const displayPath = path + subCount;
+
             const item = document.createElement('div');
             item.className = 'rule-item';
             item.innerHTML = `
               <div class="rule-info">
                 <div class="rule-name">${cleanName}</div>
-                <div class="rule-path" title="${path}">${path}</div>
+                <div class="rule-path" title="${path}${subCount}">${displayPath}</div>
               </div>
-              <button class="delete-btn" onclick="removeBlock('${displayName}')">🗑️</button>
+              <button class="delete-btn">🗑️</button>
             `;
+            item.querySelector('.delete-btn').addEventListener('click', () => {
+              removeBlock(displayName);
+            });
             listEl.appendChild(item);
           });
         }
+        renderInstalledApps();
       });
+    }
+
+    function loadInstalledApps() {
+      if (typeof pywebview === 'undefined' || !pywebview.api || !pywebview.api.get_installed_apps) return;
+      
+      const gridEl = document.getElementById('installedAppsGrid');
+      
+      pywebview.api.get_installed_apps().then(res => {
+        if (res && res.success) {
+          installedApps = res.apps || [];
+          renderInstalledApps();
+        } else {
+          gridEl.innerHTML = `<div class="empty-state" style="padding: 1rem;">${currentLang === 'de' ? 'Konnte Programme nicht laden.' : 'Failed to load apps.'}</div>`;
+        }
+      }).catch(err => {
+        gridEl.innerHTML = `<div class="empty-state" style="padding: 1rem;">Fehler / Error: ${err}</div>`;
+      });
+    }
+
+    function renderInstalledApps() {
+      const gridEl = document.getElementById('installedAppsGrid');
+      if (!gridEl) return;
+      gridEl.innerHTML = '';
+      const dict = langDict[currentLang] || langDict['de'];
+      
+      const query = document.getElementById('appSearchInput').value.toLowerCase().trim();
+      
+      const filtered = installedApps.filter(app => {
+        if (query && !app.name.toLowerCase().includes(query)) return false;
+        return true;
+      });
+      
+      const countEl = document.getElementById('lblInstalledAppsCount');
+      if (countEl) {
+        countEl.textContent = currentLang === 'de' 
+          ? `${filtered.length} Programme` 
+          : `${filtered.length} programs`;
+      }
+
+      if (filtered.length === 0) {
+        gridEl.innerHTML = `<div class="empty-state" style="grid-column: 1/-1; padding: 2rem;">${dict.noAppsFound || (currentLang === 'en' ? 'No applications found.' : 'Keine Programme gefunden.')}</div>`;
+        return;
+      }
+      
+      filtered.forEach(app => {
+        const normalizedPath = app.path.replace(/\//g, '\\').toLowerCase();
+        const isBlocked = blockedPathsMap.has(normalizedPath);
+        const ruleName = isBlocked ? blockedPathsMap.get(normalizedPath) : null;
+
+        const card = document.createElement('div');
+        card.className = 'app-card';
+        card.addEventListener('click', (e) => {
+          console.log("Card click listener triggered for app:", app.name, "path:", app.path, "isBlocked:", isBlocked);
+          try {
+            if (isBlocked) {
+              removeBlock(ruleName);
+            } else {
+              confirmBlockApp(app.name, app.path);
+            }
+          } catch (err) {
+            console.error("Exception in card click handler:", err);
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Error in card handler: ' : 'Fehler im Klick-Handler: ') + err.message, '❌');
+          }
+        });
+        
+        let icon = "";
+        if (app.icon && app.icon.trim()) {
+          icon = `<img src="data:image/png;base64,${app.icon}" style="width: 24px; height: 24px; object-fit: contain; border-radius: 4px;" />`;
+        } else {
+          let emoji = "📦";
+          const nameLower = app.name.toLowerCase();
+          if (nameLower.includes('edge') || nameLower.includes('browser') || nameLower.includes('chrome') || nameLower.includes('firefox') || nameLower.includes('opera') || nameLower.includes('brave') || nameLower.includes('safari') || nameLower.includes('internet')) {
+            emoji = "🌐";
+          } else if (nameLower.includes('steam') || nameLower.includes('game') || nameLower.includes('league') || nameLower.includes('riot') || nameLower.includes('epic') || nameLower.includes('minecraft') || nameLower.includes('roblox') || nameLower.includes('launcher')) {
+            emoji = "🎮";
+          } else if (nameLower.includes('discord') || nameLower.includes('teamspeak') || nameLower.includes('skype') || nameLower.includes('whatsapp') || nameLower.includes('telegram') || nameLower.includes('chat') || nameLower.includes('mail')) {
+            emoji = "💬";
+          } else if (nameLower.includes('spotify') || nameLower.includes('music') || nameLower.includes('media') || nameLower.includes('player') || nameLower.includes('audio') || nameLower.includes('video') || nameLower.includes('obs')) {
+            emoji = "🎵";
+          }
+          icon = emoji;
+        }
+        
+        const pathTruncated = app.path.length > 30 ? app.path.substring(0, 12) + "..." + app.path.substring(app.path.length - 15) : app.path;
+
+        const buttonText = isBlocked 
+          ? (currentLang === 'de' ? 'Freigeben' : 'Unblock')
+          : (currentLang === 'de' ? 'Sperren' : 'Block');
+        const buttonClass = isBlocked ? 'app-unblock-btn' : 'app-block-btn';
+
+        card.innerHTML = `
+          <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; width: 100%;">
+            <div class="app-icon-badge">${icon}</div>
+            <div style="display: flex; flex-direction: column; gap: 0.15rem; overflow: hidden; text-align: left;">
+              <div style="font-size: 0.85rem; font-weight: 700; color: #fff; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" title="${app.name}">${app.name}</div>
+              <div style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap; text-overflow: ellipsis; overflow: hidden;" title="${app.path}">${pathTruncated}</div>
+            </div>
+          </div>
+          <button class="${buttonClass}">${buttonText}</button>
+        `;
+        gridEl.appendChild(card);
+      });
+    }
+
+    function confirmBlockApp(name, path) {
+      console.log("confirmBlockApp called with name:", name, "path:", path, "isAdmin:", isAdmin);
+      if (!isAdmin) {
+        console.warn("confirmBlockApp: User is not an admin, ignoring block command.");
+        return;
+      }
+      const confirmMsg = currentLang === 'de' 
+        ? `Möchtest du die Internetverbindung für "${name}" wirklich blockieren?` 
+        : `Are you sure you want to block the internet connection for "${name}"?`;
+        
+      showCustomConfirm(currentLang === 'en' ? 'Confirm Block' : 'Sperre bestätigen', confirmMsg, '⚠️').then(confirmed => {
+        console.log("Confirm block dialog result:", confirmed);
+        if (confirmed) {
+          blockFile(path);
+        }
+      }).catch(err => {
+        console.error("Exception in confirmBlockApp:", err);
+        showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Block confirmation error: ' : 'Fehler bei der Sperr-Bestätigung: ') + err.message, '❌');
+      });
+    }
+
+    function filterInstalledApps() {
+      renderInstalledApps();
     }
 
     function selectExeToBlock() {
@@ -859,31 +1399,45 @@
     }
 
     function blockFile(filePath) {
+      console.log("blockFile called with path:", filePath);
       const parts = filePath.split(/[/\\]/);
       const fileName = parts[parts.length - 1];
       const appName = fileName.replace('.exe', '');
 
       pywebview.api.add_firewall_block(filePath, appName).then(res => {
-        const dict = langDict[currentLang] || langDict['de'];
+        console.log("add_firewall_block response:", res);
         if (res && res.success) {
-          alert(dict.blockSuccess);
           loadFirewallRules();
         } else {
-          alert("Fehler: " + (res ? res.error : "Unbekannter Fehler"));
+          showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Failed to add block: ' : 'Fehler beim Hinzufügen der Sperre: ') + (res ? res.error : (currentLang === 'en' ? 'Unknown error' : 'Unbekannter Fehler')), '❌');
         }
+      }).catch(err => {
+        console.error("Exception calling add_firewall_block API:", err);
+        showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Interface error when blocking: ' : 'Schnittstellenfehler beim Sperren: ') + err, '❌');
       });
     }
 
     function removeBlock(ruleName) {
-      if (!confirm("Freigeben bestätigen?")) return;
-      pywebview.api.remove_firewall_block(ruleName).then(res => {
-        const dict = langDict[currentLang] || langDict['de'];
-        if (res && res.success) {
-          alert(dict.unblockSuccess);
-          loadFirewallRules();
-        } else {
-          alert("Fehler: " + (res ? res.error : "Unbekannter Fehler"));
+      console.log("removeBlock called with ruleName:", ruleName);
+      const confirmMsg = currentLang === 'de' ? 'Freigeben bestätigen?' : 'Confirm unblock?';
+      showCustomConfirm(currentLang === 'en' ? 'Confirm Unblock' : 'Freigabe bestätigen', confirmMsg, '⚠️').then(confirmed => {
+        console.log("Confirm unblock dialog result:", confirmed);
+        if (confirmed) {
+          pywebview.api.remove_firewall_block(ruleName).then(res => {
+            console.log("remove_firewall_block response:", res);
+            if (res && res.success) {
+              loadFirewallRules();
+            } else {
+              showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Failed to unblock: ' : 'Fehler beim Freigeben: ') + (res ? res.error : (currentLang === 'en' ? 'Unknown error' : 'Unbekannter Fehler')), '❌');
+            }
+          }).catch(err => {
+            console.error("Exception calling remove_firewall_block API:", err);
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Interface error when unblocking: ' : 'Schnittstellenfehler beim Freigeben: ') + err, '❌');
+          });
         }
+      }).catch(err => {
+        console.error("Exception in showCustomConfirm for removeBlock:", err);
+        showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Unblock confirmation error: ' : 'Fehler bei der Freigabe-Bestätigung: ') + err.message, '❌');
       });
     }
 
@@ -926,71 +1480,131 @@
         lblDnsBtn.textContent = dict.dnsBtn;
 
         if (res && res.success) {
-          alert(dict.dnsSuccess);
+          showCustomAlert(currentLang === 'en' ? 'Success' : 'Erfolgreich', dict.dnsSuccess, '✅');
         } else {
-          alert(dict.dnsError + (res ? res.error : 'Unbekannt'));
+          showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', dict.dnsError + (res ? res.error : (currentLang === 'en' ? 'Unknown' : 'Unbekannt')), '❌');
         }
       }).catch(err => {
         dnsBtn.disabled = false;
         dnsIcon.textContent = "⚡";
         lblDnsBtn.textContent = dict.dnsBtn;
-        alert(dict.dnsError + err);
+        showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', dict.dnsError + err, '❌');
       });
     }
 
     // --- Tab 2: Bluetooth verwalten ---
+    let currentBtSubTab = 'known';
+    let cachedBtDevices = [];
+
+    function switchBtSubTab(tabName) {
+      currentBtSubTab = tabName;
+      
+      // Update active classes
+      const btnKnown = document.getElementById('btnBtSubKnown');
+      const btnServices = document.getElementById('btnBtSubServices');
+      if (btnKnown && btnServices) {
+        if (tabName === 'known') {
+          btnKnown.classList.add('active');
+          btnServices.classList.remove('active');
+        } else {
+          btnKnown.classList.remove('active');
+          btnServices.classList.add('active');
+        }
+      }
+      
+      renderBluetoothDevices(cachedBtDevices);
+    }
+
     function loadBluetoothDevices() {
       if (typeof pywebview === 'undefined' || !pywebview.api) return;
 
       pywebview.api.get_bluetooth_devices().then(res => {
-        const listEl = document.getElementById('deviceList');
-        listEl.innerHTML = '';
-        const dict = langDict[currentLang] || langDict['de'];
-
         if (res && res.success) {
-          if (res.devices.length === 0) {
-            listEl.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">${dict.btDevicesEmpty}</div>`;
-            return;
-          }
+          cachedBtDevices = res.devices || [];
+        } else {
+          cachedBtDevices = [];
+        }
+        renderBluetoothDevices(cachedBtDevices);
+      }).catch(err => {
+        console.error("Error loading Bluetooth devices:", err);
+      });
+    }
 
-          res.devices.forEach(dev => {
-            const card = document.createElement('div');
-            card.className = 'device-card';
-            
-            let icon = "📱";
-            const lowerName = dev.name.toLowerCase();
-            if (lowerName.includes('headphone') || lowerName.includes('audio') || lowerName.includes('ear') || lowerName.includes('sound') || lowerName.includes('qc35') || lowerName.includes('bose') || lowerName.includes('beats')) {
-              icon = "🎧";
-            } else if (lowerName.includes('mouse') || lowerName.includes('maus')) {
-              icon = "🖱️";
-            } else if (lowerName.includes('keyboard') || lowerName.includes('tastatur')) {
-              icon = "⌨️";
-            } else if (lowerName.includes('speaker') || lowerName.includes('lautsprecher') || lowerName.includes('box')) {
-              icon = "🔊";
-            } else if (lowerName.includes('watch') || lowerName.includes('uhr')) {
-              icon = "⌚";
-            }
+    function renderBluetoothDevices(devices) {
+      const listEl = document.getElementById('deviceList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+      const dict = langDict[currentLang] || langDict['de'];
 
-            const isConnected = (dev.status.toLowerCase() === 'ok' || dev.present);
-            const statusLabel = isConnected ? dict.btDeviceConnected : dict.btDeviceDisconnected;
-            const statusClass = isConnected ? 'connected' : 'disconnected';
-            
-            card.innerHTML = `
-              <div class="device-header">
-                <div class="device-icon">${icon}</div>
-                <div class="device-name-wrap">
-                  <div class="device-name" title="${dev.name}">${dev.name}</div>
-                  <div class="device-status ${statusClass}">${statusLabel}</div>
-                </div>
-              </div>
-              <label class="switch">
-                <input type="checkbox" ${isConnected ? 'checked' : ''} onchange="toggleDevice('${dev.id}', this.checked)">
-                <span class="slider"></span>
-              </label>
-            `;
-            listEl.appendChild(card);
+      // Count types
+      const knownDevices = devices.filter(d => d.type === 'physical');
+      const serviceDevices = devices.filter(d => d.type === 'service');
+
+      // Update tab labels
+      const lblKnown = document.getElementById('lblBtSubKnownText');
+      const lblServices = document.getElementById('lblBtSubServicesText');
+      if (lblKnown) {
+        lblKnown.textContent = (dict.btSubKnown || "Bekannte Geräte") + ` (${knownDevices.length})`;
+      }
+      if (lblServices) {
+        lblServices.textContent = (dict.btSubServices || "Systemdienste & Profile") + ` (${serviceDevices.length})`;
+      }
+
+      // Filter based on active subtab
+      const activeDevices = (currentBtSubTab === 'known') ? knownDevices : serviceDevices;
+
+      if (activeDevices.length === 0) {
+        listEl.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">${dict.btDevicesEmpty}</div>`;
+        return;
+      }
+
+      activeDevices.forEach(dev => {
+        const card = document.createElement('div');
+        card.className = 'device-card';
+        
+        let icon = "📱";
+        const lowerName = dev.name.toLowerCase();
+        if (lowerName.includes('headphone') || lowerName.includes('audio') || lowerName.includes('ear') || lowerName.includes('sound') || lowerName.includes('qc35') || lowerName.includes('bose') || lowerName.includes('beats') || lowerName.includes('sony') || lowerName.includes('jabra')) {
+          icon = "🎧";
+        } else if (lowerName.includes('mouse') || lowerName.includes('maus')) {
+          icon = "🖱️";
+        } else if (lowerName.includes('keyboard') || lowerName.includes('tastatur')) {
+          icon = "⌨️";
+        } else if (lowerName.includes('speaker') || lowerName.includes('lautsprecher') || lowerName.includes('box') || lowerName.includes('soundbar')) {
+          icon = "🔊";
+        } else if (lowerName.includes('watch') || lowerName.includes('uhr')) {
+          icon = "⌚";
+        } else if (dev.type === 'service') {
+          icon = "⚙️";
+        }
+
+        const isPresent = dev.present;
+        const isConnected = (dev.status.toLowerCase() === 'ok' && isPresent);
+        const statusLabel = isConnected ? dict.btDeviceConnected : dict.btDeviceDisconnected;
+        const statusClass = isConnected ? 'connected' : 'disconnected';
+        
+        card.innerHTML = `
+          <div class="device-header" style="${!isPresent ? 'opacity: 0.65;' : ''}">
+            <div class="device-icon">${icon}</div>
+            <div class="device-name-wrap">
+              <div class="device-name" title="${dev.name}">${dev.name}</div>
+              <div class="device-status ${statusClass}">${statusLabel}</div>
+            </div>
+          </div>
+          <label class="switch" style="${!isPresent ? 'opacity: 0.45; cursor: not-allowed; pointer-events: none;' : ''}">
+            <input type="checkbox" class="device-toggle" ${isConnected ? 'checked' : ''} ${!isPresent ? 'disabled' : ''}>
+            <span class="slider"></span>
+          </label>
+        `;
+        
+        if (isPresent) {
+          const toggleInput = card.querySelector('.device-toggle');
+          toggleInput.addEventListener('change', (e) => {
+            toggleDevice(dev.id, e.target.checked);
           });
         }
+
+        listEl.appendChild(card);
       });
     }
 
@@ -1004,8 +1618,169 @@
         if (res && res.success) {
           setTimeout(loadBluetoothDevices, 1500);
         } else {
-          alert("Fehler: " + (res ? res.error : "Konnte Gerätestatus nicht ändern."));
+          showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Failed to change device status: ' : 'Fehler beim Ändern des Gerätestatus: ') + (res ? res.error : (currentLang === 'en' ? 'Unknown' : 'Unbekannt')), '❌');
           loadBluetoothDevices();
+        }
+      });
+    }
+
+    // --- Tab 3: Connected PnP Devices ---
+    let currentPnpCategory = 'all';
+    let cachedPnpDevices = [];
+
+    function switchPnpCategory(category) {
+      currentPnpCategory = category;
+      
+      const buttons = [
+        { id: 'btnPnpSubAll', cat: 'all' },
+        { id: 'btnPnpSubInput', cat: 'input' },
+        { id: 'btnPnpSubCamera', cat: 'camera' },
+        { id: 'btnPnpSubAudio', cat: 'audio' },
+        { id: 'btnPnpSubStorage', cat: 'storage' },
+        { id: 'btnPnpSubMonitor', cat: 'monitor' }
+      ];
+      
+      buttons.forEach(btn => {
+        const el = document.getElementById(btn.id);
+        if (el) {
+          if (btn.cat === category) {
+            el.classList.add('active');
+          } else {
+            el.classList.remove('active');
+          }
+        }
+      });
+      
+      renderConnectedDevices(cachedPnpDevices);
+    }
+
+    function loadConnectedDevices() {
+      if (typeof pywebview === 'undefined' || !pywebview.api || !pywebview.api.get_connected_devices) return;
+
+      pywebview.api.get_connected_devices().then(res => {
+        if (res && res.success) {
+          cachedPnpDevices = res.devices || [];
+        } else {
+          cachedPnpDevices = [];
+        }
+        renderConnectedDevices(cachedPnpDevices);
+      }).catch(err => {
+        console.error("Error loading connected PnP devices:", err);
+      });
+    }
+
+    function renderConnectedDevices(devices) {
+      const listEl = document.getElementById('pnpDeviceList');
+      if (!listEl) return;
+      listEl.innerHTML = '';
+      const dict = langDict[currentLang] || langDict['de'];
+
+      // Counts per category
+      let countAll = devices.length;
+      let countInput = devices.filter(d => d.category === 'Mouse' || d.category === 'Keyboard').length;
+      let countCamera = devices.filter(d => d.category === 'Camera').length;
+      let countAudio = devices.filter(d => d.category === 'Audio').length;
+      let countStorage = devices.filter(d => d.category === 'Storage').length;
+      let countMonitor = devices.filter(d => d.category === 'Monitor').length;
+
+      // Update UI counts
+      const lblAll = document.getElementById('lblPnpSubAllText');
+      const lblInput = document.getElementById('lblPnpSubInputText');
+      const lblCamera = document.getElementById('lblPnpSubCameraText');
+      const lblAudio = document.getElementById('lblPnpSubAudioText');
+      const lblStorage = document.getElementById('lblPnpSubStorageText');
+      const lblMonitor = document.getElementById('lblPnpSubMonitorText');
+
+      if (lblAll) lblAll.textContent = (dict.pnpSubAll || "Alle") + ` (${countAll})`;
+      if (lblInput) lblInput.textContent = (dict.pnpSubInput || "Eingabe") + ` (${countInput})`;
+      if (lblCamera) lblCamera.textContent = (dict.pnpSubCamera || "Kameras") + ` (${countCamera})`;
+      if (lblAudio) lblAudio.textContent = (dict.pnpSubAudio || "Audio") + ` (${countAudio})`;
+      if (lblStorage) lblStorage.textContent = (dict.pnpSubStorage || "Speicher") + ` (${countStorage})`;
+      if (lblMonitor) lblMonitor.textContent = (dict.pnpSubMonitor || "Monitore") + ` (${countMonitor})`;
+
+      // Filter by active category
+      let filtered = devices;
+      if (currentPnpCategory === 'input') {
+        filtered = devices.filter(d => d.category === 'Mouse' || d.category === 'Keyboard');
+      } else if (currentPnpCategory === 'camera') {
+        filtered = devices.filter(d => d.category === 'Camera');
+      } else if (currentPnpCategory === 'audio') {
+        filtered = devices.filter(d => d.category === 'Audio');
+      } else if (currentPnpCategory === 'storage') {
+        filtered = devices.filter(d => d.category === 'Storage');
+      } else if (currentPnpCategory === 'monitor') {
+        filtered = devices.filter(d => d.category === 'Monitor');
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">${dict.pnpDevicesEmpty}</div>`;
+        return;
+      }
+
+      filtered.forEach(dev => {
+        const card = document.createElement('div');
+        card.className = 'device-card';
+
+        let icon = "🔌";
+        if (dev.category === 'Mouse') icon = "🖱️";
+        else if (dev.category === 'Keyboard') icon = "⌨️";
+        else if (dev.category === 'Camera') icon = "📷";
+        else if (dev.category === 'Audio') icon = "🎧";
+        else if (dev.category === 'Storage') icon = "💾";
+        else if (dev.category === 'Monitor') icon = "🖥️";
+
+        const isConnected = dev.status.toLowerCase() === 'ok';
+        const statusLabel = isConnected ? dict.pnpDeviceConnected : dict.pnpDeviceDisconnected;
+        const statusClass = isConnected ? 'connected' : 'disconnected';
+
+        card.innerHTML = `
+          <div class="device-header">
+            <div class="device-icon">${icon}</div>
+            <div class="device-name-wrap">
+              <div class="device-name" title="${dev.name}">${dev.name}</div>
+              <div class="device-status ${statusClass}">${statusLabel}</div>
+            </div>
+          </div>
+          <label class="switch">
+            <input type="checkbox" class="pnp-toggle" ${isConnected ? 'checked' : ''}>
+            <span class="slider"></span>
+          </label>
+        `;
+
+        const toggleInput = card.querySelector('.pnp-toggle');
+        toggleInput.addEventListener('change', (e) => {
+          togglePnpDevice(dev, e.target.checked);
+        });
+
+        listEl.appendChild(card);
+      });
+    }
+
+    function togglePnpDevice(device, checked) {
+      if (!isAdmin) {
+        loadConnectedDevices();
+        return;
+      }
+
+      const confirmMsg = currentLang === 'de'
+        ? `Möchtest du das Gerät "${device.name}" wirklich ${checked ? 'aktivieren' : 'deaktivieren'}?`
+        : `Are you sure you want to ${checked ? 'enable' : 'disable'} the device "${device.name}"?`;
+
+      showCustomConfirm(currentLang === 'en' ? 'Confirm Action' : 'Aktion bestätigen', confirmMsg, '⚠️').then(confirmed => {
+        if (confirmed) {
+          pywebview.api.toggle_pnp_device(device.id, checked).then(res => {
+            if (res && res.success) {
+              setTimeout(loadConnectedDevices, 1500);
+            } else {
+              showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Failed to toggle device: ' : 'Fehler beim Ändern des Gerätestatus: ') + (res ? res.error : 'Unknown'), '❌');
+              loadConnectedDevices();
+            }
+          }).catch(err => {
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (currentLang === 'en' ? 'Error: ' : 'Fehler: ') + err, '❌');
+            loadConnectedDevices();
+          });
+        } else {
+          loadConnectedDevices();
         }
       });
     }
@@ -1014,6 +1789,16 @@
     function openSystemUtility(utility) {
       if (typeof pywebview !== 'undefined' && pywebview.api) {
         pywebview.api.open_system_utility(utility);
+      }
+    }
+
+    function initApp() {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.get_language().then(lang => {
+          applyLanguage(lang || 'de');
+          checkAdminStatus();
+          loadInstalledApps();
+        });
       }
     }
 
@@ -1026,12 +1811,148 @@
       }
       
       if (typeof pywebview !== 'undefined' && pywebview.api) {
-        pywebview.api.get_language().then(lang => {
-          applyLanguage(lang || 'de');
-          checkAdminStatus();
-        });
+        initApp();
+      } else {
+        window.addEventListener('pywebviewready', initApp);
+        // Safety fallback
+        setTimeout(initApp, 600);
       }
     });
+  </script>
+  <!-- Custom Modal (Alert & Confirm) -->
+  <div id="customModal" class="custom-modal-overlay">
+    <div class="custom-modal-box">
+      <div class="custom-modal-header">
+        <span class="custom-modal-icon" id="customModalIcon">⚠️</span>
+        <h3 id="customModalTitle">Bestätigung</h3>
+      </div>
+      <div class="custom-modal-body" id="customModalMessage">
+        Möchtest du fortfahren?
+      </div>
+      <div class="custom-modal-footer">
+        <button id="customModalCancelBtn" class="modal-btn modal-btn-secondary">Abbrechen</button>
+        <button id="customModalOkBtn" class="modal-btn modal-btn-primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Save original alert/confirm functions
+    const _originalAlert = window.alert;
+    const _originalConfirm = window.confirm;
+
+    function showCustomAlert(title, message, icon = '💡') {
+      const modal = document.getElementById('customModal');
+      if (!modal) {
+        if (typeof _originalAlert === 'function') {
+          _originalAlert(message);
+        } else {
+          alert(message);
+        }
+        return Promise.resolve(true);
+      }
+      return new Promise((resolve) => {
+        const titleEl = document.getElementById('customModalTitle');
+        const msgEl = document.getElementById('customModalMessage');
+        const iconEl = document.getElementById('customModalIcon');
+        const cancelBtn = document.getElementById('customModalCancelBtn');
+        const okBtn = document.getElementById('customModalOkBtn');
+        
+        iconEl.textContent = icon;
+        titleEl.textContent = title || (currentLang === 'en' ? 'Information' : 'Hinweis');
+        msgEl.textContent = message;
+        cancelBtn.style.display = 'none';
+        okBtn.textContent = 'OK';
+        
+        modal.classList.add('active');
+        
+        function handleOk() {
+          cleanup();
+          resolve(true);
+        }
+        
+        function cleanup() {
+          modal.classList.remove('active');
+          okBtn.removeEventListener('click', handleOk);
+        }
+        
+        okBtn.addEventListener('click', handleOk);
+      });
+    }
+
+    function showCustomConfirm(title, message, icon = '⚠️') {
+      console.log("showCustomConfirm called with:", title, message, icon);
+      const modal = document.getElementById('customModal');
+      if (!modal) {
+        console.warn("showCustomConfirm: customModal overlay not found, falling back to native confirm.");
+        let confirmed = false;
+        if (typeof _originalConfirm === 'function') {
+          confirmed = _originalConfirm(message);
+        } else {
+          confirmed = confirm(message);
+        }
+        return Promise.resolve(confirmed);
+      }
+      return new Promise((resolve) => {
+        try {
+          const titleEl = document.getElementById('customModalTitle');
+          const msgEl = document.getElementById('customModalMessage');
+          const iconEl = document.getElementById('customModalIcon');
+          const cancelBtn = document.getElementById('customModalCancelBtn');
+          const okBtn = document.getElementById('customModalOkBtn');
+          
+          if (!titleEl || !msgEl || !iconEl || !cancelBtn || !okBtn) {
+            throw new Error("One or more custom modal DOM elements are missing");
+          }
+          
+          iconEl.textContent = icon;
+          titleEl.textContent = title || (currentLang === 'en' ? 'Confirmation' : 'Bestätigung');
+          msgEl.textContent = message;
+          cancelBtn.style.display = 'inline-block';
+          cancelBtn.textContent = currentLang === 'en' ? 'Cancel' : 'Abbrechen';
+          okBtn.textContent = 'OK';
+          
+          console.log("Showing customModal overlay (active class added).");
+          modal.classList.add('active');
+          
+          function handleCancel() {
+            console.log("customModal Cancel button clicked.");
+            cleanup();
+            resolve(false);
+          }
+          
+          function handleOk() {
+            console.log("customModal OK button clicked.");
+            cleanup();
+            resolve(true);
+          }
+          
+          function cleanup() {
+            modal.classList.remove('active');
+            cancelBtn.removeEventListener('click', handleCancel);
+            okBtn.removeEventListener('click', handleOk);
+          }
+          
+          cancelBtn.addEventListener('click', handleCancel);
+          okBtn.addEventListener('click', handleOk);
+        } catch (err) {
+          console.error("Exception setting up customModal:", err);
+          // Fallback if DOM manipulation fails
+          let confirmed = false;
+          if (typeof _originalConfirm === 'function') {
+            confirmed = _originalConfirm(message);
+          } else {
+            confirmed = confirm(message);
+          }
+          resolve(confirmed);
+        }
+      });
+    }
+
+    // Intercept native browser alert
+    window.alert = function(message) {
+      showCustomAlert(currentLang === 'en' ? 'Notification' : 'Hinweis', message, '💡');
+    };
   </script>
 </body>
 </html>

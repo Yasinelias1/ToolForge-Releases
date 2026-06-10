@@ -1149,6 +1149,15 @@
             <option value="dracula">Vampir-Klassiker / Lila-Cyan</option>
           </select>
         </div>
+        
+        <!-- Auto Admin Start Toggle -->
+        <div style="display: flex; align-items: flex-start; gap: 0.8rem; margin-top: 1rem; background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 1rem; border-radius: 12px;">
+          <input type="checkbox" id="autoAdminCheck" onchange="toggleAutoAdmin(this.checked)" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--accent2); margin-top: 2px; flex-shrink: 0;" />
+          <div style="display: flex; flex-direction: column; gap: 0.2rem;">
+            <label for="autoAdminCheck" style="font-size: 0.9rem; font-weight: 700; color: var(--text); cursor: pointer;" id="lblAutoAdminTitle">Als Administrator ausführen</label>
+            <span style="font-size: 0.78rem; color: var(--muted); line-height: 1.4;" id="lblAutoAdminDesc">ToolForge startet bei der nächsten Ausführung automatisch als Administrator (UAC-Abfrage).</span>
+          </div>
+        </div>
 
         <!-- Autostart-Einstellungen -->
         <div style="display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.2rem; padding-top: 1.2rem; border-top: 1px solid var(--border);">
@@ -1298,12 +1307,127 @@
         </h3>
         
         <div style="display: flex; flex-direction: column; gap: 0.8rem;">
-          <!-- v1.2.1 details -->
+          <!-- v1.2.8 details -->
           <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'" open>
             <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
               <span style="display: flex; align-items: center; gap: 8px;">
-                🚀 Version 1.2.1
+                🚀 Version 1.2.8
                 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">Aktuell</span>
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🔌 <strong style="color: var(--text);">Angeschlossene Geräte verwalten</strong>: Neuer System-Bereich zur Ansicht und Steuerung von physikalischen Systemgeräten (Webcams, USB-Sticks, Laufwerke, Maus/Tastatur, Monitore).</li>
+                <li>⚙️ <strong style="color: var(--text);">Geräte ein-/ausschalten</strong>: Ermöglicht das Deaktivieren und Aktivieren von PnP-Hardware (erfordert Administratorrechte) und bietet eine Direktverbindung zum Windows-Geräte-Manager.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.7 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.7
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🚀 <strong style="color: var(--text);">Sofortige Firewall-Aktionen (netsh)</strong>: Umstellung von langsamen PowerShell-Befehlen (Remove-NetFirewallRule) auf die native Windows-Schnittstelle (netsh). Freigabe- und Blockieraktionen werden nun in unter 150 ms ausgeführt und verhindern Timeouts.</li>
+                <li>🛡️ <strong style="color: var(--text);">Entfernung von Größenanzeigen beim Scrollen</strong>: WebView2-Debugmodus vollständig deaktiviert, um die störende Anzeige von Pixelmaßen (1207px x 815px) beim Scrollen zu beseitigen.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.6 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.6
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>⚡ <strong style="color: var(--text);">Hochleistungs-Firewall-Abfrage</strong>: Behebung von Timeouts und Ladeverzögerungen in der Sperrliste durch direkte und O(N)-indizierte CIM/WMI-Abfragen anstelle von langsamen Get-NetFirewallRule-Schleifen.</li>
+                <li>🔧 <strong style="color: var(--text);">Behebung der fehlerhaften Regelanzeige</strong>: Korrektur des fehlerhaften PowerShell-Parametrisierungsfehlers, der verhinderte, dass blockierte Programme nach dem Erstellen in der Liste aufgeführt wurden.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.5 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.5
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🛡️ <strong style="color: var(--text);">Modal-Interaktion &amp; CSS-Fehlerbehebung</strong>: Behebung eines CSS-Fehlers bei <code>pointer-events: all</code> (wurde in <code>pointer-events: auto</code> geändert), wodurch die Bestätigungsmodals nicht mehr blockieren und voll interaktiv sind.</li>
+                <li>🔑 <strong style="color: var(--text);">Echtzeit-Admin-Erkennung</strong>: Direkter Backend-Aufruf (<code>check_admin</code>) zur Prüfung von Administratorrechten, anstatt auf langwierige psutil-Systemstatistiken zu warten.</li>
+                <li>📝 <strong style="color: var(--text);">Detailliertes Klick- &amp; Fehler-Logging</strong>: Umfassende Fehlerbehandlung (try-catch) und Konsole-Protokollierung bei allen Sperr-/Freigabeaktionen und Modalaufrufen.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.4 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.4
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🖱️ <strong style="color: var(--text);">Klick-Ereignis-Optimierung</strong>: Umstellung von Inline-HTML-Attributen auf direkte Ereignis-Listener (<code>addEventListener</code>), wodurch Fehler bei Sonderzeichen (Backslashes/Anführungszeichen) in Programmpfaden der Sperrliste vollständig ausgeschlossen werden.</li>
+                <li>🛡️ <strong style="color: var(--text);">Modal-Ausfallsicherung (Fallback)</strong>: Automatische Ausweichlösung (Fallback) auf native System-Dialoge für den Fall, dass die benutzerdefinierten glassmorphen Modals aufgrund von Browser-Caching blockieren.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.3 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.3
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>🔒 <strong style="color: var(--text);">Bidirektionale Firewall-Sperre</strong>: Der App-Blocker blockiert nun sowohl ausgehenden (Outbound) als auch eingehenden (Inbound) Netzwerkverkehr.</li>
+                <li>⚡ <strong style="color: var(--text);">Aktive Verbindungen trennen</strong>: Laufende Prozesse blockierter Apps (z. B. opera.exe) werden sofort nach der Regelerstellung automatisch beendet, um bestehende TCP-Verbindungen (wie offene VPN/Twitch-Streams) direkt zu kappen.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.2 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.2
+              </span>
+              <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
+            </summary>
+            <div style="margin-top: 0.8rem; font-size: 0.84rem; color: var(--text); line-height: 1.55; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.8rem;">
+              <ul style="padding-left: 1.1rem; display: flex; flex-direction: column; gap: 0.5rem; list-style-type: disc; color: var(--muted);">
+                <li>✨ <strong style="color: var(--text);">Premium-Modals</strong>: Standardmäßige, unschöne Browser-Alerts und Bestätigungs-Popups wurden durch elegante, glassmorphe Modals ersetzt.</li>
+                <li>🔥 <strong style="color: var(--text);">Rekursive Firewall-Sperre</strong>: Beschleunigte Regelerstellung durch Batch-Verarbeitung und Gruppierung aller blockierten Unter-Binärdateien in einer sauberen Zeile mit Sub-Dateianzahl.</li>
+                <li>📶 <strong style="color: var(--text);">Bluetooth-Optimierung</strong>: Behebung von Verbindungsfehlern (0x80041001) durch dynamische ID-Übergabe, Deduplizierung doppelter Geräteeinträge und Deaktivierung von Schaltern für Offline-Geräte.</li>
+                <li>📁 <strong style="color: var(--text);">Auto-Downloads gestoppt</strong>: Die Anwendung stoppt die automatische Aktualisierung/Kopie im Downloads-Ordner und verbleibt sauber auf dem Desktop.</li>
+              </ul>
+            </div>
+          </details>
+
+          <!-- v1.2.1 details -->
+          <details style="background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 12px; padding: 0.8rem 1rem; transition: border-color 0.25s ease;" ontoggle="this.style.borderColor=this.open?'var(--accent3)':'var(--border)'">
+            <summary style="font-weight: 700; font-size: 0.92rem; cursor: pointer; color: var(--text); display: flex; align-items: center; justify-content: space-between; user-select: none; list-style: none;">
+              <span style="display: flex; align-items: center; gap: 8px;">
+                🚀 Version 1.2.1
               </span>
               <span class="details-arrow" style="font-size: 0.8rem; color: var(--muted); transition: transform 0.25s ease;">▼</span>
             </summary>
@@ -1862,9 +1986,28 @@
           document.getElementById('currentVersionText').textContent = installedAppVersion;
           document.getElementById('versionBadge').textContent = installedAppVersion;
         });
+        if (pywebview.api.get_auto_admin) {
+          pywebview.api.get_auto_admin().then(enabled => {
+            document.getElementById('autoAdminCheck').checked = enabled;
+          });
+        }
         updateSmartAiUIStatus();
         updateFaceSwapUIStatus();
         loadGeminiApiKeyStatus();
+      }
+    }
+
+    function toggleAutoAdmin(checked) {
+      if (typeof pywebview !== 'undefined' && pywebview.api && pywebview.api.save_auto_admin) {
+        pywebview.api.save_auto_admin(checked).then(res => {
+          if (res && res.success) {
+            const dict = langDict[currentLang] || langDict['de'];
+            const msg = checked ? dict.autoAdminSuccessOn : dict.autoAdminSuccessOff;
+            showCustomAlert("Settings", msg, '⚙️');
+          } else {
+            showCustomAlert("Settings", "Fehler / Error: " + (res ? res.error : "Unknown error"), '❌');
+          }
+        });
       }
     }
 
@@ -2093,20 +2236,20 @@
     function saveSettings() {
       const repo = document.getElementById('githubRepoInput').value.trim();
       if (!repo || !repo.includes('/')) {
-        alert('Bitte gib das Repository im Format "Benutzername/Projekt" an.');
+        showCustomAlert(currentLang === 'en' ? 'Invalid Input' : 'Ungültige Eingabe', currentLang === 'en' ? 'Please specify the repository in the format "username/repo".' : 'Bitte gib das Repository im Format "Benutzername/Projekt" an.', '⚠️');
         return;
       }
       
       if (typeof pywebview !== 'undefined' && pywebview.api) {
         pywebview.api.save_github_repo(repo).then(res => {
           if (res && res.success) {
-            alert('Einstellungen erfolgreich gespeichert!');
+            showCustomAlert(currentLang === 'en' ? 'Settings Saved' : 'Einstellungen gespeichert', currentLang === 'en' ? 'Settings saved successfully!' : 'Einstellungen erfolgreich gespeichert!', '✅');
           } else {
-            alert('Fehler beim Speichern.');
+            showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', currentLang === 'en' ? 'Failed to save settings.' : 'Fehler beim Speichern.', '❌');
           }
         });
       } else {
-        alert('System nicht bereit.');
+        showCustomAlert(currentLang === 'en' ? 'System Not Ready' : 'System nicht bereit', currentLang === 'en' ? 'The system is not ready yet.' : 'System nicht bereit.', '⚠️');
       }
     }
 
@@ -2177,11 +2320,11 @@
       
       pywebview.api.install_update(latestUpdateInfo.download_url).then(res => {
         if (res && !res.success) {
-          alert('Fehler beim Vorbereiten des Updates: ' + res.error);
+          showCustomAlert(currentLang === 'en' ? 'Update Error' : 'Update-Fehler', (currentLang === 'en' ? 'Failed to prepare update: ' : 'Fehler beim Vorbereiten des Updates: ') + res.error, '❌');
           checkUpdatesFromModal();
         }
       }).catch(err => {
-        alert('Update-Verbindungsfehler: ' + err);
+        showCustomAlert(currentLang === 'en' ? 'Connection Error' : 'Verbindungsfehler', (currentLang === 'en' ? 'Update connection error: ' : 'Update-Verbindungsfehler: ') + err, '❌');
         checkUpdatesFromModal();
       });
     }
@@ -2549,6 +2692,10 @@
         settingsTitle: "⚙️ Einstellungen & Updates",
         settingsSub: "Verwalte deine ToolForge-Konfiguration und halte sie aktuell",
         lblGeneralSettingsTitle: "⚙️ Allgemeine Einstellungen",
+        lblAutoAdminTitle: "Als Administrator ausführen",
+        lblAutoAdminDesc: "ToolForge startet bei der nächsten Ausführung automatisch als Administrator (UAC-Abfrage).",
+        autoAdminSuccessOn: "Erfolgreich! ToolForge startet bei der nächsten Ausführung als Administrator.",
+        autoAdminSuccessOff: "Erfolgreich! ToolForge startet künftig mit Standardrechten.",
         lblAutostartTitle: "🚀 Autostart-Einstellungen",
         lblAutostartCheckbox: "ToolForge mit Windows starten (Autostart)",
         lblAiModelsTitle: "🧠 KI-Integrationen & Modelle",
@@ -2597,6 +2744,23 @@
         faceSwapModelDownloadSuccess: "Premium Face-Swap Modelle erfolgreich heruntergeladen! 🎉",
         faceSwapModelDeleteSuccess: "Premium Face-Swap Modelle gelöscht.",
         
+        changelog_v128_list: `<li>🔌 <strong style="color: var(--text);">Angeschlossene Geräte verwalten</strong>: Neuer System-Bereich zur Ansicht und Steuerung von physikalischen Systemgeräten (Webcams, USB-Sticks, Laufwerke, Maus/Tastatur, Monitore).</li>
+                <li>⚙️ <strong style="color: var(--text);">Geräte ein-/ausschalten</strong>: Ermöglicht das Deaktivieren und Aktivieren von PnP-Hardware (erfordert Administratorrechte) und bietet eine Direktverbindung zum Windows-Geräte-Manager.</li>`,
+        changelog_v127_list: `<li>🚀 <strong style="color: var(--text);">Sofortige Firewall-Aktionen (netsh)</strong>: Umstellung von langsamen PowerShell-Befehlen (Remove-NetFirewallRule) auf die native Windows-Schnittstelle (netsh). Freigabe- und Blockieraktionen werden nun in unter 150 ms ausgeführt und verhindern Timeouts.</li>
+                <li>🛡️ <strong style="color: var(--text);">Entfernung von Größenanzeigen beim Scrollen</strong>: WebView2-Debugmodus vollständig deaktiviert, um die störende Anzeige von Pixelmaßen (1207px x 815px) beim Scrollen zu beseitigen.</li>`,
+        changelog_v126_list: `<li>⚡ <strong style="color: var(--text);">Hochleistungs-Firewall-Abfrage</strong>: Behebung von Timeouts und Ladeverzögerungen in der Sperrliste durch direkte und O(N)-indizierte CIM/WMI-Abfragen anstelle von langsamen Get-NetFirewallRule-Schleifen.</li>
+                <li>🔧 <strong style="color: var(--text);">Behebung der fehlerhaften Regelanzeige</strong>: Korrektur des fehlerhaften PowerShell-Parametrisierungsfehlers, der verhinderte, dass blockierte Programme nach dem Erstellen in der Liste aufgeführt wurden.</li>`,
+        changelog_v125_list: `<li>🛡️ <strong style="color: var(--text);">Modal-Interaktion &amp; CSS-Fehlerbehebung</strong>: Behebung des CSS-Fehlers <code>pointer-events: all</code> (geändert zu <code>auto</code>), wodurch alle Bestätigungsmodals nun voll interaktiv und klickbar sind.</li>
+                <li>🔑 <strong style="color: var(--text);">Echtzeit-Admin-Erkennung</strong>: Schnelle und direkte Admin-Erkennung über ein dediziertes API-Modul (<code>check_admin</code>) anstelle von Systemstatistiken.</li>
+                <li>📝 <strong style="color: var(--text);">Fehler- und Klickprotokolle</strong>: Hinzufügen von try-catch Sicherheitsblöcken und Konsole-Protokollen für alle Klick-Aktionen und Modaldialoge.</li>`,
+        changelog_v124_list: `<li>🖱️ <strong style="color: var(--text);">Klick-Ereignis-Optimierung</strong>: Umstellung von Inline-HTML-Attributen auf direkte Ereignis-Listener (<code>addEventListener</code>), wodurch Fehler bei Sonderzeichen (Backslashes/Anführungszeichen) in Programmpfaden der Sperrliste vollständig ausgeschlossen werden.</li>
+                <li>🛡️ <strong style="color: var(--text);">Modal-Ausfallsicherung (Fallback)</strong>: Automatische Ausweichlösung (Fallback) auf native System-Dialoge für den Fall, dass die benutzerdefinierten glassmorphen Modals aufgrund von Browser-Caching blockieren.</li>`,
+        changelog_v123_list: `<li>🔒 <strong style="color: var(--text);">Bidirektionale Firewall-Sperre</strong>: Der App-Blocker blockiert nun sowohl ausgehenden (Outbound) als auch eingehenden (Inbound) Netzwerkverkehr.</li>
+                <li>⚡ <strong style="color: var(--text);">Aktive Verbindungen trennen</strong>: Laufende Prozesse blockierter Apps (z. B. opera.exe) werden sofort nach der Regelerstellung automatisch beendet, um bestehende TCP-Verbindungen (wie offene VPN/Twitch-Streams) direkt zu kappen.</li>`,
+        changelog_v122_list: `<li>✨ <strong style="color: var(--text);">Premium-Modals</strong>: Standardmäßige, unschöne Browser-Alerts und Bestätigungs-Popups wurden durch elegante, glassmorphe Modals ersetzt.</li>
+                <li>🔥 <strong style="color: var(--text);">Rekursive Firewall-Sperre</strong>: Beschleunigte Regelerstellung durch Batch-Verarbeitung und Gruppierung aller blockierten Unter-Binärdateien in einer sauberen Zeile mit Sub-Dateianzahl.</li>
+                <li>📶 <strong style="color: var(--text);">Bluetooth-Optimierung</strong>: Behebung von Verbindungsfehlern (0x80041001) durch dynamische ID-Übergabe, Deduplizierung doppelter Geräteeinträge und Deaktivierung von Schaltern für Offline-Geräte.</li>
+                <li>📁 <strong style="color: var(--text);">Auto-Downloads gestoppt</strong>: Die Anwendung stoppt die automatische Aktualisierung/Kopie im Downloads-Ordner und verbleibt sauber auf dem Desktop.</li>`,
         changelog_v121_list: `<li>🎬 <strong style="color: var(--text);">Direkter Medien-Hub</strong>: "Medien-Studio" entfernt und durch direkten Zugriff auf Video-Editor, Bild-Editor, GIF Creator und Face Swap in der Werkzeug-Tabelle ersetzt.</li>
                 <li>↔️ <strong style="color: var(--text);">Inline-IFrame-Navigation</strong>: Tools öffnen sich nun inline direkt unter der jeweiligen Grid-Reihe als einklappbares IFrame-Panel mit Schließen-Button.</li>
                 <li>💾 <strong style="color: var(--text);">Einstellungs-Restoring</strong>: Zuverlässiges Laden und Wiederherstellen der Dashboard-Optionen (z.B. Live-Chart-Verlauf) direkt aus der backendseitigen config.json auf Anwendungsstart.</li>`,
@@ -2728,6 +2892,10 @@
         settingsTitle: "⚙️ Settings & Updates",
         settingsSub: "Manage your ToolForge configuration and keep it up to date",
         lblGeneralSettingsTitle: "⚙️ General Settings",
+        lblAutoAdminTitle: "Run as Administrator",
+        lblAutoAdminDesc: "ToolForge will automatically launch as Administrator on next startup (UAC prompt).",
+        autoAdminSuccessOn: "Success! ToolForge will run as Administrator on next launch.",
+        autoAdminSuccessOff: "Success! ToolForge will run with standard privileges in the future.",
         lblAutostartTitle: "🚀 Autostart Settings",
         lblAutostartCheckbox: "Start ToolForge with Windows (Autostart)",
         lblAiModelsTitle: "🧠 AI Integrations & Models",
@@ -2776,6 +2944,23 @@
         faceSwapModelDownloadSuccess: "Premium Face-Swap models downloaded successfully! 🎉",
         faceSwapModelDeleteSuccess: "Premium Face-Swap models deleted.",
         
+        changelog_v128_list: `<li>🔌 <strong style="color: var(--text);">Manage Connected Devices</strong>: New system control section to view and toggle physical system hardware devices (webcams, USB drives, mice, keyboards, monitors).</li>
+                <li>⚙️ <strong style="color: var(--text);">Device Power Controls</strong>: Deactivate and activate PnP hardware devices (requires Administrator rights) and access Windows Device Manager directly.</li>`,
+        changelog_v127_list: `<li>🚀 <strong style="color: var(--text);">Instant Firewall Actions (netsh)</strong>: Switched from slow PowerShell cmdlets (Remove-NetFirewallRule) to the native Windows firewall command tool (netsh). Unblock and block operations now execute in under 150ms, completely avoiding timeouts.</li>
+                <li>🛡️ <strong style="color: var(--text);">Removed Scroll Viewport Overlay</strong>: Completely disabled WebView2 debug mode, removing the viewport size dimensions overlay (1207px x 815px) that appeared in the top-right when scrolling.</li>`,
+        changelog_v126_list: `<li>⚡ <strong style="color: var(--text);">High-Performance Firewall Queries</strong>: Resolved list loading timeouts and interface freezes by querying CIM/WMI database objects in O(N) hashtable lookups instead of executing slow rule-by-rule PowerShell bindings.</li>
+                <li>🔧 <strong style="color: var(--text);">Fixed Blank Rule Listing</strong>: Corrected a PowerShell parameter error in rule queries that caused blocked applications to disappear from the user interface list after creation.</li>`,
+        changelog_v125_list: `<li>🛡️ <strong style="color: var(--text);">Modal Interaction &amp; CSS Fix</strong>: Corrected CSS <code>pointer-events: all</code> to <code>auto</code>, fixing click propagation blocks on custom glassmorphic confirmation overlays.</li>
+                <li>🔑 <strong style="color: var(--text);">Real-time Admin Detection</strong>: Direct backend endpoint integration (<code>check_admin</code>) to query elevation status instantly rather than waiting on psutil statistics.</li>
+                <li>📝 <strong style="color: var(--text);">Diagnostics &amp; Click Logging</strong>: Added detailed console tracing and try-catch safety wrapper around all click handlers and modal triggers.</li>`,
+        changelog_v124_list: `<li>🖱️ <strong style="color: var(--text);">Click Event Robustness</strong>: Migrated from inline HTML onclick attributes to native Javascript <code>addEventListener</code> bindings, eliminating any string parsing bugs or backslash/quote escaping issues for app paths.</li>
+                <li>🛡️ <strong style="color: var(--text);">Modal Fail-Safe Fallbacks</strong>: Added automated fallback to native system dialogs in case custom glassmorphic modals are blocked or fail due to WebView2 file caching.</li>`,
+        changelog_v123_list: `<li>🔒 <strong style="color: var(--text);">Bidirectional Firewall Block</strong>: The App Blocker now blocks both outbound and inbound network traffic for superior security.</li>
+                <li>⚡ <strong style="color: var(--text);">Active Connection Termination</strong>: Running processes of blocked apps (e.g. opera.exe) are automatically killed immediately after rule creation to drop existing TCP sockets (like active VPN tunnels/streams) instantly.</li>`,
+        changelog_v122_list: `<li>✨ <strong style="color: var(--text);">Premium Modals</strong>: Replaced unstyled browser alert/confirm popups with elegant, glassmorphic custom modals.</li>
+                <li>🔥 <strong style="color: var(--text);">Recursive Firewall Blocker</strong>: Accelerated rule creation via batch processing and grouped child binaries into a single clean row with sub-file counts.</li>
+                <li>📶 <strong style="color: var(--text);">Bluetooth Optimizations</strong>: Resolved connection errors (0x80041001) via dynamic event binding, deduplicated redundant physical device entries, and disabled toggle switches for offline devices.</li>
+                <li>📁 <strong style="color: var(--text);">Stopped Auto-Downloads</strong>: The application ceases auto-updating the Downloads directory, deploying cleanly to the Desktop path instead.</li>`,
         changelog_v121_list: `<li>🎬 <strong style="color: var(--text);">Direct Media Hub</strong>: Removed "Media Studio" and replaced it with direct grid cards for Video Editor, Image Editor, GIF Creator, and Face Swap.</li>
                 <li>↔️ <strong style="color: var(--text);">Inline IFrame Panels</strong>: Tools now load inline directly below their grid row as a collapsible iframe panel with a close button.</li>
                 <li>💾 <strong style="color: var(--text);">Settings Restoring</strong>: Startup settings are now robustly restored from the backend config.json (including live performance chart visibility).</li>`,
@@ -2933,6 +3118,10 @@
       
       const lblGeneralSettingsTitle = document.getElementById('lblGeneralSettingsTitle');
       if (lblGeneralSettingsTitle) lblGeneralSettingsTitle.textContent = dict.lblGeneralSettingsTitle;
+      const lblAutoAdminTitle = document.getElementById('lblAutoAdminTitle');
+      if (lblAutoAdminTitle) lblAutoAdminTitle.textContent = dict.lblAutoAdminTitle;
+      const lblAutoAdminDesc = document.getElementById('lblAutoAdminDesc');
+      if (lblAutoAdminDesc) lblAutoAdminDesc.textContent = dict.lblAutoAdminDesc;
       const lblAutostartTitle = document.getElementById('lblAutostartTitle');
       if (lblAutostartTitle) lblAutostartTitle.textContent = dict.lblAutostartTitle;
       const lblAutostartCheckbox = document.getElementById('lblAutostartCheckbox');
@@ -2967,54 +3156,82 @@
       if (changelogCard) {
         changelogCard.querySelector('h3').innerHTML = dict.changelogTitle;
         const detailsElements = changelogCard.querySelectorAll('details');
-        if (detailsElements.length >= 12) {
-          const sum121 = detailsElements[0].querySelector('summary');
-          sum121.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.1 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
-          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v121_list;
+        if (detailsElements.length >= 19) {
+          const sum128 = detailsElements[0].querySelector('summary');
+          sum128.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.8 <span style="font-size: 0.72rem; font-weight: 700; color: var(--accent3); background: rgba(6,182,212,0.12); padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(6,182,212,0.25); text-transform: uppercase; letter-spacing: 0.05em;">${dict.badgeCurrent}</span>`;
+          detailsElements[0].querySelector('ul').innerHTML = dict.changelog_v128_list;
 
-          const sum120 = detailsElements[1].querySelector('summary');
+          const sum127 = detailsElements[1].querySelector('summary');
+          sum127.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.7`;
+          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v127_list;
+
+          const sum126 = detailsElements[2].querySelector('summary');
+          sum126.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.6`;
+          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v126_list;
+
+          const sum125 = detailsElements[3].querySelector('summary');
+          sum125.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.5`;
+          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v125_list;
+
+          const sum124 = detailsElements[4].querySelector('summary');
+          sum124.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.4`;
+          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v124_list;
+
+          const sum123 = detailsElements[5].querySelector('summary');
+          sum123.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.3`;
+          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v123_list;
+
+          const sum122 = detailsElements[6].querySelector('summary');
+          sum122.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.2`;
+          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v122_list;
+
+          const sum121 = detailsElements[7].querySelector('summary');
+          sum121.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.1`;
+          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v121_list;
+
+          const sum120 = detailsElements[8].querySelector('summary');
           sum120.querySelector('span').innerHTML = `🚀 ${lang === 'en' ? 'Version' : 'Version'} 1.2.0`;
-          detailsElements[1].querySelector('ul').innerHTML = dict.changelog_v120_list;
+          detailsElements[8].querySelector('ul').innerHTML = dict.changelog_v120_list;
 
-          const sum119 = detailsElements[2].querySelector('summary');
+          const sum119 = detailsElements[9].querySelector('summary');
           sum119.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.9`;
-          detailsElements[2].querySelector('ul').innerHTML = dict.changelog_v119_list;
+          detailsElements[9].querySelector('ul').innerHTML = dict.changelog_v119_list;
 
-          const sum118 = detailsElements[3].querySelector('summary');
+          const sum118 = detailsElements[10].querySelector('summary');
           sum118.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.8`;
-          detailsElements[3].querySelector('ul').innerHTML = dict.changelog_v118_list;
+          detailsElements[10].querySelector('ul').innerHTML = dict.changelog_v118_list;
 
-          const sum116 = detailsElements[4].querySelector('summary');
+          const sum116 = detailsElements[11].querySelector('summary');
           sum116.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.6`;
-          detailsElements[4].querySelector('ul').innerHTML = dict.changelog_v116_list;
+          detailsElements[11].querySelector('ul').innerHTML = dict.changelog_v116_list;
 
-          const sum115 = detailsElements[5].querySelector('summary');
+          const sum115 = detailsElements[12].querySelector('summary');
           sum115.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.5`;
-          detailsElements[5].querySelector('ul').innerHTML = dict.changelog_v115_list;
+          detailsElements[12].querySelector('ul').innerHTML = dict.changelog_v115_list;
 
-          const sum114 = detailsElements[6].querySelector('summary');
+          const sum114 = detailsElements[13].querySelector('summary');
           sum114.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.4`;
-          detailsElements[6].querySelector('ul').innerHTML = dict.changelog_v114_list;
+          detailsElements[13].querySelector('ul').innerHTML = dict.changelog_v114_list;
 
-          const sum113 = detailsElements[7].querySelector('summary');
+          const sum113 = detailsElements[14].querySelector('summary');
           sum113.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.3`;
-          detailsElements[7].querySelector('ul').innerHTML = dict.changelog_v113_list;
+          detailsElements[14].querySelector('ul').innerHTML = dict.changelog_v113_list;
           
-          const sum112 = detailsElements[8].querySelector('summary');
+          const sum112 = detailsElements[15].querySelector('summary');
           sum112.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.2`;
-          detailsElements[8].querySelector('ul').innerHTML = dict.changelog_v112_list;
+          detailsElements[15].querySelector('ul').innerHTML = dict.changelog_v112_list;
           
-          const sum111 = detailsElements[9].querySelector('summary');
+          const sum111 = detailsElements[16].querySelector('summary');
           sum111.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.1`;
-          detailsElements[9].querySelector('ul').innerHTML = dict.changelog_v111_list;
+          detailsElements[16].querySelector('ul').innerHTML = dict.changelog_v111_list;
 
-          const sum110 = detailsElements[10].querySelector('summary');
+          const sum110 = detailsElements[17].querySelector('summary');
           sum110.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.1.0`;
-          detailsElements[10].querySelector('ul').innerHTML = dict.changelog_v110_list;
+          detailsElements[17].querySelector('ul').innerHTML = dict.changelog_v110_list;
 
-          const sum100 = detailsElements[11].querySelector('summary');
+          const sum100 = detailsElements[18].querySelector('summary');
           sum100.querySelector('span').innerHTML = `📦 ${lang === 'en' ? 'Version' : 'Version'} 1.0.0`;
-          detailsElements[11].querySelector('ul').innerHTML = dict.changelog_v100_list;
+          detailsElements[18].querySelector('ul').innerHTML = dict.changelog_v100_list;
         }
       }
 
@@ -3091,7 +3308,7 @@
           if (res && res.success) {
             console.log("Autostart toggled:", res.enabled);
           } else {
-            alert("Fehler beim Ändern des Autostarts: " + (res ? res.error : "unbekannt"));
+            showCustomAlert(currentLang === 'en' ? 'Autostart Error' : 'Autostart-Fehler', (currentLang === 'en' ? 'Failed to change autostart status: ' : 'Fehler beim Ändern des Autostarts: ') + (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
           }
         });
       }
@@ -3245,7 +3462,7 @@
                 localStorage.clear();
                 window.location.reload();
               } else {
-                alert('Error: ' + (res ? res.error : 'unknown'));
+                showCustomAlert(currentLang === 'en' ? 'Error' : 'Fehler', (res ? res.error : (currentLang === 'en' ? 'unknown' : 'unbekannt')), '❌');
               }
             });
           } else {
