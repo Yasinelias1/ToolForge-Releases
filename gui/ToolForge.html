@@ -2797,6 +2797,7 @@
 
     function applyLanguage(lang) {
       currentLang = lang;
+      localStorage.setItem('language', lang);
       const dict = langDict[lang] || langDict['de'];
 
       // Translate static labels
@@ -3242,6 +3243,11 @@
       });
 
       // Immediate load from localStorage for instant display
+      const cachedLang = localStorage.getItem('language');
+      if (cachedLang) {
+        currentLang = cachedLang;
+        applyLanguage(currentLang);
+      }
       loadSavedTheme();
       updateToolCountText();
       const hash = window.location.hash.replace('#', '');

@@ -1075,6 +1075,7 @@
     // Localization
     function applyLanguage(lang) {
       currentLang = lang;
+      localStorage.setItem('language', lang);
       const dict = langDict[lang] || langDict['de'];
       
       document.getElementById('btnBack').textContent = dict.backBtn;
@@ -1122,6 +1123,11 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      const cachedLang = localStorage.getItem('language');
+      if (cachedLang) {
+        currentLang = cachedLang;
+        applyLanguage(currentLang);
+      }
       withApi(() => {
         pywebview.api.get_language().then(lang => {
           applyLanguage(lang || 'de');

@@ -433,6 +433,7 @@
 
     function applyLanguage(lang) {
       currentLang = lang;
+      localStorage.setItem('language', lang);
       const dict = langDict[lang] || langDict['de'];
       document.querySelector('.back-btn').innerHTML = dict.backBtn;
       document.querySelector('h1').textContent = dict.title;
@@ -647,6 +648,11 @@
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      const cachedLang = localStorage.getItem('language');
+      if (cachedLang) {
+        currentLang = cachedLang;
+        applyLanguage(currentLang);
+      }
       if (typeof pywebview !== 'undefined' && pywebview.api) {
         pywebview.api.get_language().then(lang => {
           applyLanguage(lang || 'de');
