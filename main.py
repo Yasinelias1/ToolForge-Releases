@@ -676,6 +676,18 @@ class ToolForgeAPI:
             pass
 
         try:
+            cmd = ["powershell", "-NoProfile", "-Command", "Get-CimInstance -Namespace root/LibreHardwareMonitor -ClassName Sensor | Where-Object { $_.SensorType -eq 'Temperature' -and $_.Name -like '*CPU*' } | Select-Object -ExpandProperty Value"]
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=1.5)
+            if res.returncode == 0 and res.stdout.strip():
+                vals = [float(val) for val in res.stdout.strip().split("\n") if val.strip()]
+                if vals:
+                    return round(sum(vals) / len(vals))
+        except:
+            pass
+
+        try:
             cmd = ["powershell", "-NoProfile", "-Command", "(Get-CimInstance -Namespace root/WMI -ClassName MSAcpi_ThermalZoneTemperature).CurrentTemperature"]
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
