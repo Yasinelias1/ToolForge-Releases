@@ -947,7 +947,7 @@
           <div class="hub-title">System-Hub</div>
           <div class="hub-subtitle">Netzwerk &amp; Finanzen</div>
         </div>
-        <div class="hub-count">3 Tools</div>
+        <div class="hub-count">4 Tools</div>
         <span class="hub-arrow">▼</span>
       </div>
       <div class="grid">
@@ -973,6 +973,14 @@
           <div class="card-title">Speedtest</div>
           <div class="card-desc">Messe deine Internet-Geschwindigkeit (Download, Upload und Ping) sicher und lokal über Cloudflare-Server.</div>
           <div class="card-tag">⚡ Netzwerk · Utility</div>
+          <span class="card-arrow">→</span>
+        </a>
+
+        <a class="tool-card" href="tools/system-settings.html" style="--card-color1:#a855f7;--card-color2:#ec4899" data-tags="systemsteuerung steuerung einstellungen settings bluetooth firewall internet netzwerk sperren dns lautstärke">
+          <span class="card-icon">🛠️</span>
+          <div class="card-title">Systemsteuerung</div>
+          <div class="card-desc">Verwalte deinen PC: Programme vom Internet trennen (Firewall), Bluetooth-Geräte verwalten, DNS-Cache leeren und System-Utilities steuern.</div>
+          <div class="card-tag">🛠️ System · Utilities</div>
           <span class="card-arrow">→</span>
         </a>
 
@@ -2515,6 +2523,10 @@
         cardSpeedtestDesc: "Messe deine Internet-Geschwindigkeit (Download, Upload und Ping) sicher und lokal über Cloudflare-Server.",
         cardSpeedtestTag: "⚡ Netzwerk · Utility",
         
+        cardSystemSettingsTitle: "Systemsteuerung",
+        cardSystemSettingsDesc: "Verwalte deinen PC: Programme vom Internet trennen (Firewall), Bluetooth-Geräte verwalten, DNS-Cache leeren und System-Utilities steuern.",
+        cardSystemSettingsTag: "🛠️ System · Utilities",
+        
         dbTitle: "📊 System-Dashboard",
         dbSub: "Live-Ressourcenauslastung deines PCs",
         dbCpuTitle: "⚙️ Prozessor (CPU)",
@@ -2690,6 +2702,10 @@
         cardSpeedtestDesc: "Measure your internet speed (download, upload, and ping) securely and locally via Cloudflare servers.",
         cardSpeedtestTag: "⚡ Network · Utility",
         
+        cardSystemSettingsTitle: "System Control",
+        cardSystemSettingsDesc: "Manage your PC: block programs from the internet (firewall), manage Bluetooth devices, flush DNS cache, and control system utilities.",
+        cardSystemSettingsTag: "🛠️ System · Utilities",
+        
         dbTitle: "📊 System Dashboard",
         dbSub: "Live hardware utilization of your PC",
         dbCpuTitle: "⚙️ Processor (CPU)",
@@ -2836,7 +2852,7 @@
         
         hubs[2].querySelector('.hub-title').textContent = dict.hubSystemTitle;
         hubs[2].querySelector('.hub-subtitle').textContent = dict.hubSystemSub;
-        hubs[2].querySelector('.hub-count').textContent = lang === 'en' ? '3 Tools' : '3 Tools';
+        hubs[2].querySelector('.hub-count').textContent = lang === 'en' ? '4 Tools' : '4 Tools';
       }
 
       // Tool Cards (Translated dynamically by href mapping)
@@ -2864,7 +2880,8 @@
         'tools/qr-generator.html': 'cardQrGenerator',
         'tools/currency-converter.html': 'cardCurrencyConverter',
         'tools/network-info.html': 'cardNetworkInfo',
-        'tools/speedtest.html': 'cardSpeedtest'
+        'tools/speedtest.html': 'cardSpeedtest',
+        'tools/system-settings.html': 'cardSystemSettings'
       };
 
       cards.forEach(card => {

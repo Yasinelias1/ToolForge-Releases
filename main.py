@@ -747,6 +747,181 @@ class ToolForgeAPI:
         except Exception as e:
             return {"success": False, "error": str(e)}
 
+    def get_firewall_blocks(self):
+        try:
+            ps_script = (
+                "Get-NetFirewallRule -DisplayName 'ToolForge Block - *' -ErrorAction SilentlyContinue | "
+                "ForEach-Object { [PSCustomObject]@{ "
+                "Name = $_.Name; "
+                "DisplayName = $_.DisplayName; "
+                "Program = ($_ | Get-NetFirewallApplicationFilter).ProgramPath "
+                "} } | ConvertTo-Json"
+            )
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
+            
+            if res.returncode == 0 and res.stdout.strip():
+                data = json.loads(res.stdout.strip())
+                if isinstance(data, dict):
+                    return {"success": True, "rules": [data]}
+                return {"success": True, "rules": data}
+            return {"success": True, "rules": []}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def add_firewall_block(self, exe_path, app_name):
+        try:
+            import ctypes
+            is_elevated = False
+            try: is_elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            except: pass
+            
+            if not is_elevated:
+                return {"success": False, "error": "Administratorrechte erforderlich."}
+                
+            rule_name = f"ToolForge Block - {app_name}"
+            ps_script = (
+                f'New-NetFirewallRule -DisplayName "{rule_name}" -Direction Outbound '
+                f'-Program "{exe_path}" -Action Block -ErrorAction Stop'
+            )
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
+            
+            if res.returncode == 0:
+                return {"success": True}
+            else:
+                return {"success": False, "error": res.stderr.strip()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def remove_firewall_block(self, rule_name):
+        try:
+            import ctypes
+            is_elevated = False
+            try: is_elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            except: pass
+            
+            if not is_elevated:
+                return {"success": False, "error": "Administratorrechte erforderlich."}
+                
+            ps_script = f'Remove-NetFirewallRule -DisplayName "{rule_name}" -ErrorAction Stop'
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
+            
+            if res.returncode == 0:
+                return {"success": True}
+            else:
+                return {"success": False, "error": res.stderr.strip()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def get_bluetooth_devices(self):
+        try:
+            ps_script = 'Get-PnpDevice -Class Bluetooth -ErrorAction SilentlyContinue | ConvertTo-Json'
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=6)
+            
+            devices = []
+            if res.returncode == 0 and res.stdout.strip():
+                data = json.loads(res.stdout.strip())
+                if isinstance(data, dict):
+                    data = [data]
+                
+                ignored_keywords = [
+                    "enumerator", "microsoft", "intel(r)", "qualcomm", "realtek", 
+                    "generic", "rfcomm", "avrcp", "hands-free", "gatt", "device identification",
+                    "audioservice", "bthport", "bthusb", "treiber", "driver", "transport", "le-att"
+                ]
+                
+                seen_ids = set()
+                for item in data:
+                    name = item.get("FriendlyName")
+                    instance_id = item.get("InstanceId")
+                    status = item.get("Status", "Unknown")
+                    present = item.get("Present", False)
+                    service = item.get("Service", "").lower()
+                    
+                    if not name or not instance_id:
+                        continue
+                        
+                    if instance_id in seen_ids:
+                        continue
+                    seen_ids.add(instance_id)
+                    
+                    lower_name = name.lower()
+                    if any(kw in lower_name for kw in ignored_keywords):
+                        continue
+                    if any(kw in service for kw in ignored_keywords):
+                        continue
+                        
+                    devices.append({
+                        "name": name,
+                        "id": instance_id,
+                        "status": status,
+                        "present": present
+                    })
+            return {"success": True, "devices": devices}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def toggle_bluetooth_device(self, device_id, enable):
+        try:
+            import ctypes
+            is_elevated = False
+            try: is_elevated = ctypes.windll.shell32.IsUserAnAdmin() != 0
+            except: pass
+            
+            if not is_elevated:
+                return {"success": False, "error": "Administratorrechte erforderlich."}
+                
+            cmd_verb = "Enable-PnpDevice" if enable else "Disable-PnpDevice"
+            ps_script = f'{cmd_verb} -InstanceId "{device_id}" -Confirm:$false -ErrorAction Stop'
+            
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=5)
+            
+            if res.returncode == 0:
+                return {"success": True}
+            else:
+                return {"success": False, "error": res.stderr.strip()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def flush_dns_cache(self):
+        try:
+            cmd = ["ipconfig", "/flushdns"]
+            startupinfo = subprocess.STARTUPINFO()
+            startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, startupinfo=startupinfo, timeout=3)
+            if res.returncode == 0:
+                return {"success": True}
+            else:
+                return {"success": False, "error": res.stderr.strip()}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
+    def open_system_utility(self, utility):
+        try:
+            import os
+            if utility == "volume":
+                subprocess.Popen("sndvol.exe", shell=True)
+            elif utility == "bluetooth":
+                os.startfile("ms-settings:bluetooth")
+            elif utility == "network":
+                os.startfile("ms-settings:network-status")
+            elif utility == "power":
+                os.startfile("ms-settings:power")
+            elif utility == "windowsupdate":
+                os.startfile("ms-settings:windowsupdate")
+            return {"success": True}
+        except Exception as e:
+            return {"success": False, "error": str(e)}
+
     def run_speed_test(self):
         try:
             import time

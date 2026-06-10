@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+
+  <title>Systemsteuerung – ToolForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      color-scheme: dark;
+      --bg: #080810;
+      --surface: rgba(255, 255, 255, 0.04);
+      --surface-hover: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-bright: rgba(255, 255, 255, 0.15);
+      --text: #f0f0ff;
+      --text-muted: #8888aa;
+      --accent: #a855f7; /* Violet */
+      --accent-rgb: 168, 85, 247;
+      --accent2: #ec4899; /* Pink */
+      --gradient: linear-gradient(135deg, #a855f7, #ec4899);
+      --radius: 20px;
+      --radius-sm: 12px;
+      --shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem 1.5rem;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Background Orbs */
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      opacity: 0.12;
+    }
+    .orb-1 { width: 550px; height: 550px; background: var(--accent); top: -200px; left: -100px; }
+    .orb-2 { width: 450px; height: 450px; background: var(--accent2); bottom: -100px; right: -50px; }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .back-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.6rem 1.2rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .back-btn:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+      transform: translateX(-2px);
+    }
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Tabs Navigation */
+    .tabs-nav {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.35rem;
+      gap: 0.25rem;
+    }
+    .tab-btn {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.8rem 1rem;
+      border-radius: 12px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .tab-btn:hover:not(.active) {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.02);
+    }
+    .tab-btn.active {
+      color: #fff;
+      background: var(--gradient);
+      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.25);
+    }
+
+    /* Tab Content panels */
+    .tab-panel {
+      display: none;
+      flex-direction: column;
+      gap: 1.5rem;
+      animation: fadeIn 0.35s ease;
+    }
+    .tab-panel.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glassmorphic Card container */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.8rem;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(16px);
+      position: relative;
+      overflow: hidden;
+    }
+    .card-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.8rem;
+    }
+
+    /* Admin Overlay */
+    .admin-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(8, 8, 16, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      text-align: center;
+      z-index: 10;
+      transition: opacity 0.3s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .admin-overlay.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .admin-lock-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+    .admin-title {
+      font-size: 1.2rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+      color: #ef4444;
+    }
+    .admin-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    /* Firewall Drag Zone */
+    .drag-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-sm);
+      padding: 2.2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s;
+      background: rgba(255,255,255,0.01);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .drag-zone:hover, .drag-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(168, 85, 247, 0.03);
+    }
+    .drag-icon {
+      font-size: 2rem;
+    }
+    .drag-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+    .drag-sub {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+
+    /* Program Block list */
+    .rule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+    .rule-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.9rem 1.2rem;
+      transition: all 0.2s;
+    }
+    .rule-item:hover {
+      border-color: var(--border-bright);
+      background: rgba(255,255,255,0.04);
+    }
+    .rule-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      overflow: hidden;
+    }
+    .rule-name {
+      font-weight: 600;
+      font-size: 0.92rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .rule-path {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+      max-width: 500px;
+    }
+    .delete-btn {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .delete-btn:hover {
+      background: rgba(239, 68, 68, 0.25);
+      border-color: rgba(239, 68, 68, 0.4);
+      transform: scale(1.05);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      font-style: italic;
+    }
+
+    /* DNS Cache & Utility Card styling */
+    .util-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .util-text-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .util-title {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .util-desc {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+    }
+    .action-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.7rem 1.4rem;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: all 0.25s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .action-btn:hover:not(:disabled) {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+      transform: translateY(-1px);
+    }
+    .action-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Bluetooth devices grid */
+    .device-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    .device-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      transition: all 0.25s;
+      position: relative;
+    }
+    .device-card:hover {
+      border-color: var(--border-bright);
+      background: rgba(255,255,255,0.04);
+    }
+    .device-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .device-icon {
+      font-size: 1.6rem;
+      background: rgba(255,255,255,0.04);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .device-name-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      overflow: hidden;
+    }
+    .device-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .device-status {
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    .device-status.connected { color: #10b981; }
+    .device-status.disconnected { color: var(--text-muted); }
+    
+    /* Premium Switch Button */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+      align-self: flex-end;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background-color: rgba(255,255,255,0.1);
+      transition: .3s;
+      border-radius: 24px;
+      border: 1px solid var(--border);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background: var(--gradient);
+      border-color: transparent;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    /* Shortcut Grid */
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.2rem;
+    }
+    @media (max-width: 500px) {
+      .shortcut-grid { grid-template-columns: 1fr; }
+    }
+    .shortcut-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: var(--shadow);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .shortcut-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+    .shortcut-icon {
+      font-size: 2.2rem;
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .shortcut-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+    .shortcut-title {
+      font-weight: 700;
+      font-size: 0.98rem;
+    }
+    .shortcut-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Tooltip */
+    .tooltip {
+      position: absolute;
+      background: #080810;
+      border: 1px solid var(--border-bright);
+      color: var(--text);
+      padding: 0.5rem 0.8rem;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      z-index: 100;
+      box-shadow: var(--shadow);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <div class="container">
+    <header>
+      <a href="../ToolForge.html#tools" class="back-btn" id="lblBackBtn">← Zurück</a>
+      <h1 id="lblTitle">🛠️ Systemsteuerung</h1>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-nav">
+      <button class="tab-btn active" onclick="switchTab('network')" id="tabBtnNetwork">🌐 Netzwerk & Firewall</button>
+      <button class="tab-btn" onclick="switchTab('devices')" id="tabBtnDevices">👤 Bluetooth-Geräte</button>
+      <button class="tab-btn" onclick="switchTab('shortcuts')" id="tabBtnShortcuts">⚡ Schnell-Aktionen</button>
+    </div>
+
+    <!-- TAB 1: NETWERK & FIREWALL -->
+    <div id="panelNetwork" class="tab-panel active">
+      <!-- Firewall App Blocker -->
+      <div class="card" style="min-height: 250px;">
+        <div class="admin-overlay" id="firewallAdminOverlay">
+          <div class="admin-lock-icon">🔒</div>
+          <div class="admin-title" id="lblFwAdminTitle">Admin-Rechte erforderlich</div>
+          <div class="admin-desc" id="lblFwAdminDesc">Das Ändern der Windows-Firewall-Regeln benötigt Administratorrechte. Starte ToolForge als Administrator.</div>
+        </div>
+
+        <div class="card-title"><span style="font-size: 1.3rem;">🛡️</span> <span id="lblFwTitle">Netzwerksperre für Programme</span></div>
+        
+        <div class="drag-zone" id="dragZone" onclick="selectExeToBlock()">
+          <div class="drag-icon">📁</div>
+          <div class="drag-text" id="lblDragText">Datei auswählen (.exe) oder hierher ziehen</div>
+          <div class="drag-sub" id="lblDragSub">Blockiert ausgehende Internetverbindungen für das Programm</div>
+        </div>
+
+        <div class="rule-list" id="ruleList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+
+      <!-- Flush DNS Cache Card -->
+      <div class="card">
+        <div class="util-row">
+          <div class="util-text-wrap">
+            <div class="util-title" id="lblDnsTitle">DNS-Auflösungscache leeren</div>
+            <div class="util-desc" id="lblDnsDesc">Löscht den lokalen Cache für Domain-Auflösungen (hilft bei Verbindungsproblemen).</div>
+          </div>
+          <button class="action-btn" id="dnsBtn" onclick="flushDns()">
+            <span id="dnsIcon">⚡</span> <span id="lblDnsBtn">Leeren</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: BLUETOOTH DEVICES -->
+    <div id="panelDevices" class="tab-panel">
+      <div class="card" style="min-height: 200px;">
+        <div class="admin-overlay" id="bluetoothAdminOverlay">
+          <div class="admin-lock-icon">🔒</div>
+          <div class="admin-title" id="lblBtAdminTitle">Admin-Rechte erforderlich</div>
+          <div class="admin-desc" id="lblBtAdminDesc">Das Verbinden oder Trennen von Geräten über PnP benötigt Administratorrechte. Starte ToolForge als Administrator.</div>
+        </div>
+
+        <div class="card-title" style="justify-content: space-between; border-bottom: none; margin-bottom: 0;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.3rem;">👤</span> <span id="lblBtTitle">Bluetooth-Geräte verwalten</span>
+          </div>
+          <button class="action-btn" onclick="openSystemUtility('bluetooth')" style="padding: 0.5rem 1rem; font-size: 0.82rem;" id="lblBtSettingsBtn">⚙️ Windows-Einstellungen</button>
+        </div>
+        
+        <div class="device-grid" id="deviceList">
+          <!-- Populated dynamically -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: SYSTEM SHORTCUTS -->
+    <div id="panelShortcuts" class="tab-panel">
+      <div class="shortcut-grid">
+        <div class="shortcut-card" onclick="openSystemUtility('volume')">
+          <div class="shortcut-icon">🔊</div>
+          <div class="shortcut-info">
+            <div class="shortcut-title" id="lblShMixerTitle">Lautstärkemixer</div>
+            <div class="shortcut-desc" id="lblShMixerDesc">Öffnet den Windows-Mixer zur Steuerung einzelner App-Lautstärken.</div>
+          </div>
+        </div>
+
+        <div class="shortcut-card" onclick="openSystemUtility('power')">
+          <div class="shortcut-icon">🔋</div>
+          <div class="shortcut-info">
+            <div class="shortcut-title" id="lblShPowerTitle">Energieoptionen</div>
+            <div class="shortcut-desc" id="lblShPowerDesc">Öffnet die Systemeinstellungen für Bildschirm-Timeout und Energiesparpläne.</div>
+          </div>
+        </div>
+
+        <div class="shortcut-card" onclick="openSystemUtility('network')">
+          <div class="shortcut-icon">📶</div>
+          <div class="shortcut-info">
+            <div class="shortcut-title" id="lblShNetworkTitle">Netzwerkstatus</div>
+            <div class="shortcut-desc" id="lblShNetworkDesc">Öffnet die Netzwerkeinstellungen zur Diagnose der Internetverbindung.</div>
+          </div>
+        </div>
+
+        <div class="shortcut-card" onclick="openSystemUtility('windowsupdate')">
+          <div class="shortcut-icon">🔄</div>
+          <div class="shortcut-info">
+            <div class="shortcut-title" id="lblShUpdateTitle">Windows Update</div>
+            <div class="shortcut-desc" id="lblShUpdateDesc">Prüfe direkt nach den neuesten Windows-Betriebssystem-Updates.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentLang = 'de';
+    let isAdmin = false;
+
+    const langDict = {
+      de: {
+        backBtn: "← Zurück",
+        title: "🛠️ Systemsteuerung",
+        tabNetwork: "🌐 Netzwerk & Firewall",
+        tabDevices: "👤 Bluetooth-Geräte",
+        tabShortcuts: "⚡ Schnell-Aktionen",
+        
+        fwAdminTitle: "Admin-Rechte erforderlich",
+        fwAdminDesc: "Das Ändern der Windows-Firewall-Regeln benötigt Administratorrechte. Starte ToolForge als Administrator.",
+        fwTitle: "Netzwerksperre für Programme",
+        dragText: "Datei auswählen (.exe) oder hierher ziehen",
+        dragSub: "Blockiert ausgehende Internetverbindungen für das Programm",
+        rulesEmpty: "Keine blockierten Programme über ToolForge eingerichtet.",
+        unblockSuccess: "Programm erfolgreich freigegeben!",
+        blockSuccess: "Internetverbindung für das Programm erfolgreich blockiert!",
+        
+        dnsTitle: "DNS-Auflösungscache leeren",
+        dnsDesc: "Löscht den lokalen Cache für Domain-Auflösungen (hilft bei Verbindungsproblemen).",
+        dnsBtn: "Leeren",
+        dnsSuccess: "DNS-Cache erfolgreich geleert!",
+        dnsError: "Fehler beim Leeren des DNS-Caches: ",
+        
+        btAdminTitle: "Admin-Rechte erforderlich",
+        btAdminDesc: "Das Verbinden oder Trennen von Geräten über PnP-Knoten benötigt Administratorrechte. Starte ToolForge als Administrator.",
+        btTitle: "Bluetooth-Geräte verwalten",
+        btSettingsBtn: "⚙️ Windows-Einstellungen",
+        btDeviceConnected: "Verbunden",
+        btDeviceDisconnected: "Getrennt",
+        btDevicesEmpty: "Keine Bluetooth-Geräte gefunden.",
+        btStatusOff: "Ausgeschaltet",
+        btStatusOn: "Bereit",
+        
+        shMixerTitle: "Lautstärkemixer",
+        shMixerDesc: "Öffnet den Windows-Mixer zur Steuerung einzelner App-Lautstärken.",
+        shPowerTitle: "Energieoptionen",
+        shPowerDesc: "Öffnet die Systemeinstellungen für Bildschirm-Timeout und Energiesparpläne.",
+        shNetworkTitle: "Netzwerkstatus",
+        shNetworkDesc: "Öffnet die Netzwerkeinstellungen zur Diagnose der Internetverbindung.",
+        shUpdateTitle: "Windows Update",
+        shUpdateDesc: "Prüfe direkt nach den neuesten Windows-Betriebssystem-Updates."
+      },
+      en: {
+        backBtn: "← Back",
+        title: "🛠️ System Control",
+        tabNetwork: "🌐 Network & Firewall",
+        tabDevices: "👤 Bluetooth Devices",
+        tabShortcuts: "⚡ Quick Actions",
+        
+        fwAdminTitle: "Admin Rights Required",
+        fwAdminDesc: "Modifying Windows Firewall rules requires Administrator rights. Run ToolForge as Administrator.",
+        fwTitle: "Program Internet Blocker",
+        dragText: "Select file (.exe) or drag it here",
+        dragSub: "Blocks outbound internet connections for the program",
+        rulesEmpty: "No blocked programs configured via ToolForge.",
+        unblockSuccess: "Program successfully unblocked!",
+        blockSuccess: "Program successfully blocked from the internet!",
+        
+        dnsTitle: "Flush DNS Cache",
+        dnsDesc: "Clears the local Domain Name System resolution cache (helps with connection issues).",
+        dnsBtn: "Flush",
+        dnsSuccess: "DNS Cache flushed successfully!",
+        dnsError: "Failed to flush DNS cache: ",
+        
+        btAdminTitle: "Admin Rights Required",
+        btAdminDesc: "Connecting or disconnecting hardware devices via PnP nodes requires Administrator rights. Run ToolForge as Administrator.",
+        btTitle: "Manage Bluetooth Devices",
+        btSettingsBtn: "⚙️ Windows Settings",
+        btDeviceConnected: "Connected",
+        btDeviceDisconnected: "Disconnected",
+        btDevicesEmpty: "No Bluetooth devices found.",
+        btStatusOff: "Disabled",
+        btStatusOn: "Ready",
+        
+        shMixerTitle: "Volume Mixer",
+        shMixerDesc: "Opens the Windows Volume Mixer to adjust individual app volumes.",
+        shPowerTitle: "Power Settings",
+        shPowerDesc: "Opens system options for screen timeout and power saving plans.",
+        shNetworkTitle: "Network Status",
+        shNetworkDesc: "Opens network adapter settings to diagnose internet connectivity.",
+        shUpdateTitle: "Windows Update",
+        shUpdateDesc: "Directly check for the latest Windows operating system updates."
+      }
+    };
+
+    function applyLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('language', lang);
+      const dict = langDict[lang] || langDict['de'];
+
+      document.getElementById('lblBackBtn').textContent = dict.backBtn;
+      document.getElementById('lblTitle').textContent = dict.title;
+      
+      document.getElementById('tabBtnNetwork').textContent = dict.tabNetwork;
+      document.getElementById('tabBtnDevices').textContent = dict.tabDevices;
+      document.getElementById('tabBtnShortcuts').textContent = dict.tabShortcuts;
+
+      document.getElementById('lblFwAdminTitle').textContent = dict.fwAdminTitle;
+      document.getElementById('lblFwAdminDesc').textContent = dict.fwAdminDesc;
+      document.getElementById('lblFwTitle').textContent = dict.fwTitle;
+      document.getElementById('lblDragText').textContent = dict.dragText;
+      document.getElementById('lblDragSub').textContent = dict.dragSub;
+
+      document.getElementById('lblDnsTitle').textContent = dict.dnsTitle;
+      document.getElementById('lblDnsDesc').textContent = dict.dnsDesc;
+      document.getElementById('lblDnsBtn').textContent = dict.dnsBtn;
+
+      document.getElementById('lblBtAdminTitle').textContent = dict.btAdminTitle;
+      document.getElementById('lblBtAdminDesc').textContent = dict.btAdminDesc;
+      document.getElementById('lblBtTitle').textContent = dict.btTitle;
+      document.getElementById('lblBtSettingsBtn').textContent = dict.btSettingsBtn;
+
+      document.getElementById('lblShMixerTitle').textContent = dict.shMixerTitle;
+      document.getElementById('lblShMixerDesc').textContent = dict.shMixerDesc;
+      document.getElementById('lblShPowerTitle').textContent = dict.shPowerTitle;
+      document.getElementById('lblShPowerDesc').textContent = dict.shPowerDesc;
+      document.getElementById('lblShNetworkTitle').textContent = dict.shNetworkTitle;
+      document.getElementById('lblShNetworkDesc').textContent = dict.shNetworkDesc;
+      document.getElementById('lblShUpdateTitle').textContent = dict.shUpdateTitle;
+      document.getElementById('lblShUpdateDesc').textContent = dict.shUpdateDesc;
+
+      loadFirewallRules();
+      loadBluetoothDevices();
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+
+      if (tabId === 'network') {
+        document.getElementById('tabBtnNetwork').classList.add('active');
+        document.getElementById('panelNetwork').classList.add('active');
+      } else if (tabId === 'devices') {
+        document.getElementById('tabBtnDevices').classList.add('active');
+        document.getElementById('panelDevices').classList.add('active');
+        loadBluetoothDevices();
+      } else if (tabId === 'shortcuts') {
+        document.getElementById('tabBtnShortcuts').classList.add('active');
+        document.getElementById('panelShortcuts').classList.add('active');
+      }
+    }
+
+    // --- Admin state check ---
+    function checkAdminStatus() {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.get_system_stats().then(stats => {
+          isAdmin = (stats.cpu_temp_status === 'ok' || stats.cpu_temp_status === 'not_supported');
+          
+          if (!isAdmin) {
+            document.getElementById('firewallAdminOverlay').classList.add('show');
+            document.getElementById('bluetoothAdminOverlay').classList.add('show');
+          } else {
+            document.getElementById('firewallAdminOverlay').classList.remove('show');
+            document.getElementById('bluetoothAdminOverlay').classList.remove('show');
+          }
+        });
+      }
+    }
+
+    // --- Tab 1: Netzwerksperre (Firewall) ---
+    function loadFirewallRules() {
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+      
+      pywebview.api.get_firewall_blocks().then(res => {
+        const listEl = document.getElementById('ruleList');
+        listEl.innerHTML = '';
+        const dict = langDict[currentLang] || langDict['de'];
+
+        if (res && res.success) {
+          if (res.rules.length === 0) {
+            listEl.innerHTML = `<div class="empty-state">${dict.rulesEmpty}</div>`;
+            return;
+          }
+
+          res.rules.forEach(rule => {
+            const displayName = rule.DisplayName || rule.Name;
+            const cleanName = displayName.replace('ToolForge Block - ', '');
+            const path = rule.Program || 'N/A';
+
+            const item = document.createElement('div');
+            item.className = 'rule-item';
+            item.innerHTML = `
+              <div class="rule-info">
+                <div class="rule-name">${cleanName}</div>
+                <div class="rule-path" title="${path}">${path}</div>
+              </div>
+              <button class="delete-btn" onclick="removeBlock('${displayName}')">🗑️</button>
+            `;
+            listEl.appendChild(item);
+          });
+        }
+      });
+    }
+
+    function selectExeToBlock() {
+      if (!isAdmin) return;
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+
+      const fileTypes = [["Executable Files (*.exe)", "*.exe"]];
+      pywebview.api.select_file(JSON.stringify(fileTypes)).then(filePath => {
+        if (filePath) {
+          blockFile(filePath);
+        }
+      });
+    }
+
+    function blockFile(filePath) {
+      const parts = filePath.split(/[/\\]/);
+      const fileName = parts[parts.length - 1];
+      const appName = fileName.replace('.exe', '');
+
+      pywebview.api.add_firewall_block(filePath, appName).then(res => {
+        const dict = langDict[currentLang] || langDict['de'];
+        if (res && res.success) {
+          alert(dict.blockSuccess);
+          loadFirewallRules();
+        } else {
+          alert("Fehler: " + (res ? res.error : "Unbekannter Fehler"));
+        }
+      });
+    }
+
+    function removeBlock(ruleName) {
+      if (!confirm("Freigeben bestätigen?")) return;
+      pywebview.api.remove_firewall_block(ruleName).then(res => {
+        const dict = langDict[currentLang] || langDict['de'];
+        if (res && res.success) {
+          alert(dict.unblockSuccess);
+          loadFirewallRules();
+        } else {
+          alert("Fehler: " + (res ? res.error : "Unbekannter Fehler"));
+        }
+      });
+    }
+
+    // Drag and drop executable support
+    const dragZone = document.getElementById('dragZone');
+    dragZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (isAdmin) dragZone.classList.add('dragover');
+    });
+    dragZone.addEventListener('dragleave', () => {
+      dragZone.classList.remove('dragover');
+    });
+    dragZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dragZone.classList.remove('dragover');
+      if (!isAdmin) return;
+
+      if (e.dataTransfer.files.length > 0) {
+        const file = e.dataTransfer.files[0];
+        if (file.name.endsWith('.exe')) {
+          selectExeToBlock();
+        }
+      }
+    });
+
+    // --- Tab 1: DNS Cache Leeren ---
+    function flushDns() {
+      const dnsBtn = document.getElementById('dnsBtn');
+      const dnsIcon = document.getElementById('dnsIcon');
+      const lblDnsBtn = document.getElementById('lblDnsBtn');
+      const dict = langDict[currentLang] || langDict['de'];
+
+      dnsBtn.disabled = true;
+      dnsIcon.textContent = "⏳";
+      lblDnsBtn.textContent = currentLang === 'de' ? "Leere..." : "Flushing...";
+
+      pywebview.api.flush_dns_cache().then(res => {
+        dnsBtn.disabled = false;
+        dnsIcon.textContent = "⚡";
+        lblDnsBtn.textContent = dict.dnsBtn;
+
+        if (res && res.success) {
+          alert(dict.dnsSuccess);
+        } else {
+          alert(dict.dnsError + (res ? res.error : 'Unbekannt'));
+        }
+      }).catch(err => {
+        dnsBtn.disabled = false;
+        dnsIcon.textContent = "⚡";
+        lblDnsBtn.textContent = dict.dnsBtn;
+        alert(dict.dnsError + err);
+      });
+    }
+
+    // --- Tab 2: Bluetooth verwalten ---
+    function loadBluetoothDevices() {
+      if (typeof pywebview === 'undefined' || !pywebview.api) return;
+
+      pywebview.api.get_bluetooth_devices().then(res => {
+        const listEl = document.getElementById('deviceList');
+        listEl.innerHTML = '';
+        const dict = langDict[currentLang] || langDict['de'];
+
+        if (res && res.success) {
+          if (res.devices.length === 0) {
+            listEl.innerHTML = `<div class="empty-state" style="grid-column: 1/-1;">${dict.btDevicesEmpty}</div>`;
+            return;
+          }
+
+          res.devices.forEach(dev => {
+            const card = document.createElement('div');
+            card.className = 'device-card';
+            
+            let icon = "📱";
+            const lowerName = dev.name.toLowerCase();
+            if (lowerName.includes('headphone') || lowerName.includes('audio') || lowerName.includes('ear') || lowerName.includes('sound') || lowerName.includes('qc35') || lowerName.includes('bose') || lowerName.includes('beats')) {
+              icon = "🎧";
+            } else if (lowerName.includes('mouse') || lowerName.includes('maus')) {
+              icon = "🖱️";
+            } else if (lowerName.includes('keyboard') || lowerName.includes('tastatur')) {
+              icon = "⌨️";
+            } else if (lowerName.includes('speaker') || lowerName.includes('lautsprecher') || lowerName.includes('box')) {
+              icon = "🔊";
+            } else if (lowerName.includes('watch') || lowerName.includes('uhr')) {
+              icon = "⌚";
+            }
+
+            const isConnected = (dev.status.toLowerCase() === 'ok' || dev.present);
+            const statusLabel = isConnected ? dict.btDeviceConnected : dict.btDeviceDisconnected;
+            const statusClass = isConnected ? 'connected' : 'disconnected';
+            
+            card.innerHTML = `
+              <div class="device-header">
+                <div class="device-icon">${icon}</div>
+                <div class="device-name-wrap">
+                  <div class="device-name" title="${dev.name}">${dev.name}</div>
+                  <div class="device-status ${statusClass}">${statusLabel}</div>
+                </div>
+              </div>
+              <label class="switch">
+                <input type="checkbox" ${isConnected ? 'checked' : ''} onchange="toggleDevice('${dev.id}', this.checked)">
+                <span class="slider"></span>
+              </label>
+            `;
+            listEl.appendChild(card);
+          });
+        }
+      });
+    }
+
+    function toggleDevice(deviceId, checked) {
+      if (!isAdmin) {
+        loadBluetoothDevices();
+        return;
+      }
+
+      pywebview.api.toggle_bluetooth_device(deviceId, checked).then(res => {
+        if (res && res.success) {
+          setTimeout(loadBluetoothDevices, 1500);
+        } else {
+          alert("Fehler: " + (res ? res.error : "Konnte Gerätestatus nicht ändern."));
+          loadBluetoothDevices();
+        }
+      });
+    }
+
+    // --- Common System Utility Launcher ---
+    function openSystemUtility(utility) {
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.open_system_utility(utility);
+      }
+    }
+
+    // --- Page Initialization ---
+    window.addEventListener('DOMContentLoaded', () => {
+      const cachedLang = localStorage.getItem('language');
+      if (cachedLang) {
+        currentLang = cachedLang;
+        applyLanguage(currentLang);
+      }
+      
+      if (typeof pywebview !== 'undefined' && pywebview.api) {
+        pywebview.api.get_language().then(lang => {
+          applyLanguage(lang || 'de');
+          checkAdminStatus();
+        });
+      }
+    });
+  </script>
+</body>
+</html>
