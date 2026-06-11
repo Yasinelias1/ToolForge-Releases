@@ -1121,8 +1121,10 @@ class ToolForgeAPI:
             if res.returncode == 0:
                 return {"success": True}
             else:
-                stdout_str = res.stdout.decode('cp850', errors='replace').strip()
-                stderr_str = res.stderr.decode('cp850', errors='replace').strip()
+                import locale
+                enc = locale.getpreferredencoding()
+                stdout_str = res.stdout.decode(enc, errors='replace').strip()
+                stderr_str = res.stderr.decode(enc, errors='replace').strip()
                 err_msg = stdout_str if stdout_str else stderr_str
                 if not err_msg:
                     err_msg = f"Fehlercode {res.returncode}"
