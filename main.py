@@ -1112,18 +1112,21 @@ class ToolForgeAPI:
             if not is_elevated:
                 return {"success": False, "error": "Administratorrechte erforderlich."}
                 
-            cmd_verb = "Enable-PnpDevice" if enable else "Disable-PnpDevice"
-            ps_script = f'{cmd_verb} -InstanceId "{device_id}" -Confirm:$false -ErrorAction Stop'
+            cmd_verb = "/enable-device" if enable else "/disable-device"
             
             startupinfo = subprocess.STARTUPINFO()
             startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            res = subprocess.run(["powershell", "-NoProfile", "-Command", ps_script], stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo, timeout=5)
+            res = subprocess.run(["pnputil", cmd_verb, device_id], stdout=subprocess.PIPE, stderr=subprocess.PIPE, startupinfo=startupinfo, timeout=10)
             
             if res.returncode == 0:
                 return {"success": True}
             else:
+                stdout_str = res.stdout.decode('cp850', errors='replace').strip()
                 stderr_str = res.stderr.decode('cp850', errors='replace').strip()
-                return {"success": False, "error": stderr_str}
+                err_msg = stdout_str if stdout_str else stderr_str
+                if not err_msg:
+                    err_msg = f"Fehlercode {res.returncode}"
+                return {"success": False, "error": err_msg}
         except Exception as e:
             return {"success": False, "error": str(e)}
 
